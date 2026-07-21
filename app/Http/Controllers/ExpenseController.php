@@ -25,7 +25,6 @@ class ExpenseController extends Controller
         $query = Expense::forBranch($branchId)
             ->with([
                 'expenseType.category',
-                'paymentAccount:id,name,code',
                 'createdBy:id,first_name,last_name',
                 'paidBy:id,first_name,last_name',
             ]);
@@ -116,13 +115,6 @@ class ExpenseController extends Controller
             })],
 
             'amount'             => 'required|numeric|min:0.01|max:999999999',
-            'currency'           => [
-                'required',
-                'string',
-                Rule::exists('currencies', 'name')->where(function ($q) use ($branchId) {
-                    $q->where('branch_id', $branchId)->where('is_active', true);
-                }),
-            ],
             'description'        => 'required|string|max:500',
             'paid_to'            => 'nullable|string|max:150',
             'date'               => 'required|date|before_or_equal:today',
@@ -142,7 +134,7 @@ class ExpenseController extends Controller
         DB::beginTransaction();
         try {
             $expense = Expense::create($validated);
-            $expense->load('expenseType.category', 'paymentAccount:id,name,code', 'createdBy:id,first_name,last_name');
+            $expense->load('expenseType.category', 'createdBy:id,first_name,last_name');
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -165,8 +157,6 @@ class ExpenseController extends Controller
 
         $expense->load([
             'expenseType.category',
-            'expenseType.expenseAccount:id,name,code',
-            'paymentAccount:id,name,code',
             'createdBy:id,first_name,last_name,email',
             'submittedBy:id,first_name,last_name',
             'paidBy:id,first_name,last_name',
@@ -199,13 +189,6 @@ class ExpenseController extends Controller
                 $q->where('is_active', true)->whereNull('deleted_at');
             })],
             'amount'             => 'sometimes|numeric|min:0.01|max:999999999',
-            'currency'           => [
-                'sometimes',
-                'string',
-                Rule::exists('currencies', 'name')->where(function ($q) use ($branchId) {
-                    $q->where('branch_id', $branchId)->where('is_active', true);
-                }),
-            ],
             'description'        => 'sometimes|string|max:500',
             'paid_to'            => 'nullable|string|max:150',
             'date'               => 'sometimes|date|before_or_equal:today',
@@ -222,7 +205,7 @@ class ExpenseController extends Controller
         }
 
         $expense->update($validated);
-        $expense->refresh()->load('expenseType.category', 'paymentAccount:id,name,code');
+        $expense->refresh()->load('expenseType.category');
 
         return response()->json([
             'data'    => $expense,
@@ -353,14 +336,13 @@ class ExpenseController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $summary = Expense::forBranch($branchId)
-            ->selectRaw('status, COUNT(*) as count, SUM(total_amount) as total, currency')
-            ->groupBy('status', 'currency')
+            ->selectRaw('status, COUNT(*) as count, SUM(total_amount) as total')
+            ->groupBy('status')
             ->get();
 
         $totals = Expense::forBranch($branchId)
-            ->selectRaw('currency, SUM(total_amount) as total, COUNT(*) as count')
+            ->selectRaw('SUM(total_amount) as total, COUNT(*) as count')
             ->where('status', Expense::STATUS_PAID)
-            ->groupBy('currency')
             ->get();
 
         $byCategory = Expense::forBranch($branchId)

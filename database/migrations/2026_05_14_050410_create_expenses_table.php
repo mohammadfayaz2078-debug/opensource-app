@@ -17,7 +17,6 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->decimal('total_amount', 15, 2)->nullable();
             $table->text('file')->nullable();
-            $table->enum('currency', ['Dollar', 'Afghani'])->default('Afghani');
             $table->text('description')->nullable();
             $table->text('notes')->nullable();
             $table->string('paid_to', 100)->nullable();

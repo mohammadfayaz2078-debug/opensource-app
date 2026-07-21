@@ -12,15 +12,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('branch_id');
             $table->unsignedBigInteger('expense_category_id');
-            $table->unsignedBigInteger('expense_account_id')->nullable()->index();
             $table->string('name', 100);
-            // $table->string('slug', 120);
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->unsignedBigInteger('default_payment_account_id')->nullable();
-            // $table->boolean('requires_receipt')->default(false);
-            // $table->decimal('approval_threshold', 15, 2)->nullable();
-            // $table->decimal('max_amount', 15, 2)->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
             $table->softDeletes();

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Helpers\AuthHelper;
 use App\Models\IncomeCategory;
-use App\Models\ChartOfAccount;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -61,7 +60,7 @@ class IncomeCategoryController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = IncomeCategory::with(['incomeAccount', 'creator'])
+        $query = IncomeCategory::with(['creator'])
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
 
@@ -155,7 +154,7 @@ class IncomeCategoryController extends Controller
         }
 
         $category = IncomeCategory::create($validated);
-        $category->load(['incomeAccount', 'creator']);
+        $category->load(['creator']);
 
         return response()->json([
             'data'    => $category,
@@ -175,7 +174,7 @@ class IncomeCategoryController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $category = IncomeCategory::where('branch_id', $branchId)
-            ->with(['incomeAccount', 'creator', 'company'])
+            ->with(['creator', 'company'])
             ->findOrFail($id);
 
         // Load related other incomes count if needed
@@ -219,7 +218,7 @@ class IncomeCategoryController extends Controller
         }
         
         $category->update($validated);
-        $category->load(['incomeAccount', 'creator']);
+        $category->load(['creator']);
 
         return response()->json([
             'data'    => $category,
@@ -296,14 +295,13 @@ class IncomeCategoryController extends Controller
         
         $categories = $query->orderBy('name')
             ->limit(100)
-            ->get(['id', 'name', 'description', 'income_account_id']);
+            ->get(['id', 'name', 'description']);
         
         return response()->json([
             'data' => $categories->map(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'description' => $category->description,
-                'has_account' => !is_null($category->income_account_id),
             ])
         ]);
     }
@@ -322,15 +320,12 @@ class IncomeCategoryController extends Controller
         
         $categories = IncomeCategory::where('company_id', $companyId)
             ->where('branch_id', $branchId)
-            ->with('incomeAccount')
             ->orderBy('name')
             ->get();
-        
+
         $exportData = $categories->map(fn($category) => [
             'Name' => $category->name,
             'Description' => $category->description ?? '',
-            'Income Account' => $category->incomeAccount?->name ?? 'Not Assigned',
-            'Account Code' => $category->incomeAccount?->code ?? '',
             'Status' => $category->is_active ? 'Active' : 'Inactive',
             'Created At' => $category->created_at->format('Y-m-d H:i:s'),
         ]);
@@ -413,14 +408,7 @@ class IncomeCategoryController extends Controller
             ->where('branch_id', $branchId)
             ->where('is_active', true)
             ->count();
-        
-        $withAccounts = IncomeCategory::where('company_id', $companyId)
-            ->where('branch_id', $branchId)
-            ->whereNotNull('income_account_id')
-            ->count();
-        
-        $withoutAccounts = $total - $withAccounts;
-        
+
         $recentlyAdded = IncomeCategory::where('company_id', $companyId)
             ->where('branch_id', $branchId)
             ->orderBy('created_at', 'desc')
@@ -431,8 +419,6 @@ class IncomeCategoryController extends Controller
             'total_categories' => $total,
             'active_categories' => $active,
             'inactive_categories' => $total - $active,
-            'categories_with_accounts' => $withAccounts,
-            'categories_without_accounts' => $withoutAccounts,
             'recently_added' => $recentlyAdded,
         ]);
     }

@@ -2,36 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../plugins/axios';
 
-export default function IncomeCategoryEdit() {
+export default function OtherIncomeEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
+  const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
-    name: '',
+    income_category_id: '',
+    income_date: '',
     description: '',
-    is_active: true,
+    amount: '',
+    note: '',
   });
 
   useEffect(() => {
-    // Fetch category data
-    api.get(`/income-categories/${id}`).then(r => {
-      const category = r.data.data;
+    api.get('/income-categories?per_page=1000').then(r => {
+      const payload = r.data.data;
+      setCategories(Array.isArray(payload) ? payload : payload?.data || []);
+    }).catch(() => {});
+
+    api.get(`/other-incomes/${id}`).then(r => {
+      const income = r.data.data;
       setForm({
-        name: category.name || '',
-        description: category.description || '',
-        is_active: category.is_active ?? true,
+        income_category_id: income.income_category_id || '',
+        income_date: income.income_date ? income.income_date.split('T')[0] : '',
+        description: income.description || '',
+        amount: income.amount || '',
+        note: income.note || '',
       });
-    }).catch(() => navigate('/income-categories')).finally(() => setFetching(false));
+    }).catch(() => navigate('/other-incomes')).finally(() => setFetching(false));
   }, [id, navigate]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
@@ -40,8 +46,8 @@ export default function IncomeCategoryEdit() {
     setLoading(true);
     setErrors({});
     try {
-      await api.put(`/income-categories/${id}`, form);
-      navigate(`/income-categories/${id}`);
+      await api.put(`/other-incomes/${id}`, form);
+      navigate(`/other-incomes/${id}`);
     } catch (err) {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
@@ -49,7 +55,7 @@ export default function IncomeCategoryEdit() {
           setErrors({ general: err.response.data.message });
         }
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to update income category.' });
+        setErrors({ general: err.response?.data?.message || 'Failed to update income record.' });
       }
     } finally {
       setLoading(false);
@@ -60,7 +66,7 @@ export default function IncomeCategoryEdit() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading category...</span>
+        <span className="ml-3 text-gray-600">Loading income record...</span>
       </div>
     );
   }
@@ -72,19 +78,19 @@ export default function IncomeCategoryEdit() {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/income-categories')} className="hover:text-[#007c89]">Income Categories</button>
+          <button onClick={() => navigate('/other-incomes')} className="hover:text-[#007c89]">Other Incomes</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <button onClick={() => navigate(`/income-categories/${id}`)} className="hover:text-[#007c89]">
-            {form.name}
+          <button onClick={() => navigate(`/other-incomes/${id}`)} className="hover:text-[#007c89]">
+            {form.income_number || `#${id}`}
           </button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
           <span className="text-gray-700">Edit</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Edit Income Category</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Edit Other Income</h1>
       </div>
 
       {errors.general && (
@@ -93,26 +99,47 @@ export default function IncomeCategoryEdit() {
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Information */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Category Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">Income Information</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Category Name
+                      Income Category
+                    </label>
+                    <select
+                      name="income_category_id"
+                      value={form.income_category_id}
+                      onChange={handleChange}
+                      className={inputClass('income_category_id')}
+                    >
+                      <option value="">Select category</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                    {errors.income_category_id && <p className="text-red-500 text-xs mt-1">{errors.income_category_id[0]}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Income Date *
                     </label>
                     <input
-                      name="name"
-                      value={form.name}
+                      type="date"
+                      name="income_date"
+                      value={form.income_date}
                       onChange={handleChange}
-                      className={inputClass('name')}
+                      className={inputClass('income_date')}
                     />
-                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name[0]}</p>}
+                    {errors.income_date && <p className="text-red-500 text-xs mt-1">{errors.income_date[0]}</p>}
                   </div>
+
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                       Description
@@ -126,31 +153,47 @@ export default function IncomeCategoryEdit() {
                     />
                     {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description[0]}</p>}
                   </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Amount *
+                    </label>
+                    <input
+                      type="number"
+                      name="amount"
+                      value={form.amount}
+                      onChange={handleChange}
+                      step="0.01"
+                      min="0"
+                      className={inputClass('amount')}
+                    />
+                    {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount[0]}</p>}
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* Notes */}
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Notes</h2>
+              </div>
+              <div className="p-6">
+                <textarea
+                  name="note"
+                  value={form.note}
+                  onChange={handleChange}
+                  rows="3"
+                  className={inputClass('note')}
+                />
+                {errors.note && <p className="text-red-500 text-xs mt-1">{errors.note[0]}</p>}
+              </div>
+            </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 sticky top-6">
-              <div className="mb-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="is_active"
-                    checked={form.is_active}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-[#007c89] focus:ring-[#007c89] border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Active</span>
-                </label>
-                <p className="text-xs text-gray-400 mt-1 ml-6">
-                  Inactive categories won't appear in dropdown menus
-                </p>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
@@ -172,7 +215,7 @@ export default function IncomeCategoryEdit() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate(`/income-categories/${id}`)}
+                onClick={() => navigate(`/other-incomes/${id}`)}
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 mt-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
                 Cancel

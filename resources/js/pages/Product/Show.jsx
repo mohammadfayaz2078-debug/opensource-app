@@ -245,42 +245,6 @@ export default function ProductShow() {
             </div>
           </div>
 
-          {/* Accounting Accounts */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
-            </div>
-            <div className="p-6 space-y-3">
-              <div>
-                <p className="text-xs text-gray-500 uppercase">Expense Account (COGS)</p>
-                <p className="text-sm text-gray-900">
-                  {product.expense_account?.name || '—'}
-                  {product.expense_account?.code && (
-                    <span className="text-xs text-gray-400 ml-1">({product.expense_account.code})</span>
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase">Income Account (Revenue)</p>
-                <p className="text-sm text-gray-900">
-                  {product.income_account?.name || '—'}
-                  {product.income_account?.code && (
-                    <span className="text-xs text-gray-400 ml-1">({product.income_account.code})</span>
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase">Inventory Asset Account</p>
-                <p className="text-sm text-gray-900">
-                  {product.inventory_asset_account?.name || '—'}
-                  {product.inventory_asset_account?.code && (
-                    <span className="text-xs text-gray-400 ml-1">({product.inventory_asset_account.code})</span>
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Audit Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">

@@ -7,7 +7,6 @@ export default function ProductEdit() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
-  const [accounts, setAccounts] = useState([]);
   const [existingAttachments, setExistingAttachments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -23,17 +22,13 @@ export default function ProductEdit() {
     stock_unit_id: '',
     purchase_price: '',
     sale_price: '',
-    expense_account_id: '',
-    income_account_id: '',
     low_stock_warning_count: '0',
-    inventory_asset_account_id: '',
     reorder_point: '0',
   });
 
   useEffect(() => {
     fetchCategories();
     fetchUnits();
-    fetchAccounts();
     fetchProduct();
   }, [id]);
 
@@ -52,43 +47,6 @@ export default function ProductEdit() {
       setUnits(res.data.data || []);
     } catch {
       setUnits([]);
-    }
-  };
-
-  const fetchAccounts = async () => {
-    try {
-      const res = await api.get('/chart-of-accounts?per_page=1000');
-      const payload = res.data.data;
-      setAccounts(Array.isArray(payload) ? payload : payload?.data || []);
-    } catch {
-      setAccounts([]);
-    }
-  };
-
-  const fetchProduct = async () => {
-    try {
-      const res = await api.get(`/products/${id}`);
-      const product = res.data.data;
-      setForm({
-        name: product.name || '',
-        barcode: product.barcode || '',
-        category_id: product.category_id || '',
-        purchase_unit_id: product.purchase_unit_id || '',
-        sale_unit_id: product.sale_unit_id || '',
-        stock_unit_id: product.stock_unit_id || '',
-        purchase_price: product.purchase_price || '',
-        sale_price: product.sale_price || '',
-        expense_account_id: product.expense_account_id || '',
-        income_account_id: product.income_account_id || '',
-        low_stock_warning_count: product.low_stock_warning_count || '0',
-        inventory_asset_account_id: product.inventory_asset_account_id || '',
-        reorder_point: product.reorder_point || '0',
-      });
-      setExistingAttachments(product.attachments || []);
-    } catch {
-      navigate('/products');
-    } finally {
-      setFetching(false);
     }
   };
 

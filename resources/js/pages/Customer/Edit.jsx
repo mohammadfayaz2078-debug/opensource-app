@@ -5,7 +5,6 @@ import api from '../../plugins/axios';
 export default function CustomerEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
@@ -21,7 +20,6 @@ export default function CustomerEdit() {
     gps_lat: '',
     gps_lng: '',
     country: '',
-    receivable_account_id: '',
     opening_balance: '',
     opening_balance_type: 'debit',
     note: '',
@@ -29,12 +27,6 @@ export default function CustomerEdit() {
   });
 
   useEffect(() => {
-    // Fetch chart of accounts
-    api.get('/chart-of-accounts?per_page=1000').then(r => {
-      const payload = r.data.data;
-      setAccounts(Array.isArray(payload) ? payload : payload?.data || []);
-    }).catch(() => {});
-    
     // Fetch customer data
     api.get(`/customers/${id}`).then(r => {
       const customer = r.data.data;
@@ -50,7 +42,6 @@ export default function CustomerEdit() {
         gps_lat: customer.gps_lat || '',
         gps_lng: customer.gps_lng || '',
         country: customer.country || 'Afghanistan',
-        receivable_account_id: customer.receivable_account_id || '',
         opening_balance: customer.opening_balance || '',
         opening_balance_type: customer.opening_balance_type || 'debit',
         note: customer.note || '',
@@ -298,28 +289,7 @@ export default function CustomerEdit() {
                 <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
               </div>
               <div className="p-6">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Receivable Account
-                    </label>
-                    <select
-                      name="receivable_account_id"
-                      value={form.receivable_account_id}
-                      onChange={handleChange}
-                      className={inputClass('receivable_account_id')}
-                    >
-                      <option value="">Select account</option>
-                      {accounts.map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.code})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                       Opening Balance

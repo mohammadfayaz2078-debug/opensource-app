@@ -36,7 +36,6 @@ class Expense extends Model
         'payment_account_id',
         'amount',
         'file',
-        'currency',
         'description',
         'paid_to',
         'date',
@@ -137,11 +136,6 @@ class Expense extends Model
         return $query->whereHas('expenseType', fn ($q) =>
             $q->where('expense_category_id', $categoryId)
         );
-    }
-
-    public function scopeByCurrency(Builder $query, string $currency): Builder
-    {
-        return $query->where('currency', $currency);
     }
 
     public function scopeSearch(Builder $query, string $term): Builder

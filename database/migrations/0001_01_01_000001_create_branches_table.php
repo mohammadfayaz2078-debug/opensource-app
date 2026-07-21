@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            $table->unsignedBigInteger('base_currency_id')->nullable();
             $table->string('branch_name');
             $table->string('branch_slogan')->nullable();
             $table->string('branch_logo_url')->nullable();

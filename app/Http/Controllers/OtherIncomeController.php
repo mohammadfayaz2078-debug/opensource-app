@@ -78,7 +78,7 @@ class OtherIncomeController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = OtherIncome::with(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator'])
+        $query = OtherIncome::with(['incomeCategory', 'creator'])
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
 
@@ -93,16 +93,6 @@ class OtherIncomeController extends Controller
         // Filter by income category
         if ($request->filled('income_category_id')) {
             $query->where('income_category_id', $request->income_category_id);
-        }
-
-        // Filter by currency
-        if ($request->filled('currency_id')) {
-            $query->where('currency_id', $request->currency_id);
-        }
-
-        // Filter by payment account
-        if ($request->filled('payment_account_id')) {
-            $query->where('payment_account_id', $request->payment_account_id);
         }
 
         // Search functionality
@@ -127,7 +117,7 @@ class OtherIncomeController extends Controller
         $sortField = $request->get('sort_by', 'income_date');
         $sortOrder = $request->get('sort_order', 'desc');
         
-        $allowedSorts = ['income_date', 'income_number', 'amount', 'amount_base', 'created_at'];
+        $allowedSorts = ['income_date', 'income_number', 'amount', 'created_at'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortOrder);
         } else {
@@ -143,9 +133,6 @@ class OtherIncomeController extends Controller
             'total_amount' => OtherIncome::where('company_id', $companyId)
                 ->where('branch_id', $branchId)
                 ->sum('amount'),
-            'total_amount_base' => OtherIncome::where('company_id', $companyId)
-                ->where('branch_id', $branchId)
-                ->sum('amount_base'),
             'average_amount' => OtherIncome::where('company_id', $companyId)
                 ->where('branch_id', $branchId)
                 ->avg('amount') ?? 0,
@@ -175,10 +162,6 @@ class OtherIncomeController extends Controller
             'income_date'          => 'required|date',
             'description'          => 'nullable|string',
             'amount'               => 'required|numeric|min:0.01|max:999999999999.99',
-            'currency_id'          => 'nullable|exists:currencies,id',
-            'exchange_rate'        => 'nullable|numeric|min:0.000001',
-            'payment_account_id'   => 'nullable|exists:chart_of_accounts,id',
-            'income_account_id'    => 'nullable|exists:chart_of_accounts,id',
             'note'                 => 'nullable|string',
         ]);
 
@@ -186,29 +169,10 @@ class OtherIncomeController extends Controller
         $validated['company_id'] = $companyId;
         $validated['branch_id']  = $branchId;
         $validated['created_by'] = Auth::id();
-        
+
         // Generate income number if not provided
         if (empty($validated['income_number'])) {
             $validated['income_number'] = $this->generateIncomeNumber($branchId);
-        }
-        
-        // Set default currency if not provided
-        if (empty($validated['currency_id'])) {
-            $branch = Branch::find($branchId);
-            $validated['currency_id'] = $branch?->base_currency_id;
-        }
-        
-        // Calculate exchange rate and base amount
-        if (empty($validated['exchange_rate'])) {
-            $validated['exchange_rate'] = 1;
-        }
-
-        // If income account not provided, try to get from category
-        if (empty($validated['income_account_id']) && !empty($validated['income_category_id'])) {
-            $category = IncomeCategory::find($validated['income_category_id']);
-            if ($category && $category->income_account_id) {
-                $validated['income_account_id'] = $category->income_account_id;
-            }
         }
 
         $income = DB::transaction(function () use ($validated) {
@@ -216,7 +180,7 @@ class OtherIncomeController extends Controller
             return $income;
         });
 
-        $income->load(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator']);
+        $income->load(['incomeCategory', 'creator']);
 
         return response()->json([
             'data'    => $income,
@@ -232,7 +196,7 @@ class OtherIncomeController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $income = OtherIncome::where('branch_id', $branchId)
-            ->with(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator', 'company', 'branch'])
+            ->with(['incomeCategory', 'creator', 'company', 'branch'])
             ->findOrFail($id);
 
         return response()->json(['data' => $income]);
@@ -253,25 +217,13 @@ class OtherIncomeController extends Controller
             'income_date'          => 'sometimes|date',
             'description'          => 'nullable|string',
             'amount'               => 'sometimes|numeric|min:0.01|max:999999999999.99',
-            'currency_id'          => 'nullable|exists:currencies,id',
-            'exchange_rate'        => 'nullable|numeric|min:0.000001',
-            'payment_account_id'   => 'nullable|exists:chart_of_accounts,id',
-            'income_account_id'    => 'nullable|exists:chart_of_accounts,id',
             'note'                 => 'nullable|string',
         ]);
 
-        // If income account not provided but category changed, try to get from new category
-        if (empty($validated['income_account_id']) && isset($validated['income_category_id']) && $validated['income_category_id'] != $income->income_category_id) {
-            $category = IncomeCategory::find($validated['income_category_id']);
-            if ($category && $category->income_account_id) {
-                $validated['income_account_id'] = $category->income_account_id;
-            }
-        }
-        
         $oldData = $income->toArray();
         $income->update($validated);
 
-        $income->load(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator']);
+        $income->load(['incomeCategory', 'creator']);
 
         return response()->json([
             'data'    => $income,
@@ -304,7 +256,7 @@ class OtherIncomeController extends Controller
         $newIncome->created_by = Auth::id();
         $newIncome->push();
 
-        $newIncome->load(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator']);
+        $newIncome->load(['incomeCategory', 'creator']);
 
         return response()->json([
             'data'    => $newIncome,
@@ -376,7 +328,7 @@ class OtherIncomeController extends Controller
 
         $query = OtherIncome::where('company_id', $companyId)
             ->where('branch_id', $branchId)
-            ->with(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount']);
+            ->with(['incomeCategory']);
 
         if ($request->filled('from_date')) {
             $query->whereDate('income_date', '>=', $request->from_date);
@@ -393,11 +345,6 @@ class OtherIncomeController extends Controller
             'Category' => $income->incomeCategory?->name ?? 'Uncategorized',
             'Description' => $income->description ?? '',
             'Amount' => $income->amount,
-            'Currency' => $income->currency?->code ?? 'AFN',
-            'Base Amount' => $income->amount_base,
-            'Exchange Rate' => $income->exchange_rate,
-            'Payment Account' => $income->paymentAccount?->name ?? '',
-            'Income Account' => $income->incomeAccount?->name ?? '',
             'Notes' => $income->note ?? '',
             'Created At' => $income->created_at->format('Y-m-d H:i:s'),
         ]);

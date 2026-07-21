@@ -2,89 +2,94 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../plugins/axios';
 
-export default function IncomeCategoryShow() {
+export default function OtherIncomeShow() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [category, setCategory] = useState(null);
+  const [income, setIncome] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCategory();
+    fetchIncome();
   }, [id]);
 
-  const fetchCategory = async () => {
+  const fetchIncome = async () => {
     try {
-      const res = await api.get(`/income-categories/${id}`);
-      setCategory(res.data.data);
+      const res = await api.get(`/other-incomes/${id}`);
+      setIncome(res.data.data);
     } catch (err) {
-      console.error('Failed to fetch category', err);
-      navigate('/income-categories');
+      console.error('Failed to fetch income', err);
+      navigate('/other-incomes');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this category? This action cannot be undone.')) return;
+    if (!confirm('Delete this income record? This action cannot be undone.')) return;
     try {
-      await api.delete(`/income-categories/${id}`);
-      navigate('/income-categories');
+      await api.delete(`/other-incomes/${id}`);
+      navigate('/other-incomes');
     } catch (err) {
-      const message = err.response?.data?.message || 'Delete failed';
-      alert(message);
+      alert(err.response?.data?.message || 'Delete failed');
     }
   };
 
-  const handleToggleStatus = async () => {
+  const handleDuplicate = async () => {
     try {
-      const res = await api.post(`/income-categories/${id}/toggle-status`);
-      setCategory(prev => ({ ...prev, is_active: !prev.is_active }));
+      await api.post(`/other-incomes/${id}/duplicate`);
+      navigate('/other-incomes');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to toggle status');
+      alert(err.response?.data?.message || 'Duplicate failed');
     }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount || 0);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading category...</span>
+        <span className="ml-3 text-gray-600">Loading income record...</span>
       </div>
     );
   }
 
-  if (!category) return null;
+  if (!income) return null;
 
   return (
     <div>
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/income-categories')} className="hover:text-[#007c89]">Income Categories</button>
+          <button onClick={() => navigate('/other-incomes')} className="hover:text-[#007c89]">Other Incomes</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">{category.name}</span>
+          <span className="text-gray-700">{income.income_number || `#${income.id}`}</span>
         </div>
-        
+
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{category.name}</h1>
-            <p className="text-sm text-gray-500 mt-1">Income Category</p>
+            <h1 className="text-2xl font-semibold text-gray-900">{income.income_number || 'Other Income'}</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {income.income_date ? new Date(income.income_date).toLocaleDateString() : ''}
+              {income.income_category ? ` — ${income.income_category.name}` : ''}
+            </p>
           </div>
           <div className="flex gap-2">
             <button
-              onClick={handleToggleStatus}
-              className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                category.is_active 
-                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
-              }`}
+              onClick={handleDuplicate}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
             >
-              {category.is_active ? 'Deactivate' : 'Activate'}
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Duplicate
             </button>
             <button
-              onClick={() => navigate(`/income-categories/${id}/edit`)}
+              onClick={() => navigate(`/other-incomes/${id}/edit`)}
               className="inline-flex items-center px-3 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77]"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,27 +121,19 @@ export default function IncomeCategoryShow() {
             </div>
             <div className="p-6">
               <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                {category.description || 'No description provided.'}
+                {income.description || 'No description provided.'}
               </p>
             </div>
           </div>
 
-          {/* Related Incomes (if other_incomes relationship exists) */}
-          {category.other_incomes_count > 0 && (
+          {/* Notes */}
+          {income.note && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Related Income Records</h2>
+                <h2 className="text-lg font-medium text-gray-900">Notes</h2>
               </div>
               <div className="p-6">
-                <p className="text-sm text-gray-600">
-                  This category has {category.other_incomes_count} income record(s) associated with it.
-                </p>
-                <button
-                  onClick={() => navigate(`/other-incomes?category_id=${category.id}`)}
-                  className="mt-3 text-sm text-[#007c89] hover:underline"
-                >
-                  View all →
-                </button>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{income.note}</p>
               </div>
             </div>
           )}
@@ -144,34 +141,39 @@ export default function IncomeCategoryShow() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Amount */}
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Amount</h2>
+            </div>
+            <div className="p-6">
+              <dl className="space-y-4">
+                <div>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">Amount</dt>
+                  <dd className="mt-1 text-xl font-bold text-gray-900">{formatCurrency(income.amount)}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
           {/* Status & Audit */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Status & Audit</h2>
+              <h2 className="text-lg font-medium text-gray-900">Audit</h2>
             </div>
             <div className="p-6">
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Status</dt>
-                  <dd>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      category.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {category.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </dd>
-                </div>
-                <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created By</dt>
-                  <dd className="text-gray-700">{category.creator?.name || '—'}</dd>
+                  <dd className="text-gray-700">{income.creator?.name || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created At</dt>
-                  <dd className="text-gray-700">{new Date(category.created_at).toLocaleString()}</dd>
+                  <dd className="text-gray-700">{new Date(income.created_at).toLocaleString()}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Last Updated</dt>
-                  <dd className="text-gray-700">{new Date(category.updated_at).toLocaleString()}</dd>
+                  <dd className="text-gray-700">{new Date(income.updated_at).toLocaleString()}</dd>
                 </div>
               </dl>
             </div>

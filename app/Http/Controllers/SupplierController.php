@@ -79,7 +79,7 @@ class SupplierController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = Supplier::with(['branch', 'payableAccount', 'creator'])
+        $query = Supplier::with(['branch', 'creator'])
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
 
@@ -99,11 +99,6 @@ class SupplierController extends Controller
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('contact_person', 'like', "%{$search}%");
             });
-        }
-
-        // Filter by payable account
-        if ($request->filled('payable_account_id')) {
-            $query->where('payable_account_id', $request->payable_account_id);
         }
 
         // Filter by city
@@ -173,7 +168,6 @@ class SupplierController extends Controller
             'address'                => 'nullable|string',
             'city'                   => 'nullable|string|max:255',
             'country'                => 'nullable|string|max:255',
-            'payable_account_id'     => 'nullable|exists:chart_of_accounts,id',
             'opening_balance'        => 'nullable|numeric|min:0|max:999999999999.99',
             'opening_balance_type'   => 'nullable|in:debit,credit',
             'note'                   => 'nullable|string',
@@ -184,17 +178,17 @@ class SupplierController extends Controller
         $validated['company_id'] = $companyId;
         $validated['branch_id']  = $branchId;
         $validated['created_by'] = Auth::id();
-        
+
         // Generate supplier code if not provided
         if (empty($validated['supplier_code'])) {
             $validated['supplier_code'] = $this->generateSupplierCode($branchId);
         }
-        
+
         // Set default opening balance type if opening balance is provided
         if (($validated['opening_balance'] ?? 0) > 0 && empty($validated['opening_balance_type'])) {
             $validated['opening_balance_type'] = 'credit';
         }
-        
+
         // Set default active status
         if (!isset($validated['is_active'])) {
             $validated['is_active'] = true;
@@ -202,16 +196,10 @@ class SupplierController extends Controller
 
         $supplier = DB::transaction(function () use ($validated) {
             $supplier = Supplier::create($validated);
-            
-            // Create journal entry for opening balance if exists
-            if (($supplier->opening_balance ?? 0) > 0 && $supplier->payable_account_id) {
-                $this->createOpeningBalanceEntry($supplier);
-            }
-            
             return $supplier;
         });
 
-        $supplier->load(['branch', 'payableAccount', 'creator']);
+        $supplier->load(['branch', 'creator']);
 
         return response()->json([
             'data'    => $supplier,
@@ -231,7 +219,7 @@ class SupplierController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $supplier = Supplier::where('branch_id', $branchId)
-            ->with(['branch', 'payableAccount', 'creator', 'company'])
+            ->with(['branch', 'creator', 'company'])
             ->findOrFail($id);
 
         return response()->json(['data' => $supplier]);
@@ -260,27 +248,17 @@ class SupplierController extends Controller
             'address'                => 'nullable|string',
             'city'                   => 'nullable|string|max:255',
             'country'                => 'nullable|string|max:255',
-            'payable_account_id'     => 'nullable|exists:chart_of_accounts,id',
             'opening_balance'        => 'nullable|numeric|min:0|max:999999999999.99',
             'opening_balance_type'   => 'nullable|in:debit,credit',
             'note'                   => 'nullable|string',
             'is_active'              => 'nullable|boolean',
         ]);
 
-        $oldPayableAccountId = $supplier->payable_account_id;
         $oldOpeningBalance = $supplier->opening_balance;
-        
-        $supplier->update($validated);
-        
-        // Handle opening balance changes
-        if (($supplier->opening_balance != $oldOpeningBalance) || 
-            ($supplier->payable_account_id != $oldPayableAccountId)) {
-            DB::transaction(function () use ($supplier, $oldOpeningBalance, $oldPayableAccountId) {
-                $this->updateOpeningBalanceEntry($supplier, $oldOpeningBalance, $oldPayableAccountId);
-            });
-        }
 
-        $supplier->load(['branch', 'payableAccount', 'creator']);
+        $supplier->update($validated);
+
+        $supplier->load(['branch', 'creator']);
 
         return response()->json([
             'data'    => $supplier,
@@ -308,14 +286,7 @@ class SupplierController extends Controller
         //     ], 422);
         // }
 
-        DB::transaction(function () use ($supplier) {
-            // Remove opening balance journal entry if exists
-            if (($supplier->opening_balance ?? 0) > 0 && $supplier->payable_account_id) {
-                $this->deleteOpeningBalanceEntry($supplier);
-            }
-            
-            $supplier->delete();
-        });
+        $supplier->delete();
 
         return response()->json(['message' => 'Supplier deleted successfully.']);
     }
@@ -395,10 +366,9 @@ class SupplierController extends Controller
         
         $suppliers = Supplier::where('company_id', $companyId)
             ->where('branch_id', $branchId)
-            ->with('payableAccount')
             ->orderBy('first_name')
             ->get();
-        
+
         $exportData = $suppliers->map(fn($supplier) => [
             'Supplier Code' => $supplier->supplier_code,
             'Name' => $supplier->full_name,
@@ -410,7 +380,6 @@ class SupplierController extends Controller
             'Country' => $supplier->country,
             'Opening Balance' => $supplier->opening_balance,
             'Opening Balance Type' => ucfirst($supplier->opening_balance_type),
-            'Payable Account' => $supplier->payableAccount?->account_name,
             'Status' => $supplier->is_active ? 'Active' : 'Inactive',
             'Created At' => $supplier->created_at->format('Y-m-d H:i:s'),
         ]);
@@ -445,12 +414,7 @@ class SupplierController extends Controller
         
         foreach ($suppliers as $supplier) {
             try {
-                DB::transaction(function () use ($supplier) {
-                    if (($supplier->opening_balance ?? 0) > 0 && $supplier->payable_account_id) {
-                        $this->deleteOpeningBalanceEntry($supplier);
-                    }
-                    $supplier->delete();
-                });
+                $supplier->delete();
                 $deleted++;
             } catch (\Exception $e) {
                 $errors[] = [

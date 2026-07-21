@@ -77,7 +77,7 @@ export default function IncomeCategoryIndex() {
   return (
     <div>
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -91,7 +91,7 @@ export default function IncomeCategoryIndex() {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -101,36 +101,6 @@ export default function IncomeCategoryIndex() {
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">With Income Account</p>
-              <p className="text-2xl font-bold text-purple-600">{summary.categories_with_accounts || 0}</p>
-            </div>
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Without Account</p>
-              <p className="text-2xl font-bold text-orange-600">
-                {(summary.total_categories || 0) - (summary.categories_with_accounts || 0)}
-              </p>
-            </div>
-            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
           </div>
@@ -216,7 +186,6 @@ export default function IncomeCategoryIndex() {
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Income Account</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -240,15 +209,6 @@ export default function IncomeCategoryIndex() {
                       <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
                         {category.description || '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {category.income_account ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                            {category.income_account.name}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-xs">Not assigned</span>
-                        )}
-                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <button
                           onClick={() => handleToggleStatus(category.id, category.is_active)}

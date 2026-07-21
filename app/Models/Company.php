@@ -28,7 +28,6 @@ class Company extends Authenticatable
         'email',
         'manager_password',
         'language',
-        'base_currency_id',
         'created_by',
     ];
 
@@ -39,7 +38,6 @@ class Company extends Authenticatable
     protected $casts = [
         'is_active' => 'boolean',
         'language' => 'string',
-        'base_currency_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -58,22 +56,6 @@ class Company extends Authenticatable
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(SuperAdmin::class, 'created_by');
-    }
-
-    /**
-     * Get the base (home) currency for this company
-     */
-    public function baseCurrency(): BelongsTo
-    {
-        return $this->belongsTo(Currency::class, 'base_currency_id');
-    }
-
-    /**
-     * Get all currencies for this company
-     */
-    public function currencies(): HasMany
-    {
-        return $this->hasMany(Currency::class);
     }
 
     /**

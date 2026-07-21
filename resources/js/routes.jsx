@@ -268,12 +268,6 @@ const routes = [
       { path: 'expense-categories', element: <ExpenseCategoryIndex /> },
       { path: 'expense-types', element: <ExpenseTypeIndex /> },
 
-      // Employees
-      { path: 'employees', element: <EmployeeIndex /> },
-      { path: 'employees/create', element: <EmployeeCreate /> },
-      { path: 'employees/:id', element: <EmployeeShow /> },
-      { path: 'employees/:id/edit', element: <EmployeeEdit /> },
-
 
       { path: 'suppliers', element: <SupplierIndex /> },
       { path: 'suppliers/create', element: <SupplierCreate /> },

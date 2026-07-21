@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\ProductAttachment;
 use App\Models\ProductCategory;
 use App\Models\Unit;
-use App\Models\ChartOfAccount;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -103,13 +102,10 @@ class ProductController extends Controller
         $companyId = $this->resolveCompanyId($request);
 
         $query = Product::with([
-            'category', 
-            'purchaseUnit', 
-            'saleUnit', 
+            'category',
+            'purchaseUnit',
+            'saleUnit',
             'stockUnit',
-            'expenseAccount',
-            'incomeAccount',
-            'inventoryAssetAccount'
         ])
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
@@ -254,7 +250,6 @@ class ProductController extends Controller
 
         $product->load([
             'category', 'purchaseUnit', 'saleUnit', 'stockUnit',
-            'expenseAccount', 'incomeAccount', 'inventoryAssetAccount'
         ]);
         $product->attachments_count = $product->attachments()->count();
 
@@ -273,13 +268,10 @@ class ProductController extends Controller
 
         $product = Product::where('branch_id', $branchId)
             ->with([
-                'category', 
-                'purchaseUnit', 
-                'saleUnit', 
+                'category',
+                'purchaseUnit',
+                'saleUnit',
                 'stockUnit',
-                'expenseAccount',
-                'incomeAccount',
-                'inventoryAssetAccount',
                 'attachments' => function($q) {
                     $q->orderBy('created_at', 'desc');
                 }
@@ -347,7 +339,6 @@ class ProductController extends Controller
 
         $product->load([
             'category', 'purchaseUnit', 'saleUnit', 'stockUnit',
-            'expenseAccount', 'incomeAccount', 'inventoryAssetAccount'
         ]);
         $product->attachments_count = $product->attachments()->count();
 

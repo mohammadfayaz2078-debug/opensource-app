@@ -57,23 +57,6 @@ return new class extends Migration
 
             $table->decimal('amount', 15, 2);
 
-            $table->foreignId('currency_id')
-                ->nullable()
-                ->constrained('currencies')
-                ->nullOnDelete();
-
-            $table->decimal('exchange_rate', 15, 6)
-                ->default(1);
-
-            $table->decimal('amount_base', 15, 2)
-                ->default(0);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Extra
-            |--------------------------------------------------------------------------
-            */
-
             $table->text('note')
                 ->nullable();
 

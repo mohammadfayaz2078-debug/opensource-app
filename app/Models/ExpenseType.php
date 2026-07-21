@@ -15,19 +15,15 @@ class ExpenseType extends Model
     protected $fillable = [
         'branch_id',
         'expense_category_id',
-        'expense_account_id',
         'name',
         'description',
         'is_active',
-        'default_payment_account_id',
         'sort_order',
     ];
 
     protected $casts = [
         'is_active'                  => 'boolean',
         'sort_order'                 => 'integer',
-        'default_payment_account_id' => 'integer',
-        'expense_account_id'         => 'integer',
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────────
@@ -40,16 +36,6 @@ class ExpenseType extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
-    }
-
-    public function expenseAccount(): BelongsTo
-    {
-        return $this->belongsTo(ChartOfAccount::class, 'expense_account_id');
-    }
-
-    public function defaultPaymentAccount(): BelongsTo
-    {
-        return $this->belongsTo(ChartOfAccount::class, 'default_payment_account_id');
     }
 
     public function expenses(): HasMany

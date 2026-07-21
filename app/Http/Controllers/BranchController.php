@@ -195,7 +195,6 @@ class BranchController extends Controller
             'branch_phone' => 'nullable|string|max:50',
             'branch_email' => 'nullable|email|max:255',
             'branch_website' => 'nullable|url|max:500',
-            'base_currency_id' => 'nullable|integer|exists:currencies,id',
             'is_active' => 'boolean',
         ]);
 

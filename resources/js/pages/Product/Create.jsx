@@ -6,7 +6,6 @@ export default function ProductCreate() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
-  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -20,17 +19,13 @@ export default function ProductCreate() {
     stock_unit_id: '',
     purchase_price: '',
     sale_price: '',
-    expense_account_id: '',
-    income_account_id: '',
     low_stock_warning_count: '0',
-    inventory_asset_account_id: '',
     reorder_point: '0',
   });
 
   useEffect(() => {
     fetchCategories();
     fetchUnits();
-    fetchAccounts();
   }, []);
 
   const fetchCategories = async () => {
@@ -48,16 +43,6 @@ export default function ProductCreate() {
       setUnits(res.data.data || []);
     } catch {
       setUnits([]);
-    }
-  };
-
-  const fetchAccounts = async () => {
-    try {
-      const res = await api.get('/chart-of-accounts?per_page=1000');
-      const payload = res.data.data;
-      setAccounts(Array.isArray(payload) ? payload : payload?.data || []);
-    } catch {
-      setAccounts([]);
     }
   };
 
@@ -301,71 +286,6 @@ export default function ProductCreate() {
                         placeholder="0.00"
                       />
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Accounting */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Expense Account (COGS)
-                    </label>
-                    <select
-                      name="expense_account_id"
-                      value={form.expense_account_id}
-                      onChange={handleChange}
-                      className={inputClass('expense_account_id')}
-                    >
-                      <option value="">Select account</option>
-                      {accounts.filter(a => a.type === 'expense').map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.code})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Account (Revenue)
-                    </label>
-                    <select
-                      name="income_account_id"
-                      value={form.income_account_id}
-                      onChange={handleChange}
-                      className={inputClass('income_account_id')}
-                    >
-                      <option value="">Select account</option>
-                      {accounts.filter(a => a.type === 'income').map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.code})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Inventory Asset Account
-                    </label>
-                    <select
-                      name="inventory_asset_account_id"
-                      value={form.inventory_asset_account_id}
-                      onChange={handleChange}
-                      className={inputClass('inventory_asset_account_id')}
-                    >
-                      <option value="">Select account</option>
-                      {accounts.filter(a => a.type === 'asset').map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.code})
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
               </div>
