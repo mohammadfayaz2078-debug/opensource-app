@@ -10,8 +10,6 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\API\BackupController;
 use App\Http\Controllers\API\SuperAdminAuthController;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseTypeController;
 use App\Http\Controllers\ExpenseController;
@@ -232,16 +230,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-
-Route::prefix('super-admin')
-    ->middleware(['auth:sanctum'])
-    ->group(function () {
-        Route::apiResource('super-admins', SuperAdminController::class);
-        Route::apiResource('companies', CompanyController::class);
-        Route::post('companies/{id}/toggle', [CompanyController::class, 'toggleStatus']);
-        Route::post('companies/{id}/impersonate', [CompanyController::class, 'impersonate']);
-        Route::get('branches', [BranchController::class, 'index']);
-});
 
 Route::prefix('company-admin')
     ->middleware(['auth:sanctum'])

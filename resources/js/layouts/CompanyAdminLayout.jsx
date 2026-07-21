@@ -101,10 +101,6 @@ const CompanyAdminLayout = () => {
       localStorage.removeItem('user');
       localStorage.removeItem('user_type');
       localStorage.removeItem('permissions');
-      localStorage.removeItem('sa_token');
-      localStorage.removeItem('sa_user');
-      localStorage.removeItem('sa_user_type');
-      localStorage.removeItem('impersonating');
       localStorage.removeItem('impersonating_branch');
       localStorage.removeItem('ca_token');
       localStorage.removeItem('ca_user');
@@ -112,28 +108,6 @@ const CompanyAdminLayout = () => {
       navigate('/login');
     }
   };
-
-  const returnToSuperAdmin = () => {
-    const saToken = localStorage.getItem('sa_token');
-    const saUser = localStorage.getItem('sa_user');
-    const saUserType = localStorage.getItem('sa_user_type');
-
-    if (saToken && saUser) {
-      localStorage.setItem('api_token', saToken);
-      localStorage.setItem('user', saUser);
-      localStorage.setItem('user_type', saUserType || 'super_admin');
-
-      localStorage.removeItem('sa_token');
-      localStorage.removeItem('sa_user');
-      localStorage.removeItem('sa_user_type');
-      localStorage.removeItem('impersonating');
-      localStorage.removeItem('permissions');
-
-      window.location.href = '/super-admin/dashboard';
-    }
-  };
-
-  const isImpersonating = localStorage.getItem('impersonating') === 'true';
 
   // Handle resize
   const handleResize = useCallback(() => {
@@ -310,19 +284,6 @@ const CompanyAdminLayout = () => {
                 </div>
 
                 <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
-                  {/* Return to Super Admin button */}
-                  {isImpersonating && (
-                    <button
-                      onClick={returnToSuperAdmin}
-                      className="hidden sm:inline-flex items-center px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold hover:bg-amber-200 transition-colors"
-                    >
-                      <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-                      </svg>
-                      Back to Super Admin
-                    </button>
-                  )}
-
                   {/* Company Admin Badge */}
                   <div className="hidden sm:block px-3 py-1 bg-[#007c89]/10 text-[#007c89] rounded-full text-xs font-semibold">
                     Company Admin
@@ -377,20 +338,6 @@ const CompanyAdminLayout = () => {
                         >
                           {isRTL ? 'پروفایل شما' : 'Your Profile'}
                         </button>
-                        {isImpersonating && (
-                          <>
-                            <div className="border-t border-gray-100"></div>
-                            <button
-                              onClick={() => {
-                                setUserDropdownOpen(false);
-                                returnToSuperAdmin();
-                              }}
-                              className="block w-full text-left px-3 sm:px-4 py-2 text-xs sm:text-sm text-amber-600 hover:bg-gray-50"
-                            >
-                              {isRTL ? 'بازگشت به سوپر ادمین' : 'Back to Super Admin'}
-                            </button>
-                          </>
-                        )}
                         <div className="border-t border-gray-100"></div>
                         <button
                           onClick={() => {

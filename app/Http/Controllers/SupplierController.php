@@ -19,27 +19,16 @@ class SupplierController extends Controller
      */
     private function resolveBranchId(Request $request): ?int
     {
-        $user = Auth::user();
-        
-        if ($user instanceof \App\Models\SuperAdmin) {
-            return $request->filled('branch_id') ? (int) $request->branch_id : null;
-        }
-        
         if (AuthHelper::isCompanyAdmin()) {
             return $request->filled('branch_id') ? (int) $request->branch_id : null;
         }
-        
+
         return AuthHelper::getBranchId();
     }
 
-    /**
-     * Resolve company ID based on authenticated user
-     */
     private function resolveCompanyId(Request $request): ?int
     {
-        $user = Auth::user();
-        
-        if ($user instanceof \App\Models\SuperAdmin || AuthHelper::isCompanyAdmin()) {
+        if (AuthHelper::isCompanyAdmin()) {
             return $request->filled('company_id') ? (int) $request->company_id : null;
         }
         

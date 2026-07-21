@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExpenseCategory;
+use App\Helpers\AuthHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -208,7 +209,7 @@ class ExpenseCategoryController extends Controller
         $user = Auth::user();
 
         // Super Admin / Company Admin can pass explicit branch_id
-        if (in_array($user->role, ['super_admin', 'company_admin']) && $request->filled('branch_id')) {
+        if (AuthHelper::isCompanyAdmin() && $request->filled('branch_id')) {
             return (int) $request->branch_id;
         }
 

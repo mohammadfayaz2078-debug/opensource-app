@@ -28,7 +28,6 @@ class Company extends Authenticatable
         'email',
         'manager_password',
         'language',
-        'created_by',
     ];
 
     protected $hidden = [
@@ -48,14 +47,6 @@ class Company extends Authenticatable
     public function setManagerPasswordAttribute($value)
     {
         $this->attributes['manager_password'] = Hash::make($value);
-    }
-
-    /**
-     * Get the super admin who created this company
-     */
-    public function createdBy(): BelongsTo
-    {
-        return $this->belongsTo(SuperAdmin::class, 'created_by');
     }
 
     /**

@@ -20,7 +20,7 @@ const CompanyShow = () => {
   }, []);
   
   const userType = user.user_type;
-  const canEditCompanies = userType === 'super_admin';
+  const canEditCompanies = false;
   
   const getLogoUrl = (logoPath) => {
     if (!logoPath) return null;

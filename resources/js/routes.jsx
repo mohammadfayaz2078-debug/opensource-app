@@ -11,11 +11,9 @@ import BranchCreate from './pages/Branch/Create';
 import BranchEdit from './pages/Branch/Edit';
 import BranchShow from './pages/Branch/Show';
 
-// Company Pages
-import CompanyIndex from './pages/Company/Index';
-import CompanyCreate from './pages/Company/Create';
-import CompanyEdit from './pages/Company/Edit';
+// Company Pages (used in regular user routes)
 import CompanyShow from './pages/Company/Show';
+import CompanyEdit from './pages/Company/Edit';
 
 // Expense Pages
 import ExpenseIndex from './pages/Expense/Index';
@@ -75,10 +73,6 @@ import RoleIndex from './pages/Role/Index';
 import RoleCreate from './pages/Role/Create';
 import RoleEdit from './pages/Role/Edit';
 
-// Super Admin Pages
-import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
-import SuperAdminProfile from './pages/SuperAdmin/Profile';
-
 // Company Admin Pages
 import CompanyAdminDashboard from './pages/CompanyAdmin/Dashboard';
 import CompanyAdminProfile from './pages/CompanyAdmin/Profile';
@@ -92,34 +86,25 @@ import UserSettings from './pages/User/Settings';
 
 // Layouts
 import AuthenticatedLayout from './layouts/AuthenticatedLayout';
-import SuperAdminLayout from './layouts/SuperAdminLayout';
 import CompanyAdminLayout from './layouts/CompanyAdminLayout';
 
 // Protected Route Wrapper
 const PrivateRoute = ({ children, requiredRole = null }) => {
   const token = localStorage.getItem('api_token');
   const userType = localStorage.getItem('user_type');
-  
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  
-  // Check for super admin only routes
-  if (requiredRole === 'super_admin' && userType !== 'super_admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // Check for company admin (users from companies table)
+
   if (requiredRole === 'company_admin' && userType !== 'company_admin') {
     return <Navigate to="/dashboard" replace />;
   }
-  
-  // Check for regular users
+
   if (requiredRole === 'user' && userType !== 'user') {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Redirect company_admin away from branch-level routes (unless impersonating a branch)
   if (requiredRole === null && userType === 'company_admin') {
     const isImpersonatingBranch = localStorage.getItem('impersonating_branch') === 'true';
     if (!isImpersonatingBranch) {
@@ -127,32 +112,21 @@ const PrivateRoute = ({ children, requiredRole = null }) => {
     }
   }
 
-  // Redirect super_admin away from branch-level routes (unless impersonating)
-  if (requiredRole === null && userType === 'super_admin') {
-    const isImpersonating = localStorage.getItem('impersonating') === 'true';
-    if (!isImpersonating) {
-      return <Navigate to="/super-admin/dashboard" replace />;
-    }
-  }
-  
   return children;
 };
 
 // Guest Route Wrapper (redirects to dashboard if already logged in)
 const GuestRoute = ({ children }) => {
   const token = localStorage.getItem('api_token');
-  
+
   if (token) {
     const userType = localStorage.getItem('user_type');
-    if (userType === 'super_admin') {
-      return <Navigate to="/super-admin/dashboard" replace />;
-    }
     if (userType === 'company_admin') {
       return <Navigate to="/company-admin/dashboard" replace />;
     }
     return <Navigate to="/dashboard" replace />;
   }
-  
+
   return children;
 };
 
@@ -168,29 +142,7 @@ const routes = [
     )
   },
   
-  // Super Admin Routes (highest level - full system access)
-  {
-    path: '/super-admin',
-    element: (
-      <PrivateRoute requiredRole="super_admin">
-        <SuperAdminLayout />
-      </PrivateRoute>
-    ),
-    children: [
-      // Dashboard
-      { index: true, element: <Navigate to="/super-admin/dashboard" replace /> },
-      { path: 'dashboard', element: <SuperAdminDashboard /> },
-      { path: 'profile', element: <SuperAdminProfile /> },
-      
-      // Companies Management (super admin manages all companies)
-      { path: 'companies', element: <CompanyIndex /> },
-      { path: 'companies/create', element: <CompanyCreate /> },
-      { path: 'companies/:id/edit', element: <CompanyEdit /> },
-      { path: 'companies/:id/show', element: <CompanyShow /> },
-    ]
-  },
-  
-  // Company Admin Routes (company level - manages branches)
+  // Company Admin Routes
   {
     path: '/company-admin',
     element: (
@@ -394,23 +346,7 @@ export const routeNames = {
   PRODUCT_CREATE: '/products/create',
   PRODUCT_SHOW: (id) => `/products/${id}`,
   PRODUCT_EDIT: (id) => `/products/${id}/edit`,
-  
-  // Super Admin routes
-  SUPER_ADMIN_DASHBOARD: '/super-admin/dashboard',
-  SUPER_ADMIN_PROFILE: '/super-admin/profile',
-  
-  // Super Admin Management routes
-  SUPER_ADMIN_INDEX: '/super-admin/super-admins',
-  SUPER_ADMIN_CREATE: '/super-admin/super-admins/create',
-  SUPER_ADMIN_EDIT: (id) => `/super-admin/super-admins/${id}/edit`,
-  SUPER_ADMIN_SHOW: (id) => `/super-admin/super-admins/${id}`,
-  
-  // Super Admin Company routes
-  SUPER_ADMIN_COMPANIES_INDEX: '/super-admin/companies',
-  SUPER_ADMIN_COMPANIES_CREATE: '/super-admin/companies/create',
-  SUPER_ADMIN_COMPANIES_EDIT: (id) => `/super-admin/companies/${id}/edit`,
-  SUPER_ADMIN_COMPANIES_SHOW: (id) => `/super-admin/companies/${id}/show`,
-  
+
   // Company Admin routes
   COMPANY_ADMIN_DASHBOARD: '/company-admin/dashboard',
   COMPANY_ADMIN_PROFILE: '/company-admin/profile',
@@ -420,29 +356,10 @@ export const routeNames = {
   COMPANY_ADMIN_BRANCHES_SHOW: (id) => `/company-admin/branches/${id}/show`,
   COMPANY_ADMIN_USERS: '/company-admin/users',
   COMPANY_ADMIN_ROLES: '/company-admin/roles',
-  
-  // Super Admin Branch routes
-  SUPER_ADMIN_BRANCHES_INDEX: '/super-admin/branches',
-  SUPER_ADMIN_BRANCHES_SHOW: (id) => `/super-admin/branches/${id}/show`,
-  SUPER_ADMIN_USERS_INDEX: '/super-admin/users',
-  SUPER_ADMIN_ROLES_INDEX: '/super-admin/roles',
 };
 
-// Helper to get user type specific routes
 export const getUserSpecificRoutes = (userType) => {
-  if (userType === 'super_admin') {
-    return {
-      dashboard: '/super-admin/dashboard',
-      profile: '/super-admin/profile',
-      superAdmins: '/super-admin/super-admins',
-      companies: '/super-admin/companies',
-      branches: '/super-admin/branches',
-      users: '/super-admin/users',
-      roles: '/super-admin/roles',
-      reports: '/super-admin/reports',
-      settings: '/super-admin/settings',
-    };
-  } else if (userType === 'company_admin') {
+  if (userType === 'company_admin') {
     return {
       dashboard: '/company-admin/dashboard',
       profile: '/company-admin/profile',
@@ -460,18 +377,7 @@ export const getUserSpecificRoutes = (userType) => {
   }
 };
 
-// Helper to check if user has access to a route
 export const canAccessRoute = (path, userType) => {
-  // Super admin can access all routes starting with /super-admin
-  if (userType === 'super_admin' && path.startsWith('/super-admin')) {
-    return true;
-  }
-  
-  // Company admin and regular users cannot access super admin routes
-  if (path.startsWith('/super-admin') && userType !== 'super_admin') {
-    return false;
-  }
-  
   return true;
 };
 

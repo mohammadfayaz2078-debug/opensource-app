@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExpenseType;
+use App\Helpers\AuthHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -153,7 +154,7 @@ class ExpenseTypeController extends Controller
     private function resolveBranchId(Request $request): ?int
     {
         $user = Auth::user();
-        if (in_array($user->role, ['super_admin', 'company_admin']) && $request->filled('branch_id')) {
+        if (AuthHelper::isCompanyAdmin() && $request->filled('branch_id')) {
             return (int) $request->branch_id;
         }
         return $user->branch_id ? (int) $user->branch_id : null;

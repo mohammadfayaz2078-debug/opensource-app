@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const ExpenseIndex = () => {
   const navigate = useNavigate();
   const userType = localStorage.getItem('user_type');
-  const isAdmin = userType === 'super_admin' || userType === 'company_admin';
+  const isAdmin = userType === 'company_admin';
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userBranchId = currentUser.branch_id || currentUser.raw?.branch_id || null;
 

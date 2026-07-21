@@ -76,53 +76,39 @@ export function clearPermissions() {
 
 // Check if user has a specific permission (e.g., "branches.can_view")
 export function can(key) {
-  // Super admin has all permissions
-  if (userTypeData === 'super_admin') {
-    return true;
-  }
-  
-  // Company admin has all permissions
   if (userTypeData === 'company_admin') {
     return true;
   }
-  
-  // Regular user - check specific permissions
+
   if (!key || typeof key !== 'string') return false;
-  
+
   const [module, action] = key.split('.');
   const hasPermission = !!permissionsData?.[module]?.[action];
-  
+
   return hasPermission;
 }
 
 // Check multiple permissions (any of them)
 export function canAny(keys) {
-  // Super admin or company admin can do anything
-  if (userTypeData === 'super_admin' || userTypeData === 'company_admin') {
+  if (userTypeData === 'company_admin') {
     return true;
   }
-  
+
   if (!Array.isArray(keys)) return can(keys);
   return keys.some(key => can(key));
 }
 
 // Check multiple permissions (all of them)
 export function canAll(keys) {
-  // Super admin or company admin can do anything
-  if (userTypeData === 'super_admin' || userTypeData === 'company_admin') {
+  if (userTypeData === 'company_admin') {
     return true;
   }
-  
+
   if (!Array.isArray(keys)) return can(keys);
   return keys.every(key => can(key));
 }
 
 // Check if user is super admin
-export function isSuperAdmin() {
-  return userTypeData === 'super_admin';
-}
-
-// Check if user is company admin
 export function isCompanyAdmin() {
   return userTypeData === 'company_admin';
 }
@@ -162,7 +148,6 @@ export function usePermissions() {
   return {
     permissions,
     userType,
-    isSuperAdmin: userType === 'super_admin',
     isCompanyAdmin: userType === 'company_admin',
     isRegularUser: userType === 'user',
     can: (key) => can(key),

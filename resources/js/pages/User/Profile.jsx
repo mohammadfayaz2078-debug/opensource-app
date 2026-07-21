@@ -31,7 +31,7 @@ const UserProfile = () => {
   
   // Check if user is admin (super_admin, company_admin, or branch admin)
   const isAdmin = useMemo(() => {
-    return authUser?.user?.role?.role_name === 'admin' || authUser?.user_type === 'super_admin' || authUser?.user_type === 'company_admin';
+    return authUser?.user?.role?.role_name === 'admin' || authUser?.user_type === 'company_admin';
   }, [authUser]);
 
   // Check if changing password
