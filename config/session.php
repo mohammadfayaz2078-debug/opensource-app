@@ -1,0 +1,46 @@
+<?php
+
+use Illuminate\Support\Str;
+
+return [
+
+    'driver' => env('SESSION_DRIVER', 'database'),
+
+    // config/session.php
+    'lifetime' => env('SESSION_LIFETIME', 120),
+    'expire_on_close' => false,
+    'same_site' => 'lax', 
+    'secure' => env('SESSION_SECURE_COOKIE', false),
+
+    'encrypt' => env('SESSION_ENCRYPT', false),
+
+
+    'files' => storage_path('framework/sessions'),
+
+    'connection' => env('SESSION_CONNECTION'),
+
+
+    'table' => env('SESSION_TABLE', 'sessions'),
+
+
+    'store' => env('SESSION_STORE'),
+
+
+    'lottery' => [2, 100],
+
+
+    'cookie' => env(
+        'SESSION_COOKIE',
+        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
+    ),
+
+
+    'path' => env('SESSION_PATH', '/'),
+
+    'domain' => env('SESSION_DOMAIN'),
+
+    'http_only' => env('SESSION_HTTP_ONLY', true),
+
+    'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
+
+];
