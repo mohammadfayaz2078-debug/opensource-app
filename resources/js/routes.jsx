@@ -17,34 +17,10 @@ import CompanyCreate from './pages/Company/Create';
 import CompanyEdit from './pages/Company/Edit';
 import CompanyShow from './pages/Company/Show';
 
-// Currency Pages
-import CurrencyIndex from './pages/Currency/Index';
-
-// Account Group Pages
-import AccountGroupIndex from './pages/AccountGroup/Index';
-
-// Account Type Pages
-import AccountTypeIndex from './pages/AccountType/Index';
-
-// Chart of Accounts Pages
-import ChartOfAccountIndex from './pages/ChartOfAccount/Index';
-import ChartOfAccountCreate from './pages/ChartOfAccount/Create';
-import ChartOfAccountEdit from './pages/ChartOfAccount/Edit';
-import ChartOfAccountShow from './pages/ChartOfAccount/Show';
-
 // Expense Pages
 import ExpenseIndex from './pages/Expense/Index';
 import ExpenseCategoryIndex from './pages/ExpenseCategory/Index';
 import ExpenseTypeIndex from './pages/ExpenseType/Index';
-
-// Journal Pages
-import JournalIndex from './pages/Journal/Index';
-
-// Employee Pages
-import EmployeeIndex from './pages/Employee/Index';
-import EmployeeCreate from './pages/Employee/Create';
-import EmployeeEdit from './pages/Employee/Edit';
-import EmployeeShow from './pages/Employee/Show';
 
 import SupplierIndex from './pages/Supplier/Index';
 import SupplierCreate from './pages/Supplier/Create';
@@ -60,11 +36,6 @@ import OtherIncomeIndex from './pages/OtherIncome/Index';
 import OtherIncomeCreate from './pages/OtherIncome/Create';
 import OtherIncomeEdit from './pages/OtherIncome/Edit';
 import OtherIncomeShow from './pages/OtherIncome/Show';
-
-import WarehouseTowerIndex from './pages/WarehouseTower/Index';
-import WarehouseTowerCreate from './pages/WarehouseTower/Create';
-import WarehouseTowerEdit from './pages/WarehouseTower/Edit';
-import WarehouseTowerShow from './pages/WarehouseTower/Show';
 
 import CustomerIndex from './pages/Customer/Index';
 import CustomerCreate from './pages/Customer/Create';
@@ -292,28 +263,10 @@ const routes = [
       { path: 'my-branch', element: <div>My Branch Details</div> },
       { path: 'my-team', element: <div>My Team</div> },
       
-      // Currency (both company admin and users might access based on permissions)
-      { path: 'currencies', element: <CurrencyIndex /> },
-
-      // Account Types
-      { path: 'account-types', element: <AccountTypeIndex /> },
-
-      // Account Groups
-      { path: 'account-groups', element: <AccountGroupIndex /> },
-
-      // Chart of Accounts
-      { path: 'chart-of-accounts', element: <ChartOfAccountIndex /> },
-      { path: 'chart-of-accounts/create', element: <ChartOfAccountCreate /> },
-      { path: 'chart-of-accounts/:id/edit', element: <ChartOfAccountEdit /> },
-      { path: 'chart-of-accounts/:id/show', element: <ChartOfAccountShow /> },
-
       // Expenses
       { path: 'expenses', element: <ExpenseIndex /> },
       { path: 'expense-categories', element: <ExpenseCategoryIndex /> },
       { path: 'expense-types', element: <ExpenseTypeIndex /> },
-
-      // Journal Entries
-      { path: 'journal-entries', element: <JournalIndex /> },
 
       // Employees
       { path: 'employees', element: <EmployeeIndex /> },
@@ -336,11 +289,6 @@ const routes = [
       { path: 'other-incomes/create', element: <OtherIncomeCreate /> },
       { path: 'other-incomes/:id', element: <OtherIncomeShow /> },
       { path: 'other-incomes/:id/edit', element: <OtherIncomeEdit /> },
-
-      { path: 'warehouse-towers', element: <WarehouseTowerIndex /> },
-      { path: 'warehouse-towers/create', element: <WarehouseTowerCreate /> },
-      { path: 'warehouse-towers/:id', element: <WarehouseTowerShow /> },
-      { path: 'warehouse-towers/:id/edit', element: <WarehouseTowerEdit /> },
 
       { path: 'customers', element: <CustomerIndex /> },
       { path: 'customers/create', element: <CustomerCreate /> },
@@ -408,15 +356,6 @@ export const routeNames = {
   COMPANY_SHOW: '/company',
   COMPANY_EDIT: '/company/edit',
   
-  // Journal routes
-  JOURNAL_ENTRIES_INDEX: '/journal-entries',
-  
-  // Employee routes
-  EMPLOYEES_INDEX: '/employees',
-  EMPLOYEES_CREATE: '/employees/create',
-  EMPLOYEES_SHOW: (id) => `/employees/${id}`,
-  EMPLOYEES_EDIT: (id) => `/employees/${id}/edit`,
-
 
   SUPPLIER_INDEX: '/suppliers',
   SUPPLIER_CREATE: '/suppliers/create',
@@ -433,11 +372,6 @@ export const routeNames = {
   OTHER_INCOMES_CREATE: '/other-incomes/create',
   OTHER_INCOMES_SHOW: (id) => `/other-incomes/${id}`,
   OTHER_INCOMES_EDIT: (id) => `/other-incomes/${id}/edit`,
-
-  WAREHOUSE_TOWERS_INDEX: '/warehouse-towers',
-  WAREHOUSE_TOWERS_CREATE: '/warehouse-towers/create',
-  WAREHOUSE_TOWERS_SHOW: (id) => `/warehouse-towers/${id}`,
-  WAREHOUSE_TOWERS_EDIT: (id) => `/warehouse-towers/${id}/edit`,
 
   CUSTOMER_INDEX: '/customers',
   CUSTOMER_CREATE: '/customers/create',
@@ -466,21 +400,6 @@ export const routeNames = {
   PRODUCT_CREATE: '/products/create',
   PRODUCT_SHOW: (id) => `/products/${id}`,
   PRODUCT_EDIT: (id) => `/products/${id}/edit`,
-  
-  // Currency routes
-  CURRENCIES_INDEX: '/currencies',
-
-  // Account Type routes
-  ACCOUNT_TYPES_INDEX: '/account-types',
-
-  // Account Group routes
-  ACCOUNT_GROUPS_INDEX: '/account-groups',
-
-  // Chart of Accounts routes
-  CHART_OF_ACCOUNTS_INDEX: '/chart-of-accounts',
-  CHART_OF_ACCOUNTS_CREATE: '/chart-of-accounts/create',
-  CHART_OF_ACCOUNTS_EDIT: (id) => `/chart-of-accounts/${id}/edit`,
-  CHART_OF_ACCOUNTS_SHOW: (id) => `/chart-of-accounts/${id}/show`,
   
   // Super Admin routes
   SUPER_ADMIN_DASHBOARD: '/super-admin/dashboard',

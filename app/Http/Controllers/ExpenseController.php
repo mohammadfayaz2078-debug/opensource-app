@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\ExpenseType;
-use App\Models\JournalEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -185,8 +184,6 @@ class ExpenseController extends Controller
             'submittedBy:id,first_name,last_name',
             'paidBy:id,first_name,last_name',
             'cancelledBy:id,first_name,last_name',
-            'journalEntries.lines',
-            'journalEntries.journal:id,name,code',
         ]);
 
         return response()->json(['data' => $expense]);
@@ -344,7 +341,7 @@ class ExpenseController extends Controller
         }
 
         return response()->json([
-            'data'    => $expense->fresh()->load('paidBy:id,first_name,last_name', 'journalEntries'),
+            'data'    => $expense->fresh()->load('paidBy:id,first_name,last_name'),
             'message' => 'Expense marked as paid. Journal entry created.',
         ]);
     }
@@ -377,21 +374,6 @@ class ExpenseController extends Controller
     }
 
     /**
-     * GET /api/expenses/{id}/journal-entries
-     */
-    public function journalEntries(Request $request, int $id): JsonResponse
-    {
-        $branchId = $this->resolveBranchId($request);
-        $expense  = $this->findOrFail($id, $branchId);
-
-        $entries = $expense->journalEntries()
-            ->with(['journal:id,name,code', 'lines', 'postedBy:id,first_name,last_name'])
-            ->get();
-
-        return response()->json(['data' => $entries]);
-    }
-
-    /**
      * GET /api/expenses/summary
      * Dashboard summary totals by status.
      */
@@ -418,19 +400,9 @@ class ExpenseController extends Controller
             ->get()
             ->groupBy(fn($e) => $e->expenseType?->category?->name ?? 'Uncategorized');
 
-        // Compute base-currency total from journal entries for paid expenses
-        $baseTotal = DB::table('journal_entry_lines as jel')
-            ->join('journal_entries as je', 'je.id', '=', 'jel.journal_entry_id')
-            ->join('expenses as ex', 'ex.id', '=', 'je.expense_id')
-            ->where('ex.branch_id', $branchId)
-            ->where('ex.status', Expense::STATUS_PAID)
-            ->where('jel.type', 'debit')
-            ->sum('jel.amount_base') ?? 0;
-
         return response()->json([
             'by_status'      => $summary,
             'paid_totals'    => $totals,
-            'paid_base_total' => (float) $baseTotal,
             'by_category'    => $byCategory,
         ]);
     }

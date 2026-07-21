@@ -5,10 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\AuthHelper;
 use App\Models\OtherIncome;
 use App\Models\IncomeCategory;
-use App\Models\Currency;
 use App\Models\Branch;
-use App\Models\ChartOfAccount;
-use App\Services\JournalEntryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,27 +66,6 @@ class OtherIncomeController extends Controller
         }
 
         return 'INC-' . date('Ymd') . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Calculate base amount using exchange rate
-     */
-    private function calculateBaseAmount(float $amount, int $currencyId, int $branchId): float
-    {
-        $branch = Branch::find($branchId);
-        $baseCurrency = $branch?->baseCurrency;
-        
-        if (!$baseCurrency || $baseCurrency->id == $currencyId) {
-            return round($amount, 2);
-        }
-        
-        $currency = Currency::find($currencyId);
-        if ($currency && $currency->latestRate) {
-            $rate = (float) $currency->latestRate->rate;
-            return round($amount * $rate, 2);
-        }
-        
-        return round($amount, 2);
     }
 
     // ── Other Income CRUD ──────────────────────────────────────────────────
@@ -226,12 +202,6 @@ class OtherIncomeController extends Controller
         if (empty($validated['exchange_rate'])) {
             $validated['exchange_rate'] = 1;
         }
-        
-        $validated['amount_base'] = $this->calculateBaseAmount(
-            $validated['amount'],
-            $validated['currency_id'],
-            $branchId
-        );
 
         // If income account not provided, try to get from category
         if (empty($validated['income_account_id']) && !empty($validated['income_category_id'])) {
@@ -243,10 +213,6 @@ class OtherIncomeController extends Controller
 
         $income = DB::transaction(function () use ($validated) {
             $income = OtherIncome::create($validated);
-            
-            // Create journal entry
-            $this->createJournalEntry($income);
-            
             return $income;
         });
 
@@ -294,13 +260,6 @@ class OtherIncomeController extends Controller
             'note'                 => 'nullable|string',
         ]);
 
-        // Recalculate base amount if amount or currency changed
-        if (isset($validated['amount']) || isset($validated['currency_id'])) {
-            $amount = $validated['amount'] ?? $income->amount;
-            $currencyId = $validated['currency_id'] ?? $income->currency_id;
-            $validated['amount_base'] = $this->calculateBaseAmount($amount, $currencyId, $branchId);
-        }
-
         // If income account not provided but category changed, try to get from new category
         if (empty($validated['income_account_id']) && isset($validated['income_category_id']) && $validated['income_category_id'] != $income->income_category_id) {
             $category = IncomeCategory::find($validated['income_category_id']);
@@ -311,13 +270,6 @@ class OtherIncomeController extends Controller
         
         $oldData = $income->toArray();
         $income->update($validated);
-        
-        // Update journal entry if significant changes occurred
-        if ($this->hasAccountingChanges($oldData, $income->toArray())) {
-            DB::transaction(function () use ($income, $oldData) {
-                $this->updateJournalEntry($income, $oldData);
-            });
-        }
 
         $income->load(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator']);
 
@@ -334,13 +286,6 @@ class OtherIncomeController extends Controller
     {
         $branchId = $this->resolveBranchId($request);
         $income   = OtherIncome::where('branch_id', $branchId)->findOrFail($id);
-
-        DB::transaction(function () use ($income) {
-            // Reverse journal entry
-            $this->reverseJournalEntry($income);
-            
-            $income->delete();
-        });
 
         return response()->json(['message' => 'Income deleted successfully.']);
     }
@@ -532,120 +477,4 @@ class OtherIncomeController extends Controller
         ]);
     }
 
-    // ── Journal Entry Methods ─────────────────────────────────────────────
-
-    /**
-     * Create journal entry for income
-     * Debit: Payment Account (Cash/Bank)
-     * Credit: Income Account (Revenue)
-     */
-    private function createJournalEntry(OtherIncome $income): void
-    {
-        // Skip if accounts not configured
-        if (!$income->payment_account_id || !$income->income_account_id) {
-            return;
-        }
-
-        $description = sprintf(
-            "Income: %s - %s",
-            $income->income_number,
-            $income->description ?? $income->incomeCategory?->name ?? 'Other Income'
-        );
-
-        JournalEntryService::postSimple(
-            [
-                'branch_id'      => $income->branch_id,
-                'journal_type'   => 'other_income',
-                'reference_type' => 'other_income',
-                'reference_id'   => $income->id,
-                'entry_date'     => $income->income_date->toDateString(),
-                'description'    => $description,
-                'currency'       => $income->currency?->code ?? 'USD',
-                'exchange_rate'  => $income->exchange_rate,
-            ],
-            [
-                'account_id'  => $income->payment_account_id,
-                'amount'      => $income->amount_base,
-                'description' => 'Income received',
-            ],
-            [
-                'account_id'  => $income->income_account_id,
-                'amount'      => $income->amount_base,
-                'description' => 'Income recognized',
-            ]
-        );
-    }
-
-    /**
-     * Update journal entry when income changes
-     */
-    private function updateJournalEntry(OtherIncome $income, array $oldData): void
-    {
-        // Reverse old entry
-        $this->reverseJournalEntry($income, $oldData);
-        // Create new entry
-        $this->createJournalEntry($income);
-    }
-
-    /**
-     * Reverse journal entry
-     */
-    private function reverseJournalEntry(OtherIncome $income, ?array $oldData = null): void
-    {
-        $amount = $oldData['amount_base'] ?? $income->amount_base;
-        $paymentAccountId = $oldData['payment_account_id'] ?? $income->payment_account_id;
-        $incomeAccountId = $oldData['income_account_id'] ?? $income->income_account_id;
-        $incomeDate = isset($oldData['income_date']) ? date('Y-m-d', strtotime($oldData['income_date'])) : $income->income_date->toDateString();
-
-        if (!$paymentAccountId || !$incomeAccountId) {
-            return;
-        }
-
-        $description = sprintf(
-            "Reversal: Income %s",
-            $oldData['income_number'] ?? $income->income_number
-        );
-
-        JournalEntryService::postSimple(
-            [
-                'branch_id'      => $income->branch_id,
-                'journal_type'   => 'other_income_reversal',
-                'reference_type' => 'other_income',
-                'reference_id'   => $income->id,
-                'entry_date'     => now()->toDateString(),
-                'description'    => $description,
-                'currency'       => $income->currency?->code ?? 'USD',
-                'exchange_rate'  => $income->exchange_rate,
-            ],
-            [
-                'account_id'  => $incomeAccountId,
-                'amount'      => $amount,
-                'description' => 'Reversal - debit to income account',
-            ],
-            [
-                'account_id'  => $paymentAccountId,
-                'amount'      => $amount,
-                'description' => 'Reversal - credit to payment account',
-            ]
-        );
-    }
-
-    /**
-     * Check if accounting changes occurred
-     */
-    private function hasAccountingChanges(array $oldData, array $newData): bool
-    {
-        $fields = ['amount', 'amount_base', 'payment_account_id', 'income_account_id', 'currency_id', 'exchange_rate'];
-        
-        foreach ($fields as $field) {
-            $oldValue = $oldData[$field] ?? null;
-            $newValue = $newData[$field] ?? null;
-            
-            if ($oldValue != $newValue) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
 }

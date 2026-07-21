@@ -332,9 +332,6 @@ export default function CustomerEdit() {
                       onChange={handleChange}
                       className={inputClass('opening_balance')}
                     />
-                    <p className="text-xs text-gray-400 mt-1">
-                      Changing this will create reversal and new journal entries.
-                    </p>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">

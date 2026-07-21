@@ -10,7 +10,6 @@ const Dashboard = () => {
     customers: 0,
     suppliers: 0,
     expenses: 0,
-    journalEntries: 0
   });
   const [recentCustomers, setRecentCustomers] = useState([]);
   const [recentSuppliers, setRecentSuppliers] = useState([]);
@@ -33,7 +32,6 @@ const Dashboard = () => {
         customers: 128,
         suppliers: 45,
         expenses: 342,
-        journalEntries: 89
       });
 
       setRecentCustomers([
@@ -122,20 +120,6 @@ const Dashboard = () => {
             <div className="bg-purple-100 rounded-full p-3">
               <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 8h6m-5 0v8m2-8v8M4 4h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Journal Entries</p>
-              <p className="text-3xl font-bold text-orange-600 mt-1">{stats.journalEntries}</p>
-            </div>
-            <div className="bg-orange-100 rounded-full p-3">
-              <svg className="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
           </div>

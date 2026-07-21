@@ -78,11 +78,6 @@ class Expense extends Model
         return $this->belongsTo(ExpenseType::class, 'expense_type_id');
     }
 
-    public function paymentAccount(): BelongsTo
-    {
-        return $this->belongsTo(ChartOfAccount::class, 'payment_account_id');
-    }
-
     public function category()
     {
         return $this->expenseType?->category;
@@ -106,21 +101,6 @@ class Expense extends Model
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');
-    }
-
-    /** Journal entries generated for this expense */
-    public function journalEntries(): HasMany
-    {
-        return $this->hasMany(JournalEntry::class, 'expense_id');
-    }
-
-    /** Latest posted journal entry */
-    public function postedJournalEntry()
-    {
-        return $this->journalEntries()
-                    ->where('status', JournalEntry::STATUS_POSTED)
-                    ->latest()
-                    ->first();
     }
 
     // ── Scopes ────────────────────────────────────────────────────────────────
@@ -241,7 +221,6 @@ class Expense extends Model
         string $paymentMethod,
         ?string $paymentReference = null,
         ?string $comment = null,
-        bool $createJournalEntry = true
     ): bool {
         if (! in_array($this->status, [self::STATUS_DRAFT, self::STATUS_SUBMITTED])) {
             return false;
@@ -256,11 +235,6 @@ class Expense extends Model
 
         if ($saved) {
             $this->logTransition(self::STATUS_SUBMITTED, self::STATUS_PAID, 'pay', $comment);
-
-            // Auto-create double-entry journal entry
-            if ($createJournalEntry) {
-                $this->createPaymentJournalEntry();
-            }
         }
 
         return $saved;
@@ -336,11 +310,6 @@ class Expense extends Model
         // Since we only use 5 tables, we record this in journal_entries as an audit line
         // when there's no journal entry (e.g. submit/approve), we skip DB log — 
         // the expense row itself IS the audit trail via timestamps + user fields.
-    }
-
-    private function createPaymentJournalEntry(): void
-    {
-        \App\Services\JournalEntryService::postExpensePayment($this);
     }
 
     // ── Static Helpers ────────────────────────────────────────────────────────

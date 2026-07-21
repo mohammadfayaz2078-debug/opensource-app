@@ -199,23 +199,6 @@ class BranchController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        // Block base_currency_id change after transactions exist (like Odoo)
-        if (
-            array_key_exists('base_currency_id', $validated)
-            && $validated['base_currency_id'] != $branch->base_currency_id
-        ) {
-            $hasPostedEntries = \App\Models\JournalEntry::where('branch_id', $branch->id)
-                ->where('status', 'posted')
-                ->exists();
-
-            if ($hasPostedEntries) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot change base currency after journal entries have been posted. Create a new branch instead.',
-                ], 422);
-            }
-        }
-
         $branch->update($validated);
         $branch->load('company');
 
