@@ -14,13 +14,6 @@ return [
         'delete' => false,
     ],
 
-    // Chart of Accounts
-    'chart_of_accounts' => [
-        'view'   => false,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
 
     // Branches
     'branches' => [
@@ -32,30 +25,6 @@ return [
 
     // Users
     'users' => [
-        'view'   => false,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
-
-    // Account Groups
-    'account_groups' => [
-        'view'   => false,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
-
-    // Account Types
-    'account_types' => [
-        'view'   => false,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
-
-    // Currencies
-    'currencies' => [
         'view'   => false,
         'create' => false,
         'edit'   => false,

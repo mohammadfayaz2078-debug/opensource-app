@@ -39,7 +39,6 @@ return new class extends Migration
 
             $table->foreign('branch_id')->references('id')->on('branches')->cascadeOnDelete();
             $table->foreign('expense_type_id')->references('id')->on('expense_types')->nullOnDelete();
-            $table->foreign('payment_account_id')->references('id')->on('chart_of_accounts')->nullOnDelete();
             $table->foreign('created_by')->references('id')->on('users')->cascadeOnDelete();
 
             $table->index(['branch_id', 'status'], 'exp_branch_status_idx');

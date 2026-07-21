@@ -79,11 +79,6 @@ class IncomeCategoryController extends Controller
             });
         }
 
-        // Filter by income account
-        if ($request->filled('income_account_id')) {
-            $query->where('income_account_id', $request->income_account_id);
-        }
-
         // Sorting
         $sortField = $request->get('sort_by', 'name');
         $sortOrder = $request->get('sort_order', 'asc');
@@ -107,7 +102,6 @@ class IncomeCategoryController extends Controller
                 ->count(),
             'categories_with_accounts' => IncomeCategory::where('company_id', $companyId)
                 ->where('branch_id', $branchId)
-                ->whereNotNull('income_account_id')
                 ->count(),
         ];
 
@@ -135,7 +129,6 @@ class IncomeCategoryController extends Controller
         $validated = $request->validate([
             'name'              => 'required|string|max:255',
             'description'       => 'nullable|string',
-            'income_account_id' => 'nullable|exists:chart_of_accounts,id',
             'is_active'         => 'nullable|boolean',
         ]);
 
@@ -207,7 +200,6 @@ class IncomeCategoryController extends Controller
         $validated = $request->validate([
             'name'              => 'sometimes|string|max:255',
             'description'       => 'nullable|string',
-            'income_account_id' => 'nullable|exists:chart_of_accounts,id',
             'is_active'         => 'nullable|boolean',
         ]);
 

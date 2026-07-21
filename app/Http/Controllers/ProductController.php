@@ -199,10 +199,7 @@ class ProductController extends Controller
             'stock_unit_id'             => 'nullable|exists:units,id',
             'purchase_price'            => 'nullable|numeric|min:0|max:999999999999.99',
             'sale_price'                => 'nullable|numeric|min:0|max:999999999999.99',
-            'expense_account_id'        => 'nullable|exists:chart_of_accounts,id',
-            'income_account_id'         => 'nullable|exists:chart_of_accounts,id',
             'low_stock_warning_count'   => 'nullable|integer|min:0',
-            'inventory_asset_account_id'=> 'nullable|exists:chart_of_accounts,id',
             'reorder_point'             => 'nullable|integer|min:0',
         ]);
 
@@ -310,10 +307,7 @@ class ProductController extends Controller
             'stock_unit_id'             => 'nullable|exists:units,id',
             'purchase_price'            => 'nullable|numeric|min:0|max:999999999999.99',
             'sale_price'                => 'nullable|numeric|min:0|max:999999999999.99',
-            'expense_account_id'        => 'nullable|exists:chart_of_accounts,id',
-            'income_account_id'         => 'nullable|exists:chart_of_accounts,id',
             'low_stock_warning_count'   => 'nullable|integer|min:0',
-            'inventory_asset_account_id'=> 'nullable|exists:chart_of_accounts,id',
             'reorder_point'             => 'nullable|integer|min:0',
         ]);
 

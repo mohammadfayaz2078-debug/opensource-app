@@ -26,9 +26,6 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('branch_id')->references('id')->on('branches')->cascadeOnDelete();
-            $table->foreign('expense_category_id')->references('id')->on('expense_categories')->cascadeOnDelete();
-            $table->foreign('expense_account_id')->references('id')->on('chart_of_accounts')->nullOnDelete();
-            $table->foreign('default_payment_account_id')->references('id')->on('chart_of_accounts')->nullOnDelete();
             $table->unique(['branch_id'], 'expense_types_branch_unique');
             $table->index(['branch_id', 'expense_category_id'], 'et_branch_cat_idx');
             $table->index(['branch_id', 'is_active'], 'et_branch_active_idx');

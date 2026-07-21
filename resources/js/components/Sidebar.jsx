@@ -149,7 +149,6 @@ const links = [
     children: [
       { name: 'Customer List', to: '/customers', translation_key: 'sidebar_customer_list' },
       { name: 'Receivable List', to: '/customers', translation_key: 'sidebar_receivable_list' },
-      // { name: 'Display inactive customers', to: '#', translation_key: 'sidebar_inactive_customers' }
     ]
   },
   {
@@ -179,18 +178,6 @@ const links = [
     children: [
       { name: 'Income Category', to: '/income-categories', translation_key: 'sidebar_income_categories' },
       { name: 'Other Incomes', to: '/other-incomes', translation_key: 'sidebar_other_incomes' },
-      // { name: 'Journals', to: '/journal-entries', translation_key: 'sidebar_journals' },
-      { name: 'View Journal Entries', to: '/journal-entries', translation_key: 'sidebar_view_journal' }
-    ]
-  },
-  {
-    title: 'Accounting',
-    icon: 'wallet',
-    translation_key: 'Accounting',
-    children: [
-      { name: 'Account Types', to: '/account-types', translation_key: 'sidebar_account_types' },
-      { name: 'Account Groups', to: '/account-groups', translation_key: 'sidebar_account_groups' },
-      { name: 'Chart of Accounts', to: '/chart-of-accounts', translation_key: 'sidebar_chart_of_accounts' }
     ]
   },
   {
@@ -211,16 +198,6 @@ const links = [
       { name: 'Report 1', to: '#', translation_key: 'sidebar_report1' },
       { name: 'Report 2', to: '#', translation_key: 'sidebar_report2' },
       { name: 'Report 3', to: '#', translation_key: 'sidebar_report3' }
-    ]
-  },
-  {
-    title: 'Administration',
-    icon: 'settings',
-    translation_key: 'Administration',
-    children: [
-      { name: 'Currency', to: '/currencies', translation_key: 'sidebar_currency' },
-      { name: 'Employees', to: '/employees', icon: 'users', translation_key: 'sidebar_employees' },
-      { name: 'Warehouse/Tower', to: '/warehouse-towers', icon: 'users', translation_key: 'sidebar_warehouse_towers' },
     ]
   },
   {

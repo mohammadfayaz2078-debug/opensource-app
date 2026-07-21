@@ -54,12 +54,6 @@ class ExpenseTypeController extends Controller
         $branchId = $this->resolveBranchId($request);
         $validated = $request->validate([
             'expense_category_id' => ['required', 'integer', $this->existsWithBranch('expense_categories', 'id', $branchId)->whereNull('deleted_at')],
-            'expense_account_id'  => ['nullable', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
-                }
-                $q->where('is_active', true);
-            })],
             'name'                => ['required', 'string', 'max:100', Rule::unique('expense_types')->where(function ($q) use ($branchId) {
                 if ($branchId !== null) {
                     $q->where('branch_id', $branchId);
@@ -68,12 +62,6 @@ class ExpenseTypeController extends Controller
             })],
             'description'         => 'nullable|string|max:500',
             'is_active'           => 'boolean',
-            'default_payment_account_id' => ['nullable', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
-                }
-                $q->where('is_active', true);
-            })],
             'sort_order'          => 'integer|min:0',
         ]);
         $validated['branch_id'] = $branchId;
@@ -108,13 +96,6 @@ class ExpenseTypeController extends Controller
         $type = ExpenseType::forBranch($branchId)->findOrFail($id);
 
         $validated = $request->validate([
-            'expense_category_id' => ['sometimes', 'integer', $this->existsWithBranch('expense_categories', 'id', $branchId)->whereNull('deleted_at')],
-            'expense_account_id'  => ['nullable', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
-                }
-                $q->where('is_active', true);
-            })],
             'name'                => ['sometimes', 'string', 'max:100', Rule::unique('expense_types')->where(function ($q) use ($branchId) {
                 if ($branchId !== null) {
                     $q->where('branch_id', $branchId);
@@ -123,12 +104,6 @@ class ExpenseTypeController extends Controller
             })->ignore($typeId)],
             'description'         => 'nullable|string|max:500',
             'is_active'           => 'boolean',
-            'default_payment_account_id' => ['nullable', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
-                }
-                $q->where('is_active', true);
-            })],
             'sort_order'          => 'integer|min:0',
         ]);
 

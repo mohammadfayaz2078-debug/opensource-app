@@ -70,22 +70,6 @@ return new class extends Migration
 
             /*
             |--------------------------------------------------------------------------
-            | Accounting
-            |--------------------------------------------------------------------------
-            */
-
-            $table->foreignId('payment_account_id')
-                ->nullable()
-                ->constrained('chart_of_accounts')
-                ->nullOnDelete();
-
-            $table->foreignId('income_account_id')
-                ->nullable()
-                ->constrained('chart_of_accounts')
-                ->nullOnDelete();
-
-            /*
-            |--------------------------------------------------------------------------
             | Extra
             |--------------------------------------------------------------------------
             */

@@ -114,12 +114,7 @@ class ExpenseController extends Controller
                 }
                 $q->where('is_active', true)->whereNull('deleted_at');
             })],
-            'payment_account_id' => ['nullable', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
-                }
-                $q->where('is_active', true);
-            })],
+
             'amount'             => 'required|numeric|min:0.01|max:999999999',
             'currency'           => [
                 'required',
@@ -138,14 +133,6 @@ class ExpenseController extends Controller
         $validated['branch_id']  = $branchId;
         $validated['created_by'] = Auth::id();
         $validated['status']     = Expense::STATUS_SUBMITTED;
-
-        // Auto-fill payment account from expense type default if not provided
-        if (empty($validated['payment_account_id']) && !empty($validated['expense_type_id'])) {
-            $expenseType = ExpenseType::find($validated['expense_type_id']);
-            if ($expenseType?->default_payment_account_id) {
-                $validated['payment_account_id'] = $expenseType->default_payment_account_id;
-            }
-        }
 
         // Handle file upload (legacy `file` column)
         if ($request->hasFile('file')) {
@@ -210,12 +197,6 @@ class ExpenseController extends Controller
                     $q->where('branch_id', $branchId);
                 }
                 $q->where('is_active', true)->whereNull('deleted_at');
-            })],
-            'payment_account_id' => ['nullable', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
-                }
-                $q->where('is_active', true);
             })],
             'amount'             => 'sometimes|numeric|min:0.01|max:999999999',
             'currency'           => [
@@ -301,19 +282,9 @@ class ExpenseController extends Controller
 
         $validated = $request->validate([
             'payment_method'    => ['required', Rule::in(Expense::PAYMENT_METHODS)],
-            'payment_account_id' => ['required', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId)->where('is_active', true);
-            })],
             'payment_reference' => 'nullable|string|max:100',
             'comment'           => 'nullable|string|max:500',
         ]);
-
-        // Require expense type to have a linked Chart of Accounts expense account
-        if (! $expense->expenseType?->expense_account_id) {
-            return response()->json([
-                'message' => 'Expense type does not have a linked Chart of Accounts expense account. Please configure it first.',
-            ], 422);
-        }
 
         // Save payment account to expense if not already set
         if (! $expense->payment_account_id) {

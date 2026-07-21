@@ -112,11 +112,6 @@ class CustomerController extends Controller
             $query->where('district', 'like', "%{$request->district}%");
         }
 
-        // Filter by receivable account
-        if ($request->filled('receivable_account_id')) {
-            $query->where('receivable_account_id', $request->receivable_account_id);
-        }
-
         // Sorting
         $sortField = $request->get('sort_by', 'first_name');
         $sortOrder = $request->get('sort_order', 'asc');
@@ -176,7 +171,6 @@ class CustomerController extends Controller
             'gps_lat'                => 'nullable|numeric|min:-90|max:90',
             'gps_lng'                => 'nullable|numeric|min:-180|max:180',
             'country'                => 'nullable|string|max:255',
-            'receivable_account_id'  => 'nullable|exists:chart_of_accounts,id',
             'opening_balance'        => 'nullable|numeric|min:0|max:999999999999.99',
             'opening_balance_type'   => 'nullable|in:debit,credit',
             'note'                   => 'nullable|string',
@@ -206,12 +200,6 @@ class CustomerController extends Controller
 
         $customer = DB::transaction(function () use ($validated) {
             $customer = Customer::create($validated);
-            
-            // Create journal entry for opening balance if exists
-            if (($customer->opening_balance ?? 0) > 0 && $customer->receivable_account_id) {
-                $this->createOpeningBalanceEntry($customer);
-            }
-            
             return $customer;
         });
 
@@ -266,25 +254,13 @@ class CustomerController extends Controller
             'gps_lat'                => 'nullable|numeric|min:-90|max:90',
             'gps_lng'                => 'nullable|numeric|min:-180|max:180',
             'country'                => 'nullable|string|max:255',
-            'receivable_account_id'  => 'nullable|exists:chart_of_accounts,id',
             'opening_balance'        => 'nullable|numeric|min:0|max:999999999999.99',
             'opening_balance_type'   => 'nullable|in:debit,credit',
             'note'                   => 'nullable|string',
             'is_active'              => 'nullable|boolean',
         ]);
 
-        $oldReceivableAccountId = $customer->receivable_account_id;
-        $oldOpeningBalance = $customer->opening_balance;
-        
         $customer->update($validated);
-        
-        // Handle opening balance changes
-        if (($customer->opening_balance != $oldOpeningBalance) || 
-            ($customer->receivable_account_id != $oldReceivableAccountId)) {
-            DB::transaction(function () use ($customer, $oldOpeningBalance, $oldReceivableAccountId) {
-                $this->updateOpeningBalanceEntry($customer, $oldOpeningBalance, $oldReceivableAccountId);
-            });
-        }
 
         $customer->load(['branch', 'receivableAccount', 'creator']);
 
@@ -313,15 +289,6 @@ class CustomerController extends Controller
         //         'message' => 'Cannot delete customer with existing invoice records.'
         //     ], 422);
         // }
-
-        DB::transaction(function () use ($customer) {
-            // Remove opening balance journal entry if exists
-            if (($customer->opening_balance ?? 0) > 0 && $customer->receivable_account_id) {
-                $this->deleteOpeningBalanceEntry($customer);
-            }
-            
-            $customer->delete();
-        });
 
         return response()->json(['message' => 'Customer deleted successfully.']);
     }
@@ -455,9 +422,6 @@ class CustomerController extends Controller
         foreach ($customers as $customer) {
             try {
                 DB::transaction(function () use ($customer) {
-                    if (($customer->opening_balance ?? 0) > 0 && $customer->receivable_account_id) {
-                        $this->deleteOpeningBalanceEntry($customer);
-                    }
                     $customer->delete();
                 });
                 $deleted++;
@@ -522,14 +486,6 @@ class CustomerController extends Controller
      * Create journal entry for opening balance
      * For customers: Debit = Customer owes us, Credit = We owe customer
      */
-    private function createOpeningBalanceEntry(Customer $customer): void
-    {
-        // TODO: Implement journal entry creation when chart_of_accounts is properly configured
-        // For customers:
-        // - Debit opening balance (customer owes us) -> Debit Receivable, Credit Opening Balance Equity
-        // - Credit opening balance (we owe customer) -> Debit Opening Balance Equity, Credit Receivable
-        return;
-    }
     
     /**
      * Update opening balance journal entry
