@@ -31,12 +31,11 @@ class Customer extends Model
 
         'country',
 
-        'opening_balance',
-        'opening_balance_type',
-
         'note',
 
         'is_active',
+
+        'status',
 
         'created_by',
     ];
@@ -50,8 +49,6 @@ class Customer extends Model
 
         'gps_lat' => 'decimal:7',
         'gps_lng' => 'decimal:7',
-
-        'opening_balance' => 'decimal:2',
 
         'is_active' => 'boolean',
     ];

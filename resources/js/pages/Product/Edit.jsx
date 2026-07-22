@@ -12,7 +12,7 @@ export default function ProductEdit() {
   const [errors, setErrors] = useState({});
   const [newAttachments, setNewAttachments] = useState([]);
   const [form, setForm] = useState({
-    name: '', barcode: '', category_id: '',
+    name: '', barcode: '', description: '', category_id: '',
     purchase_price: '', sale_price: '',
     low_stock_warning_count: '0',
   });
@@ -24,7 +24,7 @@ export default function ProductEdit() {
     ]).then(([pRes, cRes]) => {
       const p = pRes.data.data;
       setForm({
-        name: p.name || '', barcode: p.barcode || '', category_id: p.category_id || '',
+        name: p.name || '', barcode: p.barcode || '', description: p.description || '', category_id: p.category_id || '',
         purchase_price: p.purchase_price || '', sale_price: p.sale_price || '',
         low_stock_warning_count: p.low_stock_warning_count || '0',
       });
@@ -112,6 +112,11 @@ export default function ProductEdit() {
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Barcode/SKU</label>
                   <input name="barcode" value={form.barcode} onChange={handleChange} className={inputClass('barcode')} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Description</label>
+                  <textarea name="description" value={form.description || ''} onChange={handleChange} rows="2"
+                    className={inputClass('description')} placeholder="Product description for public page..." />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Category</label>

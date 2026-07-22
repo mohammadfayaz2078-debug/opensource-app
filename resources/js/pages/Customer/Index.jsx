@@ -15,17 +15,23 @@ export default function CustomerIndex() {
     active_customers: 0,
   });
 
+  const [filterStatus, setFilterStatus] = useState('customer');
+
   useEffect(() => {
     fetchCustomers();
     fetchLocations();
-  }, [filterActive, filterProvince]);
+  }, [filterActive, filterProvince, filterStatus]);
 
   const fetchCustomers = async () => {
     setLoading(true);
+    setCustomers([]); // Clear old data immediately to avoid flash of wrong data
     try {
       const params = {};
       if (filterActive !== 'all') {
         params.is_active = filterActive === 'active';
+      }
+      if (filterStatus) {
+        params.status = filterStatus;
       }
       if (filterProvince) {
         params.province = filterProvince;
@@ -80,6 +86,22 @@ export default function CustomerIndex() {
     }
   };
 
+  const handleConvertToCustomer = async (id) => {
+    if (!confirm('Convert this lead to a customer?\n\nPending orders will be converted to invoices.')) return;
+    try {
+      const res = await api.post(`/customers/${id}/convert-to-customer`);
+      alert(res.data.message);
+      // Refresh the list
+      const params = { status: 'lead' };
+      if (filterActive !== 'all') params.is_active = filterActive === 'active';
+      if (filterProvince) params.province = filterProvince;
+      const refreshRes = await api.get('/customers', { params });
+      setCustomers(refreshRes.data.data || []);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to convert lead.');
+    }
+  };
+
   const filtered = customers.filter(c =>
     c.first_name?.toLowerCase().includes(search.toLowerCase()) ||
     c.last_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -102,6 +124,21 @@ export default function CustomerIndex() {
             <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{provinces.length} provinces</span>
           </div>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-4">
+        <nav className="flex gap-6">
+          {[
+            { id: 'customer', label: 'Customers' },
+            { id: 'lead', label: '🔹 Leads' },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setFilterStatus(tab.id)}
+              className={`py-2.5 px-1 border-b-2 font-medium text-sm transition-colors ${filterStatus === tab.id ? 'border-[#007c89] text-[#007c89]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
       {/* Toolbar */}
@@ -191,6 +228,7 @@ export default function CustomerIndex() {
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Code</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Contact</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Location</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Type</th>
                   <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -222,6 +260,13 @@ export default function CustomerIndex() {
                       {customer.province || '—'}
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-center">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${
+                        customer.status === 'lead' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-600'
+                      }`}>
+                        {customer.status === 'lead' ? 'Lead' : 'Customer'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 whitespace-nowrap text-center">
                       <button
                         onClick={() => handleToggleStatus(customer.id, customer.is_active)}
                         className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${
@@ -232,7 +277,21 @@ export default function CustomerIndex() {
                       </button>
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-0.5">
+                      <div className="flex items-center justify-end gap-1">
+                        {customer.status === 'lead' && (
+                          <button
+                            onClick={() => handleConvertToCustomer(customer.id)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold
+                              bg-emerald-50 text-emerald-700 border border-emerald-200
+                              hover:bg-emerald-100 hover:text-emerald-800 transition-colors"
+                            title="Convert to Customer"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Convert
+                          </button>
+                        )}
                         <button
                           onClick={() => navigate(`/customers/${customer.id}/edit`)}
                           className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600"

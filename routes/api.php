@@ -27,6 +27,8 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\PublicationController;
+use App\Http\Controllers\CommentOrderController;
 use App\Http\Controllers\AccountDepositController;
 use App\Http\Controllers\AccountWithdrawalController;
 use Illuminate\Http\Request;
@@ -35,6 +37,32 @@ use Illuminate\Http\Request;
 Route::post('/login', [SuperAdminAuthController::class, 'login']);
 Route::get('roles/modules', [RoleController::class, 'getModules']);
 Route::get('/register/options', [AuthController::class, 'getBranchesAndPositions']);
+
+// Public storefront endpoints (guests allowed)
+Route::get('/publications/public', [PublicationController::class, 'publicProducts']);
+Route::get('/publications/public/{id}', [PublicationController::class, 'publicShow']);
+
+// Guest-accessible interactions on public products (likes, comments, orders)
+Route::post('/products/{id}/comments', [CommentOrderController::class, 'addComment']);
+Route::get('/products/{id}/comments', [CommentOrderController::class, 'getComments']);
+Route::delete('/products/{id}/comments/{index}', [CommentOrderController::class, 'deleteComment']);
+Route::post('/products/{id}/likes', [CommentOrderController::class, 'toggleLike']);
+Route::get('/products/{id}/likes', [CommentOrderController::class, 'getLikes']);
+Route::get('/products/{id}/likes/check', [CommentOrderController::class, 'checkLiked']);
+
+Route::prefix('orders')->group(function () {
+    Route::get('/',           [CommentOrderController::class, 'index']);
+    Route::post('/',          [CommentOrderController::class, 'createOrder']);
+    Route::get('/{id}',       [CommentOrderController::class, 'show']);
+});
+
+// Check if customer email exists (for order form)
+Route::get('/customers/check-email', [CommentOrderController::class, 'checkEmail']);
+
+
+// Order status update requires authentication (admin action)
+Route::middleware('auth:sanctum')->put('/orders/{id}/status', [CommentOrderController::class, 'updateStatus']);
+
 
 
 // Sanctum protected routes
@@ -238,6 +266,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}',                [CustomerController::class, 'update']);
         Route::delete('/{id}',             [CustomerController::class, 'destroy']);
         Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus']);
+        Route::post('/{id}/convert-to-customer', [CustomerController::class, 'convertToCustomer']);
     });
 
     // ── Accounts Module ──────────────────────────────────────────────────────
@@ -250,6 +279,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}',          [AccountController::class, 'update']);
         Route::delete('/{id}',       [AccountController::class, 'destroy']);
     });
+
+    // ── Publication Module ───────────────────────────────────────────────────
+
+    Route::prefix('publications')->group(function () {
+        Route::get('/',              [PublicationController::class, 'index']);
+        Route::post('/{id}/toggle',  [PublicationController::class, 'toggle']);
+    });
+
+    // ── Comments & Likes / Orders are public; see top of file ───────────────
 
     // ── Purchase Module ──────────────────────────────────────────────────────
 

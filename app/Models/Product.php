@@ -16,6 +16,7 @@ class Product extends Model
 
         'name',
         'barcode',
+        'description',
 
         'category_id',
 
@@ -23,6 +24,8 @@ class Product extends Model
         'sale_price',
 
         'low_stock_warning_count',
+        'is_public',
+        'comments',
 
         'reorder_point',
     ];
@@ -34,6 +37,7 @@ class Product extends Model
 
         'purchase_price' => 'decimal:2',
         'sale_price' => 'decimal:2',
+        'comments' => 'array',
     ];
 
     /*

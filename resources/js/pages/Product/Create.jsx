@@ -11,6 +11,7 @@ export default function ProductCreate() {
   const [form, setForm] = useState({
     name: '',
     barcode: '',
+    description: '',
     category_id: '',
     purchase_price: '',
     sale_price: '',
@@ -179,8 +180,13 @@ export default function ProductCreate() {
               className="inline-flex items-center justify-center px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors">
               Cancel
             </button>
-          </div>
-        </div>
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Description</label>
+                <textarea name="description" value={form.description || ''} onChange={handleChange} rows="2"
+                  className={inputClass('description')} placeholder="Product description for public page..." />
+              </div>
+            </div>
       </form>
     </div>
   );

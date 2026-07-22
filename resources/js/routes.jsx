@@ -5,6 +5,7 @@ import Seeder from './pages/CompanyAdmin/Seeder';
 // Auth Pages
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import Welcome from './pages/Welcome';
 
 // Branch Pages
 import BranchIndex from './pages/Branch/Index';
@@ -38,6 +39,9 @@ import SaleReturnCreate from './pages/SaleReturn/Create';
 // Stock Pages
 import StockBalances from './pages/Stock/Balances';
 import StockTransactions from './pages/Stock/Transactions';
+
+// Publication Pages
+import PublicationIndex from './pages/Publication/ProductAnalytics';
 
 // Account Pages
 import AccountIndex from './pages/Account/Index';
@@ -93,6 +97,7 @@ import ProductCreate from './pages/Product/Create';
 import ProductEdit from './pages/Product/Edit';
 import ProductShow from './pages/Product/Show';
 
+
 // Dashboard Pages
 import DashboardIndex from './pages/Dashboard/Index';
 
@@ -126,7 +131,7 @@ const PrivateRoute = ({ children, requiredRole = null }) => {
   const userType = localStorage.getItem('user_type');
 
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/welcome" replace />;
   }
 
   if (requiredRole === 'company_admin' && userType !== 'company_admin') {
@@ -164,7 +169,15 @@ const GuestRoute = ({ children }) => {
 
 // Routes configuration
 const routes = [
-  // Public routes (guest only)
+  // Public welcome page (product marketplace) + login + product detail
+  {
+    path: '/welcome',
+    element: (
+      <GuestRoute>
+        <Welcome />
+      </GuestRoute>
+    )
+  },
   {
     path: '/login',
     element: (
@@ -173,6 +186,7 @@ const routes = [
       </GuestRoute>
     )
   },
+
   
   // Company Admin Routes
   {
@@ -323,6 +337,9 @@ const routes = [
       // Stock
       { path: 'stock/balances', element: <StockBalances /> },
       { path: 'stock/transactions', element: <StockTransactions /> },
+
+      // Publications
+      { path: 'publications', element: <PublicationIndex /> },
     ]
   },
   
@@ -335,7 +352,8 @@ const routes = [
 
 // Helper to get route path by name (similar to Vue Router's named routes)
 export const routeNames = {
-  // Auth routes
+  // Auth / public routes
+  WELCOME: '/welcome',
   LOGIN: '/login',
   REGISTER: '/register',
   

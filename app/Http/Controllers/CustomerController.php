@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Helpers\AuthHelper;
 use App\Models\Customer;
+use App\Models\Order;
+use App\Models\Sale;
+use App\Models\SaleItem;
+use App\Services\StockService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -91,6 +95,11 @@ class CustomerController extends Controller
             });
         }
 
+        // Filter by status (lead/customer)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
         // Filter by province
         if ($request->filled('province')) {
             $query->where('province', 'like', "%{$request->province}%");
@@ -122,9 +131,6 @@ class CustomerController extends Controller
                 ->where('branch_id', $branchId)
                 ->where('is_active', true)
                 ->count(),
-            'total_opening_balance' => Customer::where('company_id', $companyId)
-                ->where('branch_id', $branchId)
-                ->sum('opening_balance'),
         ];
 
         return response()->json([
@@ -160,8 +166,6 @@ class CustomerController extends Controller
             'gps_lat'                => 'nullable|numeric|min:-90|max:90',
             'gps_lng'                => 'nullable|numeric|min:-180|max:180',
             'country'                => 'nullable|string|max:255',
-            'opening_balance'        => 'nullable|numeric|min:0|max:999999999999.99',
-            'opening_balance_type'   => 'nullable|in:debit,credit',
             'note'                   => 'nullable|string',
             'is_active'              => 'nullable|boolean',
         ]);
@@ -170,16 +174,11 @@ class CustomerController extends Controller
         $validated['company_id'] = $companyId;
         $validated['branch_id']  = $branchId;
         $validated['created_by'] = Auth::id();
+        $validated['status']     = $validated['status'] ?? 'customer';
         
         // Generate customer code if not provided
         if (empty($validated['user_code'])) {
             $validated['user_code'] = $this->generateCustomerCode($branchId);
-        }
-        
-        // Set default opening balance type if opening balance is provided
-        // For customers, default is debit (customer owes us)
-        if (($validated['opening_balance'] ?? 0) > 0 && empty($validated['opening_balance_type'])) {
-            $validated['opening_balance_type'] = 'debit';
         }
         
         // Set default active status
@@ -243,8 +242,6 @@ class CustomerController extends Controller
             'gps_lat'                => 'nullable|numeric|min:-90|max:90',
             'gps_lng'                => 'nullable|numeric|min:-180|max:180',
             'country'                => 'nullable|string|max:255',
-            'opening_balance'        => 'nullable|numeric|min:0|max:999999999999.99',
-            'opening_balance_type'   => 'nullable|in:debit,credit',
             'note'                   => 'nullable|string',
             'is_active'              => 'nullable|boolean',
         ]);
@@ -462,6 +459,109 @@ class CustomerController extends Controller
         return response()->json([
             'provinces' => $provinces,
             'districts' => $districts,
+        ]);
+    }
+
+    // ── Lead → Customer Conversion ───────────────────────────────────────────
+
+    /**
+     * POST /api/customers/{id}/convert-to-customer
+     * 
+     * Convert a lead to customer and create sale invoices for all pending orders.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function convertToCustomer(Request $request, int $id): JsonResponse
+    {
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
+
+        $customer = Customer::where('branch_id', $branchId)->findOrFail($id);
+
+        if ($customer->status !== 'lead') {
+            return response()->json(['message' => 'This customer is already a customer, not a lead.'], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($customer, $companyId, $branchId) {
+                // 1. Find all pending/confirmed orders for this customer
+                $orders = Order::where('customer_id', $customer->id)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->with('items.product')
+                    ->get();
+
+                $convertedCount = 0;
+
+                foreach ($orders as $order) {
+                    // Create Sale invoice for this order
+                    $orderCompanyId = $order->company_id ?? $companyId;
+                    $orderBranchId  = $order->branch_id ?? $branchId;
+
+                    $sale = Sale::create([
+                        'company_id'     => $orderCompanyId,
+                        'branch_id'      => $orderBranchId,
+                        'customer_id'    => $customer->id,
+                        'created_by'     => Auth::id(),
+                        'reference_no'   => Sale::generateReferenceNo($orderBranchId),
+                        'document_date'  => now()->toDateString(),
+                        'subtotal'       => $order->total_amount,
+                        'total_amount'   => $order->total_amount,
+                        'paid_amount'    => 0,
+                        'due_amount'     => $order->total_amount,
+                        'status'         => Sale::STATUS_CONFIRMED,
+                        'payment_status' => Sale::PAYMENT_STATUS_UNPAID,
+                        'notes'          => "Created from Order #{$order->order_no}",
+                    ]);
+
+                    // Create sale items and record stock
+                    foreach ($order->items as $orderItem) {
+                        $saleItem = $sale->items()->create([
+                            'product_id' => $orderItem->product_id,
+                            'quantity'   => $orderItem->quantity,
+                            'unit_price' => $orderItem->unit_price,
+                            'total'      => $orderItem->total,
+                        ]);
+
+                        if ($saleItem->product_id) {
+                            StockService::record(
+                                companyId: $orderCompanyId,
+                                branchId: $orderBranchId,
+                                productId: $saleItem->product_id,
+                                movementType: 'out',
+                                quantity: (float) $saleItem->quantity,
+                                unitCost: (float) $saleItem->unit_price,
+                                referenceType: 'Sale',
+                                referenceId: $sale->id,
+                                notes: "Sale {$sale->reference_no} from Order #{$order->order_no}",
+                            );
+                        }
+                    }
+
+                    // Update order status to delivered
+                    $order->update(['status' => 'delivered']);
+                    $convertedCount++;
+                }
+
+                // 2. Upgrade customer from lead to customer
+                $customer->update(['status' => 'customer']);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to convert lead to customer: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        $customer->refresh()->load(['branch', 'creator', 'company']);
+
+        $orderCount = Order::where('customer_id', $customer->id)
+            ->where('status', 'delivered')
+            ->count();
+
+        return response()->json([
+            'data'    => $customer,
+            'message' => "Lead converted to customer successfully. {$orderCount} order(s) converted to invoices.",
         ]);
     }
 

@@ -74,12 +74,23 @@ export default function CustomerShow() {
     catch (err) { alert(err.response?.data?.message || 'Failed'); }
   };
 
+  const handleConvertToCustomer = async () => {
+    if (!confirm('Convert this lead to a customer?\n\nPending orders will be converted to invoices.')) return;
+    try {
+      const res = await api.post(`/customers/${id}/convert-to-customer`);
+      setCustomer(res.data.data);
+      alert(res.data.message);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to convert lead.');
+    }
+  };
+
   const tabs = [
     { id: 'info', label: 'Info' },
     { id: 'invoices', label: 'Invoices' },
     { id: 'returns', label: 'Returns' },
     { id: 'payments', label: 'Payments' },
-  ];
+  ].filter(t => customer?.status === 'lead' ? t.id === 'info' : true);
 
   const mapUrl = customer?.gps_lat && customer?.gps_lng
     ? `https://www.openstreetmap.org/?mlat=${customer.gps_lat}&mlon=${customer.gps_lng}#map=15/${customer.gps_lat}/${customer.gps_lng}`
@@ -99,6 +110,16 @@ export default function CustomerShow() {
             <p className="text-sm text-gray-500">Code: {customer.user_code} | {customer.is_active ? 'Active' : 'Inactive'}</p>
           </div>
           <div className="flex gap-2">
+            {customer.status === 'lead' && (
+              <button onClick={handleConvertToCustomer}
+                className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700
+                  shadow-sm shadow-emerald-500/25 flex items-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Convert to Customer
+              </button>
+            )}
             <button onClick={() => navigate(`/customers/${id}/edit`)} className="px-4 py-2 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77]">Edit</button>
             <button onClick={handleToggleStatus} className={`px-4 py-2 text-sm rounded-md ${customer.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>{customer.is_active ? 'Deactivate' : 'Activate'}</button>
             <button onClick={handleDelete} className="px-4 py-2 text-sm border border-red-300 text-red-700 rounded-md hover:bg-red-50">Delete</button>

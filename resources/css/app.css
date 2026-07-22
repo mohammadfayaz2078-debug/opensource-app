@@ -1,3 +1,63 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* PWA: safe area insets for notched devices */
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prevent overscroll bounce on iOS */
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
+@layer components {
+  /* PWA: safe area padding for bottom bars */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  .safe-all {
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  }
+
+  /* PWA install banner animation */
+  .pwa-install-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+}
+
+/* Print styles */
+@media print {
+  body { background: white !important; }
+  .no-print { display: none !important; }
+}
