@@ -236,7 +236,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus']);
     });
 
-<<<<<<< HEAD
     // ── Purchase Module ──────────────────────────────────────────────────────
 
     Route::prefix('purchases')->group(function () {
@@ -289,10 +288,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/transactions',        [StockController::class, 'transactions']);
         Route::get('/product/{id}',        [StockController::class, 'productStock']);
     });
-=======
-
-
-    //=============================
 
     Route::apiResource('accounts', AccountController::class);
 
@@ -305,8 +300,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('account-withdrawals/{accountWithdrawal}', [AccountWithdrawalController::class, 'show']);
 
     Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions']);
-
->>>>>>> 6c175207253c6ef70aae554a773b36a7d815a1bc
 });
 
 

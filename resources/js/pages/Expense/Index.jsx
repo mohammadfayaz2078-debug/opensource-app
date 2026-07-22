@@ -639,8 +639,8 @@ const ExpenseIndex = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black/40" onClick={closeModal}></div>
           <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-10">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Pay Expense</h2>
+            <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-gray-900">Pay Expense</h2>
               <button onClick={closeModal} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -649,38 +649,38 @@ const ExpenseIndex = () => {
             </div>
 
             <form onSubmit={handlePay}>
-              <div className="px-6 py-5 space-y-4">
+              <div className="px-5 py-4 space-y-3">
                 <div className="bg-gray-50 rounded-lg p-3 text-sm">
                   <p><strong>Ref:</strong> {selectedExpense?.reference_no}</p>
                   <p><strong>Amount:</strong> {parseFloat(selectedExpense?.total_amount || 0).toFixed(2)}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Payment Method *</label>
                   <select name="payment_method" value={payForm.payment_method} onChange={handlePayInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]">
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]">
                     {paymentMethods.map(m => <option key={m} value={m}>{m.replace('_', ' ').toUpperCase()}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Reference</label>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Reference</label>
                   <input type="text" name="payment_reference" value={payForm.payment_reference} onChange={handlePayInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" placeholder="Cheque #, transaction ref..." />
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" placeholder="Cheque #, transaction ref..." />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Comment</label>
                   <textarea name="comment" value={payForm.comment} onChange={handlePayInputChange} rows="2"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
-                <button type="button" onClick={closeModal} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+              <div className="px-5 py-3 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
+                <button type="button" onClick={closeModal} className="px-4 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
                   Cancel
                 </button>
-                <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center">
+                <button type="submit" disabled={saving} className="px-4 py-1.5 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center">
                   {saving ? (
                     <><div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>Processing...</>
                   ) : (
