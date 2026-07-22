@@ -16,7 +16,7 @@ export default function PurchaseEdit() {
   const dropdownRef = useRef(null);
 
   const [form, setForm] = useState({
-    supplier_id: '', purchase_date: '', due_date: '', reference_no: '',
+    supplier_id: '', purchase_date: '', reference_no: '',
     discount_type: 'fixed', discount_value: '0', shipping_cost: '0', paid_amount: '0', notes: '',
   });
   const [items, setItems] = useState([]);
@@ -32,7 +32,6 @@ export default function PurchaseEdit() {
       setForm({
         supplier_id: p.supplier_id || '',
         purchase_date: p.purchase_date?.split('T')[0] || '',
-        due_date: p.due_date?.split('T')[0] || '',
         reference_no: p.reference_no || '',
         discount_type: p.discount_type,
         discount_value: String(p.discount_value),
@@ -138,7 +137,6 @@ export default function PurchaseEdit() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div><label className="block text-xs font-medium text-gray-600 mb-1">Supplier</label><select name="supplier_id" value={form.supplier_id} onChange={e => setForm({ ...form, supplier_id: e.target.value })} className={inputClass}><option value="">Select</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
               <div><label className="block text-xs font-medium text-gray-600 mb-1">Date *</label><input type="date" name="purchase_date" value={form.purchase_date} onChange={e => setForm({ ...form, purchase_date: e.target.value })} className={inputClass} required /></div>
-              <div><label className="block text-xs font-medium text-gray-600 mb-1">Due Date</label><input type="date" name="due_date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} className={inputClass} /></div>
               <div><label className="block text-xs font-medium text-gray-600 mb-1">Reference #</label><input name="reference_no" value={form.reference_no} onChange={e => setForm({ ...form, reference_no: e.target.value })} className={inputClass} /></div>
             </div>
           </div>

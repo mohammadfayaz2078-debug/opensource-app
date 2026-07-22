@@ -3,75 +3,46 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use InvalidArgumentException;
-use Exception;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Builder;
 
 class Account extends Model
 {
-    use SoftDeletes;
-
     protected $fillable = [
-        'name',
-        'balance',
-        'description',
-        'is_active',
+        'company_id', 'branch_id', 'name', 'type',
+        'description', 'balance', 'is_active',
     ];
 
     protected $casts = [
-        'balance' => 'decimal:2',
+        'balance'   => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
-    /**
-     * Deposit money into the account.
-     */
+    public function company(): BelongsTo { return $this->belongsTo(Company::class); }
+    public function branch(): BelongsTo  { return $this->belongsTo(Branch::class); }
+
+    public function scopeForBranch(Builder $query, ?int $branchId): Builder
+    {
+        return $branchId ? $query->where('branch_id', $branchId) : $query;
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
     public function deposit(float $amount): void
     {
-        if ($amount <= 0) {
-            throw new InvalidArgumentException('Deposit amount must be greater than zero.');
-        }
-
         $this->increment('balance', $amount);
     }
 
-    /**
-     * Withdraw money from the account.
-     */
     public function withdraw(float $amount): void
     {
-        if ($amount <= 0) {
-            throw new InvalidArgumentException('Withdrawal amount must be greater than zero.');
-        }
-
-        if ($this->balance < $amount) {
-            throw new Exception('Insufficient balance.');
-        }
-
         $this->decrement('balance', $amount);
     }
 
-    /**
-     * Check whether the account has sufficient balance.
-     */
     public function hasEnoughBalance(float $amount): bool
     {
-        return $this->balance >= $amount;
-    }
-
-
-    public function deposits()
-    {
-        return $this->hasMany(AccountDeposit::class);
-    }
-
-    public function withdrawals()
-    {
-        return $this->hasMany(AccountWithdrawal::class);
-    }
-
-    public function transactions()
-    {
-        return $this->hasMany(AccountTransaction::class)->latest();
+        return (float) $this->balance >= $amount;
     }
 }

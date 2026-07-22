@@ -24,7 +24,7 @@ class Sale extends Model
     const DISCOUNT_TYPE_FIXED   = 'fixed';
 
     protected $fillable = [
-        'company_id', 'branch_id', 'customer_id', 'created_by',
+        'company_id', 'branch_id', 'customer_id', 'created_by', 'account_id',
         'reference_no', 'document_date', 'due_date',
         'subtotal', 'discount_type', 'discount_value',
         'shipping_cost', 'total_amount', 'paid_amount', 'due_amount',
@@ -33,7 +33,6 @@ class Sale extends Model
 
     protected $casts = [
         'document_date' => 'date',
-        'due_date'      => 'date',
         'subtotal'      => 'decimal:2',
         'discount_value'=> 'decimal:2',
         'shipping_cost' => 'decimal:2',
@@ -45,6 +44,7 @@ class Sale extends Model
     public function company(): BelongsTo  { return $this->belongsTo(Company::class); }
     public function branch(): BelongsTo   { return $this->belongsTo(Branch::class); }
     public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
+    public function account(): BelongsTo  { return $this->belongsTo(Account::class); }
     public function creator(): BelongsTo  { return $this->belongsTo(User::class, 'created_by'); }
     public function items(): HasMany      { return $this->hasMany(SaleItem::class); }
     public function returns(): HasMany    { return $this->hasMany(SaleReturn::class); }
@@ -72,8 +72,7 @@ class Sale extends Model
     }
 
     public function canBeEdited(): bool      { return $this->status === self::STATUS_DRAFT; }
-    public function canBeConfirmed(): bool   { return $this->status === self::STATUS_DRAFT; }
-    public function canBeCancelled(): bool   { return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_CONFIRMED]); }
+    public function canBeCancelled(): bool   { return $this->status !== self::STATUS_CANCELLED; }
 
     public function recalculate(): void
     {

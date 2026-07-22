@@ -44,6 +44,8 @@ class Customer extends Model
     /**
      * Attribute casting
      */
+    protected $appends = ['full_name'];
+
     protected $casts = [
 
         'gps_lat' => 'decimal:7',

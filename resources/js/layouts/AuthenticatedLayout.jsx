@@ -592,26 +592,7 @@ const userTypeDisplay = getUserTypeDisplay();
 
   return (
     <div className={`min-h-screen bg-gray-50 flex flex-col ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Impersonation Banner - Back to Company Admin (when CA impersonated branch user) */}
-      {isImpersonatingBranch && (
-        <div className="bg-[#007c89] text-white px-4 py-2 flex items-center justify-between z-50 relative">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>You are currently logged in as <strong>{user.name}</strong></span>
-          </div>
-          <button
-            onClick={backToCompanyAdmin}
-            className="inline-flex items-center px-3 py-1 bg-white text-[#007c89] text-xs font-bold rounded-md hover:bg-teal-50 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-            </svg>
-            Return to Company Admin
-          </button>
-        </div>
-      )}
+
 
       <div className="flex flex-1">
       {/* Sidebar */}
@@ -698,6 +679,16 @@ const userTypeDisplay = getUserTypeDisplay();
                   </span>
                 </div>
               )}
+                  {/* Back to Admin (when impersonating) */}
+                  {isImpersonatingBranch && (
+                    <button onClick={backToCompanyAdmin} className="inline-flex items-center px-2 py-1 text-xs text-gray-600 hover:text-[#007c89] border border-gray-200 rounded-md hover:border-[#007c89] hover:bg-blue-50 transition-colors mr-1" title="Back to Company Admin">
+                      <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                      </svg>
+                      Back to Admin
+                    </button>
+                  )}
+
                   {/* Notification bell */}
                   <div className="relative" style={{ zIndex: 100 }}>
                     <button
@@ -761,7 +752,7 @@ const userTypeDisplay = getUserTypeDisplay();
                                     <p className="text-xs text-gray-600 mt-1 line-clamp-2">
                                       {getLocalizedMessage(notification)}
                                     </p>
-                                    <p className="text-xs text-gray-400 mt-1">{notification.created_at}</p>
+                                    <p className="text-xs text-gray-400 mt-1">{notification.created_at?.split('T')[0]}</p>
                                   </div>
                                   {!notification.is_read && (
                                     <button
@@ -820,10 +811,6 @@ const userTypeDisplay = getUserTypeDisplay();
                     >
                       <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                         <span className="text-emerald-600 font-semibold text-xs sm:text-sm">{userInitials}</span>
-                      </div>
-                      <div className={`ml-2 hidden sm:block text-left min-w-0 ${isRTL ? 'text-right mr-2' : ''}`}>
-                        <p className="text-xs sm:text-sm font-medium text-gray-700 truncate max-w-[100px] lg:max-w-[150px]">{user.name}</p>
-                        <p className="text-xs text-gray-500 truncate max-w-[100px] lg:max-w-[150px] hidden md:block">{user.email}</p>
                       </div>
                       <svg className="ml-1 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 hidden sm:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />

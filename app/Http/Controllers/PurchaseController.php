@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\AuthHelper;
+use App\Models\Account;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Product;
@@ -74,8 +75,8 @@ class PurchaseController extends Controller
 
         $validated = $request->validate([
             'supplier_id'        => 'nullable|exists:suppliers,id',
+            'account_id'         => 'required|exists:accounts,id',
             'purchase_date'      => 'required|date',
-            'due_date'           => 'nullable|date',
             'discount_type'      => 'nullable|in:percent,fixed',
             'discount_value'     => 'nullable|numeric|min:0',
             'shipping_cost'      => 'nullable|numeric|min:0',
@@ -96,7 +97,7 @@ class PurchaseController extends Controller
         $validated['reference_no'] = Purchase::generateReferenceNo($branchId);
         $validated['payment_status'] = Purchase::PAYMENT_STATUS_UNPAID;
 
-        $purchase = DB::transaction(function () use ($validated) {
+        $purchase = DB::transaction(function () use ($validated, $companyId, $branchId) {
             $items = $validated['items'];
             unset($validated['items']);
 
@@ -118,7 +119,22 @@ class PurchaseController extends Controller
             $purchase = Purchase::create($validated);
 
             foreach ($items as $item) {
-                $purchase->items()->create($item);
+                $purchaseItem = $purchase->items()->create($item);
+
+                if ($purchaseItem->product_id) {
+                    StockService::record(
+                        companyId: $companyId,
+                        branchId: $branchId,
+                        productId: $purchaseItem->product_id,
+                        movementType: 'in',
+                        quantity: (float) $purchaseItem->quantity,
+                        unitCost: (float) $purchaseItem->unit_price,
+                        referenceType: 'Purchase',
+                        referenceId: $purchase->id,
+                        notes: "Purchase {$purchase->reference_no}",
+                        unitId: $purchaseItem->unit_id,
+                    );
+                }
             }
 
             return $purchase;
@@ -136,7 +152,7 @@ class PurchaseController extends Controller
     {
         $branchId = $this->resolveBranchId($request);
         $purchase = Purchase::where('branch_id', $branchId)
-            ->with(['supplier', 'items.product', 'items.unit', 'creator', 'returns'])
+            ->with(['supplier', 'account', 'items.product', 'items.unit', 'creator', 'returns'])
             ->findOrFail($id);
 
         return response()->json(['data' => $purchase]);
@@ -148,13 +164,12 @@ class PurchaseController extends Controller
         $purchase = Purchase::where('branch_id', $branchId)->findOrFail($id);
 
         if (!$purchase->canBeEdited()) {
-            return response()->json(['message' => 'Cannot edit a paid or received purchase.'], 422);
+            return response()->json(['message' => 'Cannot edit a paid purchase.'], 422);
         }
 
         $validated = $request->validate([
             'supplier_id'        => 'nullable|exists:suppliers,id',
             'purchase_date'      => 'sometimes|date',
-            'due_date'           => 'nullable|date',
             'discount_type'      => 'nullable|in:percent,fixed',
             'discount_value'     => 'nullable|numeric|min:0',
             'shipping_cost'      => 'nullable|numeric|min:0',
@@ -208,60 +223,51 @@ class PurchaseController extends Controller
         }
 
         DB::transaction(function () use ($purchase) {
-            if ($purchase->items()->where('received_qty', '>', 0)->exists()) {
-                StockService::reverse('Purchase', $purchase->id);
-            }
+            StockService::reverse('Purchase', $purchase->id);
             $purchase->delete();
         });
 
         return response()->json(['message' => 'Purchase deleted successfully.']);
     }
 
-    public function receive(Request $request, int $id): JsonResponse
+    public function pay(Request $request, int $id): JsonResponse
     {
-        $branchId  = $this->resolveBranchId($request);
-        $companyId = $this->resolveCompanyId($request);
-        $purchase  = Purchase::where('branch_id', $branchId)->with('items')->findOrFail($id);
+        $branchId = $this->resolveBranchId($request);
+        $purchase = Purchase::where('branch_id', $branchId)->findOrFail($id);
 
         $validated = $request->validate([
-            'items'              => 'required|array|min:1',
-            'items.*.id'         => 'required|integer',
-            'items.*.quantity'   => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01',
         ]);
 
-        DB::transaction(function () use ($purchase, $validated, $companyId, $branchId) {
-            foreach ($validated['items'] as $itemData) {
-                $item = $purchase->items()->where('id', $itemData['id'])->firstOrFail();
+        $newPaid = (float) $purchase->paid_amount + (float) $validated['amount'];
+        $totalAmount = (float) $purchase->total_amount;
+        $dueAmount = max(0, $totalAmount - $newPaid);
 
-                $remaining = $item->quantity - $item->received_qty;
-                if ($itemData['quantity'] > $remaining + 1e-4) {
-                    throw new \RuntimeException("Cannot receive more than ordered for item #{$item->id}.");
-                }
+        $paymentStatus = match (true) {
+            $dueAmount <= 0   => Purchase::PAYMENT_STATUS_PAID,
+            $newPaid > 0      => Purchase::PAYMENT_STATUS_PARTIAL,
+            default           => Purchase::PAYMENT_STATUS_UNPAID,
+        };
 
-                $item->increment('received_qty', $itemData['quantity']);
+        $purchase->update([
+            'paid_amount'    => $newPaid,
+            'due_amount'     => $dueAmount,
+            'payment_status' => $paymentStatus,
+        ]);
 
-                if ($item->product_id) {
-                    StockService::record(
-                        companyId: $companyId,
-                        branchId: $branchId,
-                        productId: $item->product_id,
-                        movementType: 'in',
-                        quantity: $itemData['quantity'],
-                        unitCost: (float) $item->unit_price,
-                        referenceType: 'Purchase',
-                        referenceId: $purchase->id,
-                        notes: "Received for {$purchase->reference_no}",
-                        unitId: $item->unit_id,
-                    );
-                }
+        // Update account balance - money goes out for purchases
+        if ($purchase->account_id) {
+            $account = Account::find($purchase->account_id);
+            if ($account) {
+                $account->decrement('balance', (float) $validated['amount']);
             }
-        });
+        }
 
-        $purchase->refresh()->load(['items.product', 'items.unit']);
+        $purchase->load(['supplier', 'account', 'items.product', 'items.unit', 'creator']);
 
         return response()->json([
             'data'    => $purchase,
-            'message' => 'Items received successfully. Stock updated.',
+            'message' => 'Payment recorded successfully.',
         ]);
     }
 
@@ -271,10 +277,7 @@ class PurchaseController extends Controller
         $purchase = Purchase::where('branch_id', $branchId)->findOrFail($id);
 
         DB::transaction(function () use ($purchase) {
-            $hasReceived = $purchase->items()->where('received_qty', '>', 0)->exists();
-            if ($hasReceived) {
-                StockService::reverse('Purchase', $purchase->id);
-            }
+            StockService::reverse('Purchase', $purchase->id);
             $purchase->update(['payment_status' => Purchase::PAYMENT_STATUS_UNPAID]);
         });
 

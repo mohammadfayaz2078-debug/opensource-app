@@ -52,6 +52,7 @@ export default function StockTransactions() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Cost</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
@@ -69,6 +70,7 @@ export default function StockTransactions() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900 text-right">{parseFloat(t.quantity).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{t.unit?.name || '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 text-right">{parseFloat(t.unit_cost).toFixed(2)}</td>
                   <td className="px-4 py-3 text-sm text-gray-900 text-right">{parseFloat(t.total_cost).toFixed(2)}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 text-right">{parseFloat(t.balance_qty).toFixed(2)}</td>

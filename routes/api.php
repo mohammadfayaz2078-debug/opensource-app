@@ -26,10 +26,10 @@ use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\StockController;
-use Illuminate\Http\Request;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountDepositController;
 use App\Http\Controllers\AccountWithdrawalController;
+use Illuminate\Http\Request;
 
 // Replace login route
 Route::post('/login', [SuperAdminAuthController::class, 'login']);
@@ -236,6 +236,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus']);
     });
 
+    // ── Accounts Module ──────────────────────────────────────────────────────
+
+    Route::prefix('accounts')->group(function () {
+        Route::get('/',              [AccountController::class, 'index']);
+        Route::get('/list/options',  [AccountController::class, 'listOptions']);
+        Route::post('/',             [AccountController::class, 'store']);
+        Route::get('/{id}',          [AccountController::class, 'show']);
+        Route::put('/{id}',          [AccountController::class, 'update']);
+        Route::delete('/{id}',       [AccountController::class, 'destroy']);
+    });
+
     // ── Purchase Module ──────────────────────────────────────────────────────
 
     Route::prefix('purchases')->group(function () {
@@ -246,7 +257,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}',                [PurchaseController::class, 'show']);
         Route::put('/{id}',                [PurchaseController::class, 'update']);
         Route::delete('/{id}',             [PurchaseController::class, 'destroy']);
-        Route::post('/{id}/receive',       [PurchaseController::class, 'receive']);
+        Route::post('/{id}/pay',           [PurchaseController::class, 'pay']);
         Route::post('/{id}/cancel',        [PurchaseController::class, 'cancel']);
     });
 
@@ -269,6 +280,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}',                [SaleController::class, 'update']);
         Route::delete('/{id}',             [SaleController::class, 'destroy']);
         Route::post('/{id}/confirm',       [SaleController::class, 'confirm']);
+        Route::post('/{id}/pay',           [SaleController::class, 'pay']);
         Route::post('/{id}/deliver',       [SaleController::class, 'deliver']);
         Route::post('/{id}/cancel',        [SaleController::class, 'cancel']);
     });
@@ -289,14 +301,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/product/{id}',        [StockController::class, 'productStock']);
     });
 
-    Route::apiResource('accounts', AccountController::class);
-
-    Route::get('account-deposits', [AccountDepositController::class, 'index']);
-    Route::post('account-deposits', [AccountDepositController::class, 'store']);
+    Route::get('account-deposits',             [AccountDepositController::class, 'index']);
+    Route::post('account-deposits',            [AccountDepositController::class, 'store']);
     Route::get('account-deposits/{accountDeposit}', [AccountDepositController::class, 'show']);
 
-    Route::get('account-withdrawals', [AccountWithdrawalController::class, 'index']);
-    Route::post('account-withdrawals', [AccountWithdrawalController::class, 'store']);
+    Route::get('account-withdrawals',              [AccountWithdrawalController::class, 'index']);
+    Route::post('account-withdrawals',             [AccountWithdrawalController::class, 'store']);
     Route::get('account-withdrawals/{accountWithdrawal}', [AccountWithdrawalController::class, 'show']);
 
     Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions']);

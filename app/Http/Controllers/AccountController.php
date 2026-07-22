@@ -2,99 +2,136 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuthHelper;
 use App\Models\Account;
+use App\Models\AccountTransaction;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    private function resolveBranchId(Request $request): ?int
     {
-        return response()->json(Account::latest()->get());
+        if (AuthHelper::isCompanyAdmin()) {
+            return $request->filled('branch_id') ? (int) $request->branch_id : null;
+        }
+        return AuthHelper::getBranchId();
     }
 
-    /**
-     * Store a newly created account.
-     */
-    public function store(Request $request)
+    private function resolveCompanyId(Request $request): ?int
     {
+        if (AuthHelper::isCompanyAdmin()) {
+            return $request->filled('company_id') ? (int) $request->company_id : null;
+        }
+        $branchId = AuthHelper::getBranchId();
+        return $branchId ? \App\Models\Branch::find($branchId)?->company_id : null;
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
+
+        $query = Account::where('company_id', $companyId)
+            ->where('branch_id', $branchId);
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        $accounts = $query->orderBy('name')->get();
+
+        return response()->json(['data' => $accounts]);
+    }
+
+    public function listOptions(Request $request): JsonResponse
+    {
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
+
+        $accounts = Account::where('company_id', $companyId)
+            ->where('branch_id', $branchId)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'type', 'balance']);
+
+        return response()->json(['data' => $accounts]);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
+
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:accounts,name'],
-            'description' => ['nullable', 'string'],
-            'is_active' => ['boolean'],
+            'name'        => 'required|string|max:255',
+            'type'        => 'nullable|in:cash,bank,other',
+            'description' => 'nullable|string',
+            'balance'     => 'nullable|numeric|min:0',
+            'is_active'   => 'nullable|boolean',
         ]);
 
-        $account = Account::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
-        ]);
+        $validated['company_id'] = $companyId;
+        $validated['branch_id']  = $branchId;
+        $validated['balance']    = $validated['balance'] ?? 0;
+        $validated['is_active']  = $validated['is_active'] ?? true;
+
+        $account = Account::create($validated);
 
         return response()->json([
+            'data'    => $account,
             'message' => 'Account created successfully.',
-            'data' => $account,
         ], 201);
     }
 
-    /**
-     * Display the specified account.
-     */
-    public function show(Account $account)
+    public function show(Request $request, int $id): JsonResponse
     {
-        return response()->json($account);
+        $branchId = $this->resolveBranchId($request);
+        $account  = Account::where('branch_id', $branchId)->findOrFail($id);
+
+        return response()->json(['data' => $account]);
     }
 
-    /**
-     * Update the specified account.
-     */
-    public function update(Request $request, Account $account)
+    public function update(Request $request, int $id): JsonResponse
     {
+        $branchId = $this->resolveBranchId($request);
+        $account  = Account::where('branch_id', $branchId)->findOrFail($id);
+
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                \Illuminate\Validation\Rule::unique('accounts', 'name')->ignore($account->id),
-            ],
-            'description' => ['nullable', 'string'],
-            'is_active' => ['boolean'],
+            'name'        => 'sometimes|string|max:255',
+            'type'        => 'nullable|in:cash,bank,other',
+            'description' => 'nullable|string',
+            'balance'     => 'nullable|numeric|min:0',
+            'is_active'   => 'nullable|boolean',
         ]);
 
-        $account->update([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
-        ]);
+        $account->update($validated);
 
         return response()->json([
+            'data'    => $account,
             'message' => 'Account updated successfully.',
-            'data' => $account,
         ]);
     }
 
-    /**
-     * Remove the specified account.
-     */
-    public function destroy(Account $account)
+    public function transactions(Request $request, int $id): JsonResponse
     {
-        $account->delete();
+        $branchId = $this->resolveBranchId($request);
+        Account::where('branch_id', $branchId)->findOrFail($id);
 
-        return response()->json([
-            'message' => 'Account deleted successfully.',
-        ]);
-    }
-
-    /**
-     * Get account transactions.
-     */
-    public function transactions(Account $account)
-    {
-        $transactions = $account->transactions()
-            ->with('reference')
-            ->paginate(20);
+        $transactions = AccountTransaction::where('account_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(min((int) $request->get('per_page', 20), 100));
 
         return response()->json($transactions);
+    }
+
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $branchId = $this->resolveBranchId($request);
+        $account  = Account::where('branch_id', $branchId)->findOrFail($id);
+
+        $account->delete();
+
+        return response()->json(['message' => 'Account deleted successfully.']);
     }
 }

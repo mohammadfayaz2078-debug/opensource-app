@@ -32,7 +32,7 @@ const AccountShow = () => {
         api.get('/account-withdrawals')
       ]);
 
-      setAccount(accountRes.data);
+      setAccount(accountRes.data.data);
       
       const filteredDeposits = depositsRes.data.filter(d => d.account_id === parseInt(id));
       const filteredWithdrawals = withdrawalsRes.data.filter(w => w.account_id === parseInt(id));
