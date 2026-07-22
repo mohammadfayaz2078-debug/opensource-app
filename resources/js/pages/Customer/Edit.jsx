@@ -20,14 +20,11 @@ export default function CustomerEdit() {
     gps_lat: '',
     gps_lng: '',
     country: '',
-    opening_balance: '',
-    opening_balance_type: 'debit',
     note: '',
     is_active: true,
   });
 
   useEffect(() => {
-    // Fetch customer data
     api.get(`/customers/${id}`).then(r => {
       const customer = r.data.data;
       setForm({
@@ -42,8 +39,6 @@ export default function CustomerEdit() {
         gps_lat: customer.gps_lat || '',
         gps_lng: customer.gps_lng || '',
         country: customer.country || 'Afghanistan',
-        opening_balance: customer.opening_balance || '',
-        opening_balance_type: customer.opening_balance_type || 'debit',
         note: customer.note || '',
         is_active: customer.is_active ?? true,
       });
@@ -278,45 +273,6 @@ export default function CustomerEdit() {
                       onChange={handleChange}
                       className={inputClass('country')}
                     />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Accounting */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Opening Balance
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="opening_balance"
-                      value={form.opening_balance}
-                      onChange={handleChange}
-                      className={inputClass('opening_balance')}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Balance Type
-                    </label>
-                    <select
-                      name="opening_balance_type"
-                      value={form.opening_balance_type}
-                      onChange={handleChange}
-                      className={inputClass('opening_balance_type')}
-                      disabled={!form.opening_balance || form.opening_balance === '0'}
-                    >
-                      <option value="debit">Debit (Customer owes us)</option>
-                      <option value="credit">Credit (We owe customer)</option>
-                    </select>
                   </div>
                 </div>
               </div>

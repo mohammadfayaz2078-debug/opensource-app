@@ -18,8 +18,6 @@ export default function SupplierEdit() {
     address: '',
     city: '',
     country: '',
-    opening_balance: '',
-    opening_balance_type: 'credit',
     note: '',
     is_active: true,
   });
@@ -38,8 +36,6 @@ export default function SupplierEdit() {
         address: supplier.address || '',
         city: supplier.city || '',
         country: supplier.country || 'Afghanistan',
-        opening_balance: supplier.opening_balance || '',
-        opening_balance_type: supplier.opening_balance_type || 'credit',
         note: supplier.note || '',
         is_active: supplier.is_active ?? true,
       });
@@ -246,48 +242,6 @@ export default function SupplierEdit() {
                         className={inputClass('country')}
                       />
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Accounting */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Opening Balance
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="opening_balance"
-                      value={form.opening_balance}
-                      onChange={handleChange}
-                      className={inputClass('opening_balance')}
-                    />
-                    <p className="text-xs text-gray-400 mt-1">
-                      Changing this will create reversal and new journal entries.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Balance Type
-                    </label>
-                    <select
-                      name="opening_balance_type"
-                      value={form.opening_balance_type}
-                      onChange={handleChange}
-                      className={inputClass('opening_balance_type')}
-                      disabled={!form.opening_balance || form.opening_balance === '0'}
-                    >
-                      <option value="credit">Credit (Supplier owes us)</option>
-                      <option value="debit">Debit (We owe supplier)</option>
-                    </select>
                   </div>
                 </div>
               </div>

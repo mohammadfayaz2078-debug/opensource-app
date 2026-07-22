@@ -203,36 +203,8 @@ export default function SupplierShow() {
           )}
         </div>
 
-        {/* Sidebar - Accounting */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
-            </div>
-            <div className="p-6">
-              <dl className="space-y-4">
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Opening Balance</dt>
-                  <dd className="mt-1">
-                    <span className={`text-lg font-semibold ${
-                      supplier.opening_balance_type === 'credit' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {supplier.opening_balance?.toLocaleString()} AFN
-                    </span>
-                    <span className="text-xs text-gray-500 ml-2">
-                      ({supplier.opening_balance_type === 'credit' ? 'Credit' : 'Debit'})
-                    </span>
-                  </dd>
-                  <dd className="text-xs text-gray-400 mt-1">
-                    {supplier.opening_balance_type === 'credit' 
-                      ? 'Supplier owes this amount to your business' 
-                      : 'Your business owes this amount to the supplier'}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-
           {/* Audit Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">

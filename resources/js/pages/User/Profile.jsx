@@ -244,7 +244,7 @@ const UserProfile = () => {
         };
         reader.readAsText(response.data);
       } else {
-        let filename = 'isp_system_backup.sql';
+        let filename = 'bazarnet_system_backup.sql';
         const contentDisposition = response.headers['content-disposition'];
         
         if (contentDisposition) {

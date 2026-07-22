@@ -240,36 +240,8 @@ export default function CustomerShow() {
           )}
         </div>
 
-        {/* Sidebar - Accounting */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
-            </div>
-            <div className="p-6">
-              <dl className="space-y-4">
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Opening Balance</dt>
-                  <dd className="mt-1">
-                    <span className={`text-lg font-semibold ${
-                      customer.opening_balance_type === 'debit' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {customer.opening_balance?.toLocaleString()} AFN
-                    </span>
-                    <span className="text-xs text-gray-500 ml-2">
-                      ({customer.opening_balance_type === 'debit' ? 'Debit' : 'Credit'})
-                    </span>
-                  </dd>
-                  <dd className="text-xs text-gray-400 mt-1">
-                    {customer.opening_balance_type === 'debit' 
-                      ? 'Customer owes this amount to your business' 
-                      : 'Your business owes this amount to the customer'}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-
           {/* Audit Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">

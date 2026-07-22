@@ -30,7 +30,7 @@ class BackupController extends Controller
             }
 
             // Generate filename with timestamp
-            $filename = 'isp_system_backup_' . Carbon::now()->format('Y-m-d_H-i-s') . '.sql';
+            $filename = 'bazarnet_system_backup_' . Carbon::now()->format('Y-m-d_H-i-s') . '.sql';
             
             // Generate backup content
             $backupContent = $this->generateBackupContent($user);

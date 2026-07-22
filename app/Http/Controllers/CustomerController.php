@@ -68,7 +68,7 @@ class CustomerController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = Customer::with(['branch', 'receivableAccount', 'creator'])
+        $query = Customer::with(['branch', 'creator'])
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
 
@@ -192,7 +192,7 @@ class CustomerController extends Controller
             return $customer;
         });
 
-        $customer->load(['branch', 'receivableAccount', 'creator']);
+        $customer->load(['branch', 'creator']);
 
         return response()->json([
             'data'    => $customer,
@@ -212,7 +212,7 @@ class CustomerController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $customer = Customer::where('branch_id', $branchId)
-            ->with(['branch', 'receivableAccount', 'creator', 'company'])
+            ->with(['branch', 'creator', 'company'])
             ->findOrFail($id);
 
         return response()->json(['data' => $customer]);
@@ -251,7 +251,7 @@ class CustomerController extends Controller
 
         $customer->update($validated);
 
-        $customer->load(['branch', 'receivableAccount', 'creator']);
+        $customer->load(['branch', 'creator']);
 
         return response()->json([
             'data'    => $customer,
@@ -359,7 +359,6 @@ class CustomerController extends Controller
         
         $customers = Customer::where('company_id', $companyId)
             ->where('branch_id', $branchId)
-            ->with('receivableAccount')
             ->orderBy('first_name')
             ->get();
         
@@ -373,9 +372,6 @@ class CustomerController extends Controller
             'Province' => $customer->province,
             'Country' => $customer->country,
             'GPS Coordinates' => $customer->gps_lat && $customer->gps_lng ? "{$customer->gps_lat}, {$customer->gps_lng}" : '',
-            'Opening Balance' => $customer->opening_balance,
-            'Opening Balance Type' => ucfirst($customer->opening_balance_type),
-            'Receivable Account' => $customer->receivableAccount?->name,
             'Status' => $customer->is_active ? 'Active' : 'Inactive',
             'Created At' => $customer->created_at->format('Y-m-d H:i:s'),
         ]);

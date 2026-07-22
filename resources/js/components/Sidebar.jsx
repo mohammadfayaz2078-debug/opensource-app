@@ -6,53 +6,53 @@ import api from '../plugins/axios';
 // Icon components
 const Icons = {
   home: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
   ),
   settings: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   ),
   wallet: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 9h-4m4 0v4m0-4l-4 4m4-4l4-4m-4 4V5m0 4h4m-4 0l4 4M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m0 18h10a2 2 0 002-2v-4m-12 4V5m0 16h4m0-16h-4" />
     </svg>
   ),
   box: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
     </svg>
   ),
   truck: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 18H6a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v2m2 10H8m10 0v-6a2 2 0 00-2-2H8m10 0v6m-6-6h6m-6 0v6" />
     </svg>
   ),
   chart: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
     </svg>
   ),
   user: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
     </svg>
   ),
   shopping: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1 5h12l-1-5M5 21h.01M19 21h.01" />
     </svg>
   ),
   package: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
     </svg>
   ),
   users: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
     </svg>
   )
@@ -84,18 +84,26 @@ const Sidebar = ({
       'sidebar_user_roles': 'User Roles',
       'sidebar_branches': 'Branches',
       'sidebar_users': 'Users',
-      'sidebar_customer_list': 'Customer List',
+      'sidebar_customer_list': 'Customers',
       'sidebar_add_customer': 'Add a Customer',
       'sidebar_inactive_customers': 'Display inactive customers',
       'sidebar_record_journal': 'Record Journal',
       'sidebar_view_journal': 'View Journal Entries',
-      'sidebar_supplier_list': 'Supplier List',
+      'sidebar_supplier_list': 'Suppliers',
       'sidebar_mileage_list': 'Mileage List',
       'sidebar_vehicle_list': 'Vehicle List',
       'sidebar_due_date': 'Due Date',
       'sidebar_last_invoice': 'Last Invoice',
       'sidebar_salesperson': 'Salesperson',
       'sidebar_expenses': 'Expenses',
+      'sidebar_purchase_orders': 'Bill',
+      'sidebar_purchase_returns': 'Purchase Returns',
+      'sidebar_invoices': 'Invoices',
+      'sidebar_sale_returns': 'Sale Returns',
+      'sidebar_stock_balances': 'Stock Balances',
+      'sidebar_stock_transactions': 'Transactions',
+      'sidebar_suppliers': 'Suppliers',
+      'sidebar_sales': 'Sales',
       'sidebar_income_categories': 'Income Categories',
       'sidebar_other_incomes': 'Other Incomes',
       'sidebar_expense_categories': 'Categories',
@@ -103,7 +111,7 @@ const Sidebar = ({
       'sidebar_salespersons': 'Salespersons',
       'management': 'Management',
       'Administration': 'Administration',
-      'Customers': 'Customers',
+      'Customers': 'Customer',
       'Banking': 'Banking',
       'Purchases': 'Purchases',
       'Inventory': 'Inventory',
@@ -139,12 +147,13 @@ const links = [
     ]
   },
   {
-    title: 'Customers',
+    title: 'Sales',
     icon: 'users',
-    translation_key: 'Customers',
+    translation_key: 'Sales',
     children: [
-      { name: 'Customer List', to: '/customers', translation_key: 'sidebar_customer_list' },
-      { name: 'Receivable List', to: '/customers', translation_key: 'sidebar_receivable_list' },
+      { name: 'Customer', to: '/customers', translation_key: 'sidebar_customer_list' },
+      { name: 'Invoices', to: '/sales', translation_key: 'sidebar_invoices' },
+      { name: 'Sale Returns', to: '/sale-returns', translation_key: 'sidebar_sale_returns' },
     ]
   },
   {
@@ -152,8 +161,9 @@ const links = [
     icon: 'shopping',
     translation_key: 'Purchases',
     children: [
-      { name: 'Supplier List', to: '/suppliers', translation_key: 'sidebar_supplier_list' },
-      { name: 'Payable List', to: '/suppliers', translation_key: 'sidebar_payable_list' },
+      { name: 'Suppliers', to: '/suppliers', translation_key: 'sidebar_supplier_list' },
+      { name: 'Bill', to: '/purchases', translation_key: 'sidebar_purchase_orders' },
+      { name: 'Purchase Returns', to: '/purchase-returns', translation_key: 'sidebar_purchase_returns' },
     ]
   },
   {
@@ -161,10 +171,12 @@ const links = [
     icon: 'box',
     translation_key: 'Inventory',
     children: [
-      { name: 'Unit Category', to: '/unit-categories', icon: 'users', translation_key: 'sidebar_unit_categories' },
-      { name: 'Product Units', to: '/units', icon: 'users', translation_key: 'sidebar_units' },
+      { name: 'Unit Category', to: '/unit-categories', translation_key: 'sidebar_unit_categories' },
+      { name: 'Product Units', to: '/units', translation_key: 'sidebar_units' },
       { name: 'Product Category', to: '/product-categories', translation_key: 'sidebar_product_categories' },
       { name: 'Products', to: '/products', translation_key: 'sidebar_products' },
+      { name: 'Stock Balances', to: '/stock/balances', translation_key: 'sidebar_stock_balances' },
+      { name: 'Stock Transactions', to: '/stock/transactions', translation_key: 'sidebar_stock_transactions' },
     ]
   },
   {
@@ -231,9 +243,9 @@ const links = [
 
     if (windowWidth >= 1024) {
       if (isRTL) {
-        classes.push('border-l', 'border-white/10');
+        classes.push('border-l', 'border-slate-200');
       } else {
-        classes.push('border-r', 'border-white/10');
+        classes.push('border-r', 'border-slate-200');
       }
 
       if (isCollapsed) {
@@ -257,9 +269,9 @@ const links = [
       classes.push('w-56');
 
       if (isRTL) {
-        classes.push('right-0', 'border-l', 'border-white/10');
+        classes.push('right-0', 'border-l', 'border-slate-200');
       } else {
-        classes.push('left-0', 'border-r', 'border-white/10');
+        classes.push('left-0', 'border-r', 'border-slate-200');
       }
 
       if (isMobileOpen) {
@@ -360,40 +372,35 @@ const links = [
       <aside
         ref={sidebarRef}
         className={`sidebar-container fixed inset-y-0 z-40
-           bg-[#2F3E5C] text-white
+           bg-[#F0F9FF] text-slate-700 border-r border-slate-200
            flex flex-col h-screen
            transform transition-all duration-300 ease-out
-           shadow-xl ${getSidebarClasses()}`}
+           shadow-sm ${getSidebarClasses()}`}
       >
         {/* Header */}
         <div
-          className={`p-4 border-b border-white/10 flex items-center justify-between flex-shrink-0 bg-[#2F3E5C] ${isRTL ? 'flex-row-reverse' : ''}`}
+          className={`px-3 py-2.5 border-b border-slate-200 flex items-center justify-between flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           {(!isCollapsed || windowWidth < 1024) && (
-            <div className={`flex items-center space-x-3 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-              <div className="w-9 h-9 bg-[#3FA7FF] rounded-md flex items-center justify-center flex-shrink-0 shadow-md">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
+            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] rounded-md flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm">
+                {user?.branch ? user.branch.branch_name.charAt(0).toUpperCase() : 'M'}
               </div>
-
               <div className={`overflow-hidden ${isRTL ? 'text-right' : ''}`}>
-                <h1 className="text-base font-semibold text-white truncate">
+                <div className="text-sm font-medium text-slate-800 truncate leading-tight">
                   {user?.branch ? user.branch.branch_name : 'Management'}
-                </h1>
-                <p className="text-xs text-white/70 truncate">
-                  ISP / {user?.branch?.city || 'Admin'}
-                </p>
+                </div>
+                <div className="text-xs text-slate-500 truncate leading-tight">
+                  {user?.branch?.city || ''}
+                </div>
               </div>
             </div>
           )}
 
           {isCollapsed && windowWidth >= 1024 && (
             <div className="w-full flex justify-center">
-              <div className="w-9 h-9 bg-[#3FA7FF] rounded-md flex items-center justify-center shadow-md">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
+              <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] rounded-md flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                {user?.branch ? user.branch.branch_name.charAt(0).toUpperCase() : 'M'}
               </div>
             </div>
           )}
@@ -401,7 +408,7 @@ const links = [
           {windowWidth < 1024 && (
             <button
               onClick={closeMobileSidebar}
-              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md text-white/70 hover:bg-white/10 transition-colors"
+              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md text-slate-400 hover:bg-slate-100 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -412,9 +419,9 @@ const links = [
 
         {/* Search */}
         {(!isCollapsed || windowWidth < 1024) && showSearch && (
-          <div className="mt-3 flex-shrink-0 px-2">
+          <div className="mt-2 mb-1 flex-shrink-0 px-2">
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -422,7 +429,7 @@ const links = [
                 value={linkSearch}
                 onChange={(e) => setLinkSearch(e.target.value)}
                 placeholder={t('search_links')}
-                className="w-full pl-9 pr-3 py-2 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#3FA7FF] focus:bg-white/15 text-sm border border-white/10 rounded"
+                className="w-full pl-9 pr-3 py-1.5 text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:bg-[#EFF6FF] text-sm bg-white border border-slate-200 rounded"
               />
             </div>
           </div>
@@ -433,7 +440,7 @@ const links = [
           className={`flex-1 overflow-y-auto custom-scrollbar mt-2 ${isRTL ? 'text-right' : ''}`}
           style={{
             scrollbarWidth: 'thin',
-            scrollbarColor: '#4a5d7a #2F3E5C'
+            scrollbarColor: '#cbd5e1 #f8fafc'
           }}
         >
           {(!isCollapsed || windowWidth < 1024) ? (
@@ -449,21 +456,21 @@ const links = [
                         to={child.to}
                         onClick={handleLinkClick}
                         className={({ isActive }) => `
-                          flex items-center p-1 transition group
+                          flex items-center px-3 py-2 transition group relative
                           ${isRTL ? 'flex-row-reverse' : ''}
                           ${isActive 
-                            ? 'bg-white text-gray-900 font-medium shadow-md' 
-                            : 'text-white/85 hover:bg-white/10 hover:text-white'
+                            ? 'text-[#0EA5E9] bg-[#EFF6FF] font-medium after:absolute after:left-0 after:top-1 after:bottom-1 after:w-0.5 after:bg-[#0EA5E9] after:rounded-r-full' 
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                           }
                         `}
                       >
-                        <div className="w-7 h-7 flex items-center justify-center">
+                        <div className="w-6 h-6 flex items-center justify-center text-slate-400">
                           <IconComponent 
                             icon={child.icon} 
-                            className="w-4.5 h-4.5"
+                            className="w-5 h-5"
                           />
                         </div>
-                        <span className={`text-base truncate ${isRTL ? 'mr-4' : 'ml-3'}`}>
+                        <span className={`text-base truncate ${isRTL ? 'mr-3' : 'ml-3'}`}>
                           {t(child.translation_key || child.name.toLowerCase().replace(/ /g, '_'))}
                         </span>
                       </NavLink>
@@ -483,17 +490,17 @@ const links = [
                           key={childIdx}
                           to={child.to}
                           onClick={handleLinkClick}
-                          className={({ isActive }) => `
-                            flex items-center p-2 transition text-md
-                            ${isRTL ? 'pr-5' : 'pl-5'}
-                            ${isActive 
-                              ? 'bg-[#3FA7FF] text-white font-medium' 
-                              : 'text-slate-700 hover:bg-slate-100'
-                            }
-                          `}
-                        >
-                          <span className="mx-2 text-[#3FA7FF]">•</span>
-                          <span className="truncate">
+                           className={({ isActive }) => `
+                             flex items-center px-3 py-1.5 transition text-sm rounded
+                             ${isRTL ? 'pr-5' : 'pl-5'}
+                             ${isActive 
+                               ? 'text-[#0EA5E9] bg-[#EFF6FF] font-medium' 
+                               : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                             }
+                           `}
+                         >
+                           <span className="mx-2 text-gray-300">•</span>
+                           <span className="truncate">
                             {t(child.translation_key || child.name.toLowerCase().replace(/ /g, '_'))}
                           </span>
                         </NavLink>
@@ -516,15 +523,15 @@ const links = [
                         onClick={handleLinkClick}
                         title={t(child.translation_key || child.name.toLowerCase().replace(/ /g, '_'))}
                         className={({ isActive }) => `
-                          flex justify-center p-3 transition group
+                          flex justify-center p-3 transition group relative
                           ${isActive 
-                            ? 'bg-[#3FA7FF] text-white' 
-                            : 'text-white/70 hover:bg-white/10 hover:text-white'
+                            ? 'text-[#0EA5E9] bg-[#EFF6FF] after:absolute after:left-0 after:top-1 after:bottom-1 after:w-0.5 after:bg-[#0EA5E9] after:rounded-r-full' 
+                            : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
                           }
                         `}
                       >
                         <div className="w-5 h-5 flex items-center justify-center">
-                          <IconComponent icon={child.icon} className="w-4 h-4" />
+                          <IconComponent icon={child.icon} className="w-5 h-5" />
                         </div>
                       </NavLink>
                     ))
@@ -532,10 +539,10 @@ const links = [
                     <button
                       onClick={() => toggleCollapsedGroup(group.title.toLowerCase())}
                       title={t(group.translation_key || group.title.toLowerCase().replace(/ /g, '_'))}
-                      className={`w-full flex justify-center p-3 transition group
-                        ${isCollapsedGroupOpen(group.title.toLowerCase())
-                          ? 'bg-white/10 text-white'
-                          : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        className={`w-full flex justify-center p-3 transition group
+                          ${isCollapsedGroupOpen(group.title.toLowerCase())
+                            ? 'bg-slate-100 text-slate-900'
+                            : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
                         }
                       `}
                     >
@@ -556,14 +563,14 @@ const links = [
           width: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #2F3E5C;
+          background: #f8fafc;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #4a5d7a;
+          background: #cbd5e1;
           border-radius: 2px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #5d7090;
+          background: #94a3b8;
         }
         
         @media (min-width: 1024px) {

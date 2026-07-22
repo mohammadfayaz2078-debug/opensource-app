@@ -39,7 +39,7 @@ class ExpenseTypeController extends Controller
             $query->active();
         }
 
-        $types = $query->with(['category', 'expenseAccount:id,name,code', 'defaultPaymentAccount:id,name,code'])->ordered()->get();
+        $types = $query->with(['category'])->ordered()->get();
 
         return response()->json([
             'data'  => $types,
@@ -68,7 +68,7 @@ class ExpenseTypeController extends Controller
         $validated['branch_id'] = $branchId;
 
         $type = ExpenseType::create($validated);
-        $type->load(['category', 'expenseAccount:id,name,code', 'defaultPaymentAccount:id,name,code']);
+        $type->load(['category']);
 
         return response()->json([
             'data'    => $type,
@@ -82,7 +82,7 @@ class ExpenseTypeController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $branchId = $this->resolveBranchId($request);
-        $type = ExpenseType::forBranch($branchId)->with(['category', 'expenseAccount:id,name,code', 'defaultPaymentAccount:id,name,code'])->findOrFail($id);
+        $type = ExpenseType::forBranch($branchId)->with(['category'])->findOrFail($id);
 
         return response()->json(['data' => $type]);
     }
@@ -109,7 +109,7 @@ class ExpenseTypeController extends Controller
         ]);
 
         $type->update($validated);
-        $type->refresh()->load(['category', 'expenseAccount:id,name,code', 'defaultPaymentAccount:id,name,code']);
+        $type->refresh()->load(['category']);
 
         return response()->json([
             'data'    => $type,

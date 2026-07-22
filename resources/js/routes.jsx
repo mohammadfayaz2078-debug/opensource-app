@@ -15,8 +15,29 @@ import BranchShow from './pages/Branch/Show';
 import CompanyShow from './pages/Company/Show';
 import CompanyEdit from './pages/Company/Edit';
 
+// Purchase Pages
+import PurchaseIndex from './pages/Purchase/Index';
+import PurchaseCreate from './pages/Purchase/Create';
+import PurchaseEdit from './pages/Purchase/Edit';
+import PurchaseShow from './pages/Purchase/Show';
+import PurchaseReturnIndex from './pages/PurchaseReturn/Index';
+import PurchaseReturnCreate from './pages/PurchaseReturn/Create';
+
+// Sale Pages
+import SaleIndex from './pages/Sale/Index';
+import SaleCreate from './pages/Sale/Create';
+import SaleEdit from './pages/Sale/Edit';
+import SaleShow from './pages/Sale/Show';
+import SaleReturnIndex from './pages/SaleReturn/Index';
+import SaleReturnCreate from './pages/SaleReturn/Create';
+
+// Stock Pages
+import StockBalances from './pages/Stock/Balances';
+import StockTransactions from './pages/Stock/Transactions';
+
 // Expense Pages
 import ExpenseIndex from './pages/Expense/Index';
+import ExpenseCreate from './pages/Expense/Create';
 import ExpenseCategoryIndex from './pages/ExpenseCategory/Index';
 import ExpenseTypeIndex from './pages/ExpenseType/Index';
 
@@ -217,6 +238,7 @@ const routes = [
       
       // Expenses
       { path: 'expenses', element: <ExpenseIndex /> },
+      { path: 'expenses/create', element: <ExpenseCreate /> },
       { path: 'expense-categories', element: <ExpenseCategoryIndex /> },
       { path: 'expense-types', element: <ExpenseTypeIndex /> },
 
@@ -260,6 +282,26 @@ const routes = [
       { path: 'products/create', element: <ProductCreate /> },
       { path: 'products/:id', element: <ProductShow /> },
       { path: 'products/:id/edit', element: <ProductEdit /> },
+
+      // Purchases
+      { path: 'purchases', element: <PurchaseIndex /> },
+      { path: 'purchases/create', element: <PurchaseCreate /> },
+      { path: 'purchases/:id', element: <PurchaseShow /> },
+      { path: 'purchases/:id/edit', element: <PurchaseEdit /> },
+      { path: 'purchase-returns', element: <PurchaseReturnIndex /> },
+      { path: 'purchase-returns/create', element: <PurchaseReturnCreate /> },
+
+      // Sales
+      { path: 'sales', element: <SaleIndex /> },
+      { path: 'sales/create', element: <SaleCreate /> },
+      { path: 'sales/:id', element: <SaleShow /> },
+      { path: 'sales/:id/edit', element: <SaleEdit /> },
+      { path: 'sale-returns', element: <SaleReturnIndex /> },
+      { path: 'sale-returns/create', element: <SaleReturnCreate /> },
+
+      // Stock
+      { path: 'stock/balances', element: <StockBalances /> },
+      { path: 'stock/transactions', element: <StockTransactions /> },
     ]
   },
   

@@ -96,8 +96,11 @@ class ProductController extends Controller
             'saleUnit',
             'stockUnit',
         ])
-            ->where('company_id', $companyId)
-            ->where('branch_id', $branchId);
+            ->where('company_id', $companyId);
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
 
         // Filter by category
         if ($request->filled('category_id')) {
@@ -255,17 +258,21 @@ class ProductController extends Controller
     {
         $branchId = $this->resolveBranchId($request);
 
-        $product = Product::where('branch_id', $branchId)
-            ->with([
-                'category',
-                'purchaseUnit',
-                'saleUnit',
-                'stockUnit',
-                'attachments' => function($q) {
-                    $q->orderBy('created_at', 'desc');
-                }
-            ])
-            ->findOrFail($id);
+        $query = Product::with([
+            'category',
+            'purchaseUnit',
+            'saleUnit',
+            'stockUnit',
+            'attachments' => function($q) {
+                $q->orderBy('created_at', 'desc');
+            }
+        ]);
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+
+        $product = $query->findOrFail($id);
 
         return response()->json(['data' => $product]);
     }
@@ -277,7 +284,12 @@ class ProductController extends Controller
     {
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
-        $product   = Product::where('branch_id', $branchId)->findOrFail($id);
+        
+        $query = Product::where('company_id', $companyId);
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+        $product = $query->findOrFail($id);
 
         $validated = $request->validate([
             'name'                      => 'sometimes|string|max:255',
@@ -343,7 +355,13 @@ class ProductController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $branchId = $this->resolveBranchId($request);
-        $product  = Product::where('branch_id', $branchId)->findOrFail($id);
+        $companyId = $this->resolveCompanyId($request);
+        
+        $query = Product::where('company_id', $companyId);
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+        $product = $query->findOrFail($id);
 
         // Check if product has any associated sales, purchase orders, or inventory
         // Add your checks here when those modules are implemented
@@ -391,8 +409,13 @@ class ProductController extends Controller
     public function deleteAttachment(Request $request, int $productId, int $attachmentId): JsonResponse
     {
         $branchId = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
         
-        $product = Product::where('branch_id', $branchId)->findOrFail($productId);
+        $query = Product::where('company_id', $companyId);
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+        $product = $query->findOrFail($productId);
         $attachment = $product->attachments()->findOrFail($attachmentId);
         
         // Delete file from storage
@@ -410,8 +433,13 @@ class ProductController extends Controller
     public function getAttachments(Request $request, int $productId): JsonResponse
     {
         $branchId = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
         
-        $product = Product::where('branch_id', $branchId)->findOrFail($productId);
+        $query = Product::where('company_id', $companyId);
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+        $product = $query->findOrFail($productId);
         $attachments = $product->attachments()->orderBy('created_at', 'desc')->get();
         
         // Add full URL for each attachment
@@ -533,8 +561,11 @@ class ProductController extends Controller
         $branchId = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
         
-        $query = Product::where('company_id', $companyId)
-            ->where('branch_id', $branchId);
+        $query = Product::where('company_id', $companyId);
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
         
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);

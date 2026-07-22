@@ -67,108 +67,69 @@ export default function ProductCategoryIndex() {
   };
 
   return (
-    <div>
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Categories</p>
-              <p className="text-2xl font-bold text-gray-900">{summary.total_categories || 0}</p>
-            </div>
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l5 5a2 2 0 01.586 1.414V19a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">With Products</p>
-              <p className="text-2xl font-bold text-green-600">{summary.categories_with_products || 0}</p>
-            </div>
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Without Products</p>
-              <p className="text-2xl font-bold text-orange-600">{summary.categories_without_products || 0}</p>
-            </div>
-            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4M12 4v16" />
-              </svg>
-            </div>
+    <div className="relative bg-gradient-to-br from-emerald-50/40 via-white to-sky-50/40 rounded-xl p-6 -m-6">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-xl font-semibold text-gray-900">Product Categories</h1>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{summary.total_categories || 0} total</span>
+            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{summary.categories_with_products || 0} with products</span>
+            <span className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">{summary.categories_without_products || 0} empty</span>
           </div>
         </div>
       </div>
 
       {/* Toolbar */}
-      <div className="bg-white border border-gray-200 shadow-sm mb-6">
-        <div className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <form onSubmit={handleSearch} className="flex flex-1 gap-3">
-              <div className="relative flex-1 max-w-md">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search by name or description..."
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200"
-              >
-                Search
-              </button>
-              {search && (
-                <button
-                  type="button"
-                  onClick={resetSearch}
-                  className="px-4 py-2 text-gray-500 text-sm font-medium rounded-md hover:text-gray-700"
-                >
-                  Clear
-                </button>
-              )}
-            </form>
-            
-            <div className="flex gap-2">
-              <button
-                onClick={() => navigate('/product-categories/export')}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Export
-              </button>
-              
-              <Link
-                to="/product-categories/create"
-                className="inline-flex items-center px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77]"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                </svg>
-                New Category
-              </Link>
-            </div>
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <form onSubmit={handleSearch} className="flex flex-1 gap-2">
+          <div className="relative flex-1 max-w-xs">
+            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
+            />
           </div>
+          <button
+            type="submit"
+            className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+          >
+            Search
+          </button>
+          {search && (
+            <button
+              type="button"
+              onClick={resetSearch}
+              className="px-3 py-1.5 text-sm text-gray-700 rounded-md hover:text-gray-900"
+            >
+              Clear
+            </button>
+          )}
+        </form>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate('/product-categories/export')}
+            className="inline-flex items-center px-3 py-1.5 text-sm border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export
+          </button>
+          <Link
+            to="/product-categories/create"
+            className="inline-flex items-center px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors"
+          >
+            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            New
+          </Link>
         </div>
       </div>
 
@@ -176,44 +137,61 @@ export default function ProductCategoryIndex() {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-600">Loading categories...</span>
+          <span className="ml-3 text-gray-700 text-sm">Loading categories...</span>
         </div>
       )}
 
-      {/* Categories Grid */}
+      {/* Table */}
       {!loading && (
-        <div>
+        <div className="rounded-lg border border-gray-200 shadow-md overflow-hidden">
           {categories.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-12 text-center">
-              <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="py-16 text-center">
+              <svg className="w-10 h-10 mx-auto mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l5 5a2 2 0 01.586 1.414V19a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
               </svg>
-              <p className="text-sm text-gray-500">
-                {search ? 'No categories match your search.' : 'No product categories found. Create your first category to get started.'}
+              <p className="text-sm text-gray-700">
+                {search ? 'No categories match your search.' : 'No product categories found.'}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categories.map(category => (
-                <div key={category.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <div className="p-5">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <Link to={`/product-categories/${category.id}`}>
-                          <h3 className="text-lg font-semibold text-gray-900 hover:text-[#007c89] transition-colors">
-                            {category.name}
-                          </h3>
-                        </Link>
-                        {category.description && (
-                          <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                            {category.description}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-1">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Products</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category, idx) => (
+                  <tr key={category.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50 transition-colors`}>
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <Link to={`/product-categories/${category.id}`} className="text-sm font-medium text-gray-900 hover:text-[#007c89]">
+                        {category.name}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-2.5 text-sm text-gray-700 max-w-xs truncate">
+                      {category.description || '—'}
+                    </td>
+                    <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700 text-center">
+                      {category.products_count || 0}
+                    </td>
+                    <td className="px-4 py-2.5 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <button
+                          onClick={() => navigate(`/product-categories/${category.id}`)}
+                          className="p-1.5 rounded hover:bg-blue-50 text-gray-700 hover:text-[#007c89]"
+                          title="View"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
                         <button
                           onClick={() => navigate(`/product-categories/${category.id}/edit`)}
-                          className="p-1.5 rounded hover:bg-yellow-50 text-gray-400 hover:text-yellow-600"
+                          className="p-1.5 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600"
                           title="Edit"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +200,7 @@ export default function ProductCategoryIndex() {
                         </button>
                         <button
                           onClick={() => handleDelete(category.id)}
-                          className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
+                          className="p-1.5 rounded hover:bg-red-50 text-gray-700 hover:text-red-600"
                           title="Delete"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,26 +208,11 @@ export default function ProductCategoryIndex() {
                           </svg>
                         </button>
                       </div>
-                    </div>
-                    
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                        <span>{category.products_count || 0} products</span>
-                      </div>
-                      <Link
-                        to={`/product-categories/${category.id}`}
-                        className="text-sm text-[#007c89] hover:underline"
-                      >
-                        View Details →
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       )}

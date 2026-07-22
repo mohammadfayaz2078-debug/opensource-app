@@ -21,6 +21,11 @@ use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UnitCategoryController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PurchaseReturnController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SaleReturnController;
+use App\Http\Controllers\StockController;
 use Illuminate\Http\Request;
 
 
@@ -227,6 +232,59 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}',                [CustomerController::class, 'update']);
         Route::delete('/{id}',             [CustomerController::class, 'destroy']);
         Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus']);
+    });
+
+    // ── Purchase Module ──────────────────────────────────────────────────────
+
+    Route::prefix('purchases')->group(function () {
+        Route::get('/',                    [PurchaseController::class, 'index']);
+        Route::post('/',                   [PurchaseController::class, 'store']);
+        Route::get('/list/options',        [PurchaseController::class, 'getPurchaseList']);
+        Route::get('/export/data',         [PurchaseController::class, 'export']);
+        Route::get('/{id}',                [PurchaseController::class, 'show']);
+        Route::put('/{id}',                [PurchaseController::class, 'update']);
+        Route::delete('/{id}',             [PurchaseController::class, 'destroy']);
+        Route::post('/{id}/receive',       [PurchaseController::class, 'receive']);
+        Route::post('/{id}/cancel',        [PurchaseController::class, 'cancel']);
+    });
+
+    // Purchase Returns
+    Route::prefix('purchase-returns')->group(function () {
+        Route::get('/',                    [PurchaseReturnController::class, 'index']);
+        Route::post('/',                   [PurchaseReturnController::class, 'store']);
+        Route::get('/{id}',                [PurchaseReturnController::class, 'show']);
+        Route::delete('/{id}',             [PurchaseReturnController::class, 'destroy']);
+    });
+
+    // ── Sales Module ─────────────────────────────────────────────────────────
+
+    Route::prefix('sales')->group(function () {
+        Route::get('/',                    [SaleController::class, 'index']);
+        Route::post('/',                   [SaleController::class, 'store']);
+        Route::get('/list/options',        [SaleController::class, 'getSaleList']);
+        Route::get('/export/data',         [SaleController::class, 'export']);
+        Route::get('/{id}',                [SaleController::class, 'show']);
+        Route::put('/{id}',                [SaleController::class, 'update']);
+        Route::delete('/{id}',             [SaleController::class, 'destroy']);
+        Route::post('/{id}/confirm',       [SaleController::class, 'confirm']);
+        Route::post('/{id}/deliver',       [SaleController::class, 'deliver']);
+        Route::post('/{id}/cancel',        [SaleController::class, 'cancel']);
+    });
+
+    // Sale Returns
+    Route::prefix('sale-returns')->group(function () {
+        Route::get('/',                    [SaleReturnController::class, 'index']);
+        Route::post('/',                   [SaleReturnController::class, 'store']);
+        Route::get('/{id}',                [SaleReturnController::class, 'show']);
+        Route::delete('/{id}',             [SaleReturnController::class, 'destroy']);
+    });
+
+    // ── Stock Module ─────────────────────────────────────────────────────────
+
+    Route::prefix('stock')->group(function () {
+        Route::get('/balances',            [StockController::class, 'balances']);
+        Route::get('/transactions',        [StockController::class, 'transactions']);
+        Route::get('/product/{id}',        [StockController::class, 'productStock']);
     });
 });
 
