@@ -6,7 +6,6 @@ use App\Helpers\AuthHelper;
 use App\Models\Product;
 use App\Models\ProductAttachment;
 use App\Models\ProductCategory;
-use App\Models\Unit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,27 +58,6 @@ class ProductController extends Controller
         return 'PRD-' . str_pad($nextNumber, 8, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Validate unit belongs to same category
-     */
-    private function validateUnitCategory(int $unitId, string $unitType, int $branchId): ?Unit
-    {
-        if (!$unitId) {
-            return null;
-        }
-
-        $unit = Unit::where('id', $unitId)
-            ->where('branch_id', $branchId)
-            ->with('category')
-            ->first();
-
-        if (!$unit) {
-            throw new \RuntimeException("Invalid {$unitType} unit selected.");
-        }
-
-        return $unit;
-    }
-
     // ── Products CRUD ───────────────────────────────────────────────────────
 
     /**
@@ -90,12 +68,7 @@ class ProductController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = Product::with([
-            'category',
-            'purchaseUnit',
-            'saleUnit',
-            'stockUnit',
-        ])
+        $query = Product::with('category')
             ->where('company_id', $companyId);
 
         if ($branchId) {
@@ -182,9 +155,6 @@ class ProductController extends Controller
             'name'                      => 'required|string|max:255',
             'barcode'                   => ['nullable', 'string', 'max:50', Rule::unique('products')->where(fn($q) => $q->where('branch_id', $branchId))],
             'category_id'               => 'nullable|exists:product_categories,id',
-            'purchase_unit_id'          => 'nullable|exists:units,id',
-            'sale_unit_id'              => 'nullable|exists:units,id',
-            'stock_unit_id'             => 'nullable|exists:units,id',
             'purchase_price'            => 'nullable|numeric|min:0|max:999999999999.99',
             'sale_price'                => 'nullable|numeric|min:0|max:999999999999.99',
             'low_stock_warning_count'   => 'nullable|integer|min:0',
@@ -201,21 +171,6 @@ class ProductController extends Controller
             if (!$category) {
                 return response()->json(['message' => 'Invalid category for this branch.'], 422);
             }
-        }
-
-        // Validate units belong to same category
-        try {
-            if (!empty($validated['purchase_unit_id'])) {
-                $this->validateUnitCategory($validated['purchase_unit_id'], 'purchase', $branchId);
-            }
-            if (!empty($validated['sale_unit_id'])) {
-                $this->validateUnitCategory($validated['sale_unit_id'], 'sale', $branchId);
-            }
-            if (!empty($validated['stock_unit_id'])) {
-                $this->validateUnitCategory($validated['stock_unit_id'], 'stock', $branchId);
-            }
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
         }
 
         // Set defaults
@@ -240,9 +195,7 @@ class ProductController extends Controller
             $this->uploadAttachments($request->file('attachments'), $product, $branchId, $companyId);
         }
 
-        $product->load([
-            'category', 'purchaseUnit', 'saleUnit', 'stockUnit',
-        ]);
+        $product->load('category');
         $product->attachments_count = $product->attachments()->count();
 
         return response()->json([
@@ -260,9 +213,6 @@ class ProductController extends Controller
 
         $query = Product::with([
             'category',
-            'purchaseUnit',
-            'saleUnit',
-            'stockUnit',
             'attachments' => function($q) {
                 $q->orderBy('created_at', 'desc');
             }
@@ -295,9 +245,6 @@ class ProductController extends Controller
             'name'                      => 'sometimes|string|max:255',
             'barcode'                   => ['sometimes', 'string', 'max:50', Rule::unique('products')->where(fn($q) => $q->where('branch_id', $branchId))->ignore($product->id)],
             'category_id'               => 'nullable|exists:product_categories,id',
-            'purchase_unit_id'          => 'nullable|exists:units,id',
-            'sale_unit_id'              => 'nullable|exists:units,id',
-            'stock_unit_id'             => 'nullable|exists:units,id',
             'purchase_price'            => 'nullable|numeric|min:0|max:999999999999.99',
             'sale_price'                => 'nullable|numeric|min:0|max:999999999999.99',
             'low_stock_warning_count'   => 'nullable|integer|min:0',
@@ -316,21 +263,6 @@ class ProductController extends Controller
             }
         }
 
-        // Validate units
-        try {
-            if (isset($validated['purchase_unit_id'])) {
-                $this->validateUnitCategory($validated['purchase_unit_id'], 'purchase', $branchId);
-            }
-            if (isset($validated['sale_unit_id'])) {
-                $this->validateUnitCategory($validated['sale_unit_id'], 'sale', $branchId);
-            }
-            if (isset($validated['stock_unit_id'])) {
-                $this->validateUnitCategory($validated['stock_unit_id'], 'stock', $branchId);
-            }
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
-        
         $product->update($validated);
         
         // Handle new attachments
@@ -338,9 +270,7 @@ class ProductController extends Controller
             $this->uploadAttachments($request->file('attachments'), $product, $branchId, $companyId);
         }
 
-        $product->load([
-            'category', 'purchaseUnit', 'saleUnit', 'stockUnit',
-        ]);
+        $product->load('category');
         $product->attachments_count = $product->attachments()->count();
 
         return response()->json([
@@ -460,7 +390,7 @@ class ProductController extends Controller
         
         $products = Product::where('company_id', $companyId)
             ->where('branch_id', $branchId)
-            ->with(['category', 'purchaseUnit', 'saleUnit', 'stockUnit'])
+            ->with('category')
             ->orderBy('name')
             ->get();
         
@@ -468,9 +398,6 @@ class ProductController extends Controller
             'Name' => $product->name,
             'Barcode' => $product->barcode,
             'Category' => $product->category?->name ?? 'Uncategorized',
-            'Purchase Unit' => $product->purchaseUnit?->name ?? '—',
-            'Sale Unit' => $product->saleUnit?->name ?? '—',
-            'Stock Unit' => $product->stockUnit?->name ?? '—',
             'Purchase Price' => $product->purchase_price,
             'Sale Price' => $product->sale_price,
             'Low Stock Warning' => $product->low_stock_warning_count,
@@ -496,7 +423,7 @@ class ProductController extends Controller
         $product = Product::where('company_id', $companyId)
             ->where('branch_id', $branchId)
             ->where('barcode', $barcode)
-            ->with(['category', 'purchaseUnit', 'saleUnit', 'stockUnit'])
+            ->with('category')
             ->first();
         
         if (!$product) {

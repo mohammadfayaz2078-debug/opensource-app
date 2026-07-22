@@ -133,17 +133,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-    // Other Incomes
+    // In routes/api.php
     Route::prefix('other-incomes')->group(function () {
-        Route::get('/',                    [OtherIncomeController::class, 'index']);
-        Route::post('/',                   [OtherIncomeController::class, 'store']);
-        Route::get('/report',              [OtherIncomeController::class, 'report']);
-        Route::get('/export/data',         [OtherIncomeController::class, 'export']);
-        Route::get('/stats',               [OtherIncomeController::class, 'stats']);
-        Route::get('/{id}',                [OtherIncomeController::class, 'show']);
-        Route::put('/{id}',                [OtherIncomeController::class, 'update']);
-        Route::delete('/{id}',             [OtherIncomeController::class, 'destroy']);
-        Route::post('/{id}/duplicate',     [OtherIncomeController::class, 'duplicate']);
+        Route::get('/', [OtherIncomeController::class, 'index']);
+        Route::post('/', [OtherIncomeController::class, 'store']);
+        Route::get('/{id}', [OtherIncomeController::class, 'show']);
+        Route::put('/{id}', [OtherIncomeController::class, 'update']);
+        Route::delete('/{id}', [OtherIncomeController::class, 'destroy']);
+        Route::post('/{id}/duplicate', [OtherIncomeController::class, 'duplicate']);
+        Route::get('/report', [OtherIncomeController::class, 'report']);
+        Route::get('/export', [OtherIncomeController::class, 'export']);
+        Route::get('/stats', [OtherIncomeController::class, 'stats']);
+        Route::get('/account-summary', [OtherIncomeController::class, 'accountSummary']);
+        Route::get('/category-summary', [OtherIncomeController::class, 'categorySummary']);
     });
 
 
@@ -273,7 +275,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/',                    [PurchaseReturnController::class, 'index']);
         Route::post('/',                   [PurchaseReturnController::class, 'store']);
         Route::get('/{id}',                [PurchaseReturnController::class, 'show']);
+        Route::put('/{id}',                [PurchaseReturnController::class, 'update']);
+        Route::patch('/{id}',              [PurchaseReturnController::class, 'update']);
         Route::delete('/{id}',             [PurchaseReturnController::class, 'destroy']);
+        Route::get('/refundable/{purchaseId}', [PurchaseReturnController::class, 'getRefundableItems']);
     });
 
     // ── Sales Module ─────────────────────────────────────────────────────────
@@ -297,6 +302,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/',                    [SaleReturnController::class, 'index']);
         Route::post('/',                   [SaleReturnController::class, 'store']);
         Route::get('/{id}',                [SaleReturnController::class, 'show']);
+        Route::put('/{id}',                [SaleReturnController::class, 'update']);  // Add this for update
+        Route::patch('/{id}',              [SaleReturnController::class, 'update']); // Optional: for partial updates
         Route::delete('/{id}',             [SaleReturnController::class, 'destroy']);
 
         Route::get('/refundable/{saleId}', [SaleReturnController::class, 'getRefundableItems']);

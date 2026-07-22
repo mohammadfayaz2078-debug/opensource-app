@@ -274,7 +274,7 @@ export default function UnitShow() {
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created By</dt>
-                  <dd className="text-gray-700">{unit.creator?.name || '—'}</dd>
+                  <dd className="text-gray-700">{unit.creator?.first_name + ' ' + unit.creator?.last_name || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created At</dt>

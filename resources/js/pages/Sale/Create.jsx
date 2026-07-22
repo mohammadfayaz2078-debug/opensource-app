@@ -113,8 +113,8 @@ export default function SaleCreate() {
           notes: it.notes || null,
         })),
       };
-      await api.post('/sales', payload);
-      navigate('/sales');
+      const res = await api.post('/sales', payload);
+      navigate(`/sales/${res.data.data.id}/invoice`);
     } catch (err) {
       if (err.response?.status === 422) setErrors(err.response.data.errors || {});
       else setErrors({ general: err.response?.data?.message || 'Failed to create invoice.' });

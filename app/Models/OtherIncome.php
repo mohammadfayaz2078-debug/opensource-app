@@ -10,22 +10,15 @@ class OtherIncome extends Model
      * Mass assignable fields
      */
     protected $fillable = [
-
         'company_id',
         'branch_id',
-
+        'account_id',           // Added
         'income_category_id',
-
         'income_number',
-
         'income_date',
-
         'description',
-
         'amount',
-
         'note',
-
         'created_by',
     ];
 
@@ -33,9 +26,7 @@ class OtherIncome extends Model
      * Attribute casting
      */
     protected $casts = [
-
         'income_date' => 'date',
-
         'amount' => 'decimal:2',
     ];
 
@@ -53,6 +44,11 @@ class OtherIncome extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
     }
 
     public function incomeCategory()

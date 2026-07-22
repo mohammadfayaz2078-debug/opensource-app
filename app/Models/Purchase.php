@@ -16,6 +16,10 @@ class Purchase extends Model
     const PAYMENT_STATUS_PARTIAL = 'partial';
     const PAYMENT_STATUS_PAID    = 'paid';
 
+    const REFUND_STATUS_NONE    = 'none';
+    const REFUND_STATUS_PARTIAL = 'partial';
+    const REFUND_STATUS_FULL    = 'full';
+
     const DISCOUNT_TYPE_PERCENT = 'percent';
     const DISCOUNT_TYPE_FIXED   = 'fixed';
 
@@ -24,7 +28,7 @@ class Purchase extends Model
         'reference_no', 'purchase_date', 'due_date',
         'subtotal', 'discount_type', 'discount_value',
         'shipping_cost', 'total_amount', 'paid_amount', 'due_amount',
-        'payment_status', 'notes',
+        'payment_status', 'refund_status', 'notes',
     ];
 
     protected $casts = [
@@ -55,6 +59,11 @@ class Purchase extends Model
         return $query->where('payment_status', $status);
     }
 
+    public function scopeByRefundStatus(Builder $query, string $status): Builder
+    {
+        return $query->where('refund_status', $status);
+    }
+
     public function scopeByDateRange(Builder $query, string $from, string $to): Builder
     {
         return $query->whereBetween('purchase_date', [$from, $to]);
@@ -67,8 +76,25 @@ class Purchase extends Model
         });
     }
 
-    public function canBeEdited(): bool      { return $this->payment_status === self::PAYMENT_STATUS_UNPAID; }
-    public function canBeCancelled(): bool   { return $this->payment_status === self::PAYMENT_STATUS_UNPAID; }
+    public function canBeEdited(): bool      
+    { 
+        return $this->payment_status === self::PAYMENT_STATUS_UNPAID && $this->refund_status === self::REFUND_STATUS_NONE; 
+    }
+    
+    public function canBeCancelled(): bool   
+    { 
+        return $this->payment_status === self::PAYMENT_STATUS_UNPAID && $this->refund_status === self::REFUND_STATUS_NONE; 
+    }
+    
+    public function canBeReturned(): bool
+    {
+        return $this->payment_status !== self::PAYMENT_STATUS_UNPAID && $this->refund_status !== self::REFUND_STATUS_FULL;
+    }
+
+    public function isFullyRefunded(): bool
+    {
+        return $this->refund_status === self::REFUND_STATUS_FULL;
+    }
 
     public function recalculate(): void
     {
@@ -94,6 +120,35 @@ class Purchase extends Model
             default                 => self::PAYMENT_STATUS_UNPAID,
         };
         $this->update(['payment_status' => $status]);
+    }
+
+    public function updateRefundStatus(): void
+    {
+        $items = $this->items()->get();
+        $totalItems = $items->count();
+        
+        if ($totalItems === 0) {
+            $this->update(['refund_status' => self::REFUND_STATUS_NONE]);
+            return;
+        }
+        
+        $fullyRefundedCount = 0;
+        foreach ($items as $item) {
+            $refundedQty = (float) ($item->refunded_quantity ?? 0);
+            $quantity = (float) $item->quantity;
+            
+            if ($refundedQty >= $quantity && $quantity > 0) {
+                $fullyRefundedCount++;
+            }
+        }
+        
+        $status = match (true) {
+            $fullyRefundedCount === 0                    => self::REFUND_STATUS_NONE,
+            $fullyRefundedCount === $totalItems          => self::REFUND_STATUS_FULL,
+            default                                      => self::REFUND_STATUS_PARTIAL,
+        };
+        
+        $this->update(['refund_status' => $status]);
     }
 
     public static function generateReferenceNo(int $branchId): string

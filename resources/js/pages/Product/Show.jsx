@@ -102,17 +102,11 @@ export default function ProductShow() {
                   <p className="text-2xl font-bold text-gray-900">
                     ${product.purchase_price?.toLocaleString()}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    per {product.purchase_unit?.name || 'unit'}
-                  </p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-gray-500 uppercase">Sale Price</p>
                   <p className="text-3xl font-bold text-green-700">
                     ${product.sale_price?.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    per {product.sale_unit?.name || 'unit'}
                   </p>
                 </div>
               </div>
@@ -120,44 +114,6 @@ export default function ProductShow() {
                 <p className="text-sm text-gray-600">
                   Margin: {(((product.sale_price - product.purchase_price) / product.sale_price) * 100).toFixed(2)}%
                 </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Units Information */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Units of Measurement</h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500 uppercase">Purchase Unit</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {product.purchase_unit?.name || '—'}
-                  </p>
-                  {product.purchase_unit && (
-                    <p className="text-xs text-gray-400">{product.purchase_unit.category?.name}</p>
-                  )}
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500 uppercase">Sale Unit</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {product.sale_unit?.name || '—'}
-                  </p>
-                  {product.sale_unit && (
-                    <p className="text-xs text-gray-400">{product.sale_unit.category?.name}</p>
-                  )}
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500 uppercase">Stock Unit</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {product.stock_unit?.name || '—'}
-                  </p>
-                  {product.stock_unit && (
-                    <p className="text-xs text-gray-400">{product.stock_unit.category?.name}</p>
-                  )}
-                </div>
               </div>
             </div>
           </div>

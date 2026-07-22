@@ -32,7 +32,7 @@ class StockController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = StockBalance::with('product.stockUnit')
+        $query = StockBalance::with('product')
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId)
             ->where('quantity', '>', 0);

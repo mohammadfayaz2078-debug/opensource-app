@@ -9,6 +9,8 @@ export default function SaleShow() {
   const [loading, setLoading] = useState(true);
   const [showPayModal, setShowPayModal] = useState(false);
   const [payAmount, setPayAmount] = useState('');
+  const [payAccountId, setPayAccountId] = useState('');
+  const [accounts, setAccounts] = useState([]);
   const [paying, setPaying] = useState(false);
   const [payments, setPayments] = useState([]);
 
@@ -32,6 +34,7 @@ export default function SaleShow() {
 
   useEffect(() => {
     fetchSale().finally(() => setLoading(false));
+    api.get('/accounts/list/options').then(r => setAccounts(r.data?.data || [])).catch(() => {});
   }, [id, navigate]);
 
   const handlePay = async () => {
@@ -39,14 +42,15 @@ export default function SaleShow() {
     if (!amount || amount <= 0) return;
     setPaying(true);
     try {
-      const res = await api.post(`/sales/${id}/pay`, { amount });
+      const res = await api.post(`/sales/${id}/pay`, { amount, account_id: payAccountId });
+      setPayAmount('');
+      setPayAccountId('');
+      setShowPayModal(false);
       const txId = res.data?.transaction_id;
       if (txId) {
         navigate(`/sale-payment-receipt/${txId}`);
       } else {
         await fetchSale();
-        setPayAmount('');
-        setShowPayModal(false);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Payment failed');
@@ -478,7 +482,7 @@ export default function SaleShow() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Created By</span>
-                <span className="text-gray-900">{sale.creator?.name || '—'}</span>
+                <span className="text-gray-900">{sale.creator?.first_name + ' ' + sale.creator?.last_name || '—'}</span>
               </div>
               {sale.notes && (
                 <div className="pt-3 border-t border-gray-200">
@@ -532,6 +536,22 @@ export default function SaleShow() {
                     <p className="text-xl font-bold text-red-600">{unpaid.toFixed(2)}</p>
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                  Account *
+                </label>
+                <select 
+                  value={payAccountId} 
+                  onChange={e => setPayAccountId(e.target.value)}
+                  className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent transition-all"
+                >
+                  <option value="">Select account</option>
+                  {accounts.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -594,7 +614,7 @@ export default function SaleShow() {
               </button>
               <button 
                 onClick={handlePay} 
-                disabled={paying || !payAmount || parseFloat(payAmount) <= 0}
+                disabled={paying || !payAmount || parseFloat(payAmount) <= 0 || !payAccountId}
                 className="px-6 py-2.5 text-sm bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 disabled:opacity-50 transition-colors shadow-sm hover:shadow-md"
               >
                 {paying ? (

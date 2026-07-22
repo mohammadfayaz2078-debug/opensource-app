@@ -5,7 +5,6 @@ import api from '../../plugins/axios';
 export default function ProductCreate() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
-  const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [attachments, setAttachments] = useState([]);
@@ -13,22 +12,14 @@ export default function ProductCreate() {
     name: '',
     barcode: '',
     category_id: '',
-    purchase_unit_id: '',
-    sale_unit_id: '',
-    stock_unit_id: '',
     purchase_price: '',
     sale_price: '',
     low_stock_warning_count: '0',
-    reorder_point: '0',
   });
 
   useEffect(() => {
-    Promise.all([
-      api.get('/product-categories/list/options'),
-      api.get('/units/list/options'),
-    ]).then(([cRes, uRes]) => {
+    api.get('/product-categories/list/options').then((cRes) => {
       setCategories(cRes.data.data || []);
-      setUnits(uRes.data.data || []);
     }).catch(() => {});
   }, []);
 
@@ -123,45 +114,13 @@ export default function ProductCreate() {
             </div>
           </div>
 
-          {/* Units */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Units</h2>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Purchase Unit</label>
-                  <select name="purchase_unit_id" value={form.purchase_unit_id} onChange={handleChange} className={inputClass('purchase_unit_id')}>
-                    <option value="">Select unit</option>
-                    {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.category_name})</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Sale Unit</label>
-                  <select name="sale_unit_id" value={form.sale_unit_id} onChange={handleChange} className={inputClass('sale_unit_id')}>
-                    <option value="">Select unit</option>
-                    {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.category_name})</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Stock Unit</label>
-                  <select name="stock_unit_id" value={form.stock_unit_id} onChange={handleChange} className={inputClass('stock_unit_id')}>
-                    <option value="">Select unit</option>
-                    {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.category_name})</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Pricing & Inventory */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
               <h2 className="text-base font-medium text-gray-900">Pricing & Inventory</h2>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Purchase Price</label>
                   <input type="number" step="0.01" name="purchase_price" value={form.purchase_price} onChange={handleChange} className={inputClass('purchase_price')} placeholder="0.00" />
@@ -173,10 +132,6 @@ export default function ProductCreate() {
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Low Stock Warning</label>
                   <input type="number" name="low_stock_warning_count" value={form.low_stock_warning_count} onChange={handleChange} className={inputClass('low_stock_warning_count')} placeholder="0" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Reorder Point</label>
-                  <input type="number" name="reorder_point" value={form.reorder_point} onChange={handleChange} className={inputClass('reorder_point')} placeholder="0" />
                 </div>
               </div>
             </div>

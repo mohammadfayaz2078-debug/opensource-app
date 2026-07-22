@@ -208,7 +208,6 @@ export default function ProductIndex() {
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</th>
                     <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Purchase Price</th>
                     <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Sale Price</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Units</th>
                     <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Attachments</th>
                     <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -225,11 +224,6 @@ export default function ProductIndex() {
                       <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">{product.category?.name || 'Uncategorized'}</td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-right text-sm text-gray-700">${product.purchase_price?.toLocaleString()}</td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium text-emerald-600">${product.sale_price?.toLocaleString()}</td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-xs text-gray-700">
-                        <div>P: {product.purchase_unit?.name || '—'}</div>
-                        <div>S: {product.sale_unit?.name || '—'}</div>
-                        <div>St: {product.stock_unit?.name || '—'}</div>
-                      </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-center">
                         {product.attachments_count > 0 ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700">

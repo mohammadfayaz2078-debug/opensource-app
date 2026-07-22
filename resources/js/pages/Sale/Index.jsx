@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import PaymentModal from '../../components/PaymentModal'; // Adjust path as needed
 
 export default function SaleIndex() {
   const navigate = useNavigate();
@@ -14,8 +15,6 @@ export default function SaleIndex() {
   // Payment modal state
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
-  const [payAmount, setPayAmount] = useState('');
-  const [paying, setPaying] = useState(false);
 
   const fetchSales = async (page = 1) => {
     setLoading(true);
@@ -31,7 +30,10 @@ export default function SaleIndex() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { const t = setTimeout(() => fetchSales(), 300); return () => clearTimeout(t); }, [searchQuery, statusFilter]);
+  useEffect(() => {
+    const t = setTimeout(() => fetchSales(), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery, statusFilter]);
 
   const openPayModal = (sale) => {
     // Don't allow payment for returned or cancelled sales
@@ -39,27 +41,21 @@ export default function SaleIndex() {
       return;
     }
     setSelectedSale(sale);
-    const unpaid = parseFloat(sale.total_amount) - parseFloat(sale.paid_amount);
-    setPayAmount(unpaid > 0 ? String(unpaid) : '');
     setShowPayModal(true);
   };
 
-  const handlePay = async () => {
-    const amount = parseFloat(payAmount);
-    if (!amount || amount <= 0 || !selectedSale) return;
-    setPaying(true);
-    try {
-      const res = await api.post(`/sales/${selectedSale.id}/pay`, { amount });
-      const txId = res.data?.transaction_id;
-      if (txId) {
-        navigate(`/sale-payment-receipt/${txId}`);
-      } else {
-        setShowPayModal(false);
-        setPayAmount('');
-        fetchSales(currentPage);
-      }
-    } catch (err) { alert(err.response?.data?.message || 'Payment failed'); }
-    finally { setPaying(false); }
+  const handlePaymentSuccess = () => {
+    fetchSales(currentPage);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) return;
+    try { 
+      await api.delete(`/sales/${id}`); 
+      fetchSales(currentPage);
+    } catch (err) { 
+      alert(err.response?.data?.message || 'Delete failed'); 
+    }
   };
 
   const statusBadge = (status) => {
@@ -76,8 +72,6 @@ export default function SaleIndex() {
     const c = { unpaid: 'bg-red-50 text-red-700', partial: 'bg-yellow-50 text-yellow-700', paid: 'bg-emerald-50 text-emerald-700' };
     return <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${c[ps] || c.unpaid}`}>{ps?.toUpperCase()}</span>;
   };
-
-  const unpaid = selectedSale ? parseFloat(selectedSale.total_amount) - parseFloat(selectedSale.paid_amount) : 0;
 
   // Helper to check if actions are allowed
   const canTakeAction = (sale) => {
@@ -104,7 +98,9 @@ export default function SaleIndex() {
       <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex flex-1 gap-2">
           <div className="relative flex-1 max-w-xs">
-            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..."
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
           </div>
@@ -117,7 +113,9 @@ export default function SaleIndex() {
           </select>
         </div>
         <button onClick={() => navigate('/sales/create')} className="inline-flex items-center px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">
-          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
           New Invoice
         </button>
       </div>
@@ -168,6 +166,17 @@ export default function SaleIndex() {
                             </svg>
                           </button>
 
+                          {/* Download Invoice */}
+                          <button 
+                            onClick={() => navigate(`/sales/${s.id}/invoice`)} 
+                            className="p-1.5 rounded hover:bg-gray-100 text-gray-700 hover:text-gray-900" 
+                            title="Download Invoice"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </button>
+
                           {/* Pay - Only if not cancelled/returned and not fully paid */}
                           {canPay(s) && (
                             <button 
@@ -188,6 +197,19 @@ export default function SaleIndex() {
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          )}
+
+                          {/* Delete - Only if draft and not paid/returned/cancelled */}
+                          {canAct && s.payment_status !== 'paid' && (
+                            <button 
+                              onClick={() => handleDelete(s.id)} 
+                              className="p-1.5 rounded hover:bg-red-50 text-gray-700 hover:text-red-600" 
+                              title="Delete"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </button>
                           )}
@@ -223,51 +245,19 @@ export default function SaleIndex() {
         </div>
       )}
 
-      {/* Payment Modal */}
-      {showPayModal && selectedSale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setShowPayModal(false)}></div>
-          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-10">
-            <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Make Payment</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{selectedSale.reference_no}</p>
-              </div>
-              <button onClick={() => setShowPayModal(false)} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="px-5 py-4 space-y-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div><p className="text-xs text-gray-500 uppercase">Total</p><p className="text-lg font-bold text-gray-900">{parseFloat(selectedSale.total_amount).toFixed(2)}</p></div>
-                  <div><p className="text-xs text-gray-500 uppercase">Paid</p><p className="text-lg font-bold text-green-600">{parseFloat(selectedSale.paid_amount).toFixed(2)}</p></div>
-                  <div><p className="text-xs text-gray-500 uppercase">Due</p><p className="text-lg font-bold text-red-600">{unpaid.toFixed(2)}</p></div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payment Amount *</label>
-                <input type="number" step="0.01" min="0.01" max={unpaid} value={payAmount} onChange={e => setPayAmount(e.target.value)}
-                  placeholder="0.00" className="w-full px-3 py-2.5 text-lg font-medium border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]" />
-                <p className="text-xs text-gray-400 mt-1">Maximum: {unpaid.toFixed(2)}</p>
-              </div>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setPayAmount(String(Math.min(unpaid, 100)))} className="flex-1 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">100</button>
-                <button type="button" onClick={() => setPayAmount(String(Math.min(unpaid, 500)))} className="flex-1 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">500</button>
-                <button type="button" onClick={() => setPayAmount(String(Math.min(unpaid, 1000)))} className="flex-1 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">1000</button>
-                <button type="button" onClick={() => setPayAmount(String(unpaid))} className="flex-1 py-1.5 text-xs font-medium bg-[#007c89]/10 text-[#007c89] rounded-md hover:bg-[#007c89]/20">Full Amount</button>
-              </div>
-            </div>
-            <div className="px-5 py-4 border-t border-gray-200 flex justify-end gap-3">
-              <button type="button" onClick={() => setShowPayModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-              <button onClick={handlePay} disabled={paying || !payAmount || parseFloat(payAmount) <= 0}
-                className="px-6 py-2 text-sm bg-green-600 text-white font-medium rounded-md hover:bg-green-700 disabled:opacity-50">
-                {paying ? 'Processing...' : 'Confirm Payment'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Payment Modal - Reusable Component */}
+      <PaymentModal
+        isOpen={showPayModal}
+        onClose={() => {
+          setShowPayModal(false);
+          setSelectedSale(null);
+        }}
+        onSuccess={handlePaymentSuccess}
+        entity={selectedSale}
+        entityType="sale"
+        endpoint={`/sales/${selectedSale?.id}/pay`}
+        receiptPath="/sale-payment-receipt/:id"
+      />
     </div>
   );
 }

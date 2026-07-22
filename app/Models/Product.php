@@ -19,10 +19,6 @@ class Product extends Model
 
         'category_id',
 
-        'purchase_unit_id',
-        'sale_unit_id',
-        'stock_unit_id',
-
         'purchase_price',
         'sale_price',
 
@@ -61,36 +57,6 @@ class Product extends Model
         return $this->belongsTo(
             ProductCategory::class,
             'category_id'
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Units
-    |--------------------------------------------------------------------------
-    */
-
-    public function purchaseUnit()
-    {
-        return $this->belongsTo(
-            Unit::class,
-            'purchase_unit_id'
-        );
-    }
-
-    public function saleUnit()
-    {
-        return $this->belongsTo(
-            Unit::class,
-            'sale_unit_id'
-        );
-    }
-
-    public function stockUnit()
-    {
-        return $this->belongsTo(
-            Unit::class,
-            'stock_unit_id'
         );
     }
 
