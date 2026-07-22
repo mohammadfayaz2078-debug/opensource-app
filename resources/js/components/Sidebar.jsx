@@ -131,6 +131,7 @@ const Sidebar = ({
       'sidebar_profile': 'Profile',
       'sidebar_unit_categories': 'Unit Category',
       'sidebar_units': 'Product Units',
+      'sidebar_accounts': 'Accounts',
     };
     return translations[key] || key;
   };
@@ -180,10 +181,11 @@ const links = [
     ]
   },
   {
-    title: 'Banking',
+    title: 'Accounting',
     icon: 'wallet',
-    translation_key: 'Banking',
+    translation_key: 'Accounting',
     children: [
+      { name: 'Accounts', to: '/accounts', translation_key: 'sidebar_accounts' },
       { name: 'Income Category', to: '/income-categories', translation_key: 'sidebar_income_categories' },
       { name: 'Other Incomes', to: '/other-incomes', translation_key: 'sidebar_other_incomes' },
     ]

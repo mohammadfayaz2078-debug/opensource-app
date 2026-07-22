@@ -27,7 +27,9 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\StockController;
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountDepositController;
+use App\Http\Controllers\AccountWithdrawalController;
 
 // Replace login route
 Route::post('/login', [SuperAdminAuthController::class, 'login']);
@@ -234,6 +236,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus']);
     });
 
+<<<<<<< HEAD
     // ── Purchase Module ──────────────────────────────────────────────────────
 
     Route::prefix('purchases')->group(function () {
@@ -286,6 +289,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/transactions',        [StockController::class, 'transactions']);
         Route::get('/product/{id}',        [StockController::class, 'productStock']);
     });
+=======
+
+
+    //=============================
+
+    Route::apiResource('accounts', AccountController::class);
+
+    Route::get('account-deposits', [AccountDepositController::class, 'index']);
+    Route::post('account-deposits', [AccountDepositController::class, 'store']);
+    Route::get('account-deposits/{accountDeposit}', [AccountDepositController::class, 'show']);
+
+    Route::get('account-withdrawals', [AccountWithdrawalController::class, 'index']);
+    Route::post('account-withdrawals', [AccountWithdrawalController::class, 'store']);
+    Route::get('account-withdrawals/{accountWithdrawal}', [AccountWithdrawalController::class, 'show']);
+
+    Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions']);
+
+>>>>>>> 6c175207253c6ef70aae554a773b36a7d815a1bc
 });
 
 

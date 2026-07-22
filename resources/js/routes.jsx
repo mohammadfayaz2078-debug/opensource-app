@@ -94,6 +94,11 @@ import RoleIndex from './pages/Role/Index';
 import RoleCreate from './pages/Role/Create';
 import RoleEdit from './pages/Role/Edit';
 
+
+import AccountIndex from './pages/Account/Index';
+import AccountShow from './pages/Account/Show';
+
+
 // Company Admin Pages
 import CompanyAdminDashboard from './pages/CompanyAdmin/Dashboard';
 import CompanyAdminProfile from './pages/CompanyAdmin/Profile';
@@ -226,6 +231,10 @@ const routes = [
       { path: 'roles', element: <RoleIndex /> },
       { path: 'roles/create', element: <RoleCreate /> },
       { path: 'roles/:id/edit', element: <RoleEdit /> },
+
+
+      { path: 'accounts', element: <AccountIndex /> },
+      { path: 'accounts/:id', element: <AccountShow /> },
       
       // Company admin can view their own company details
       { path: 'company', element: <CompanyShow /> },
@@ -333,6 +342,9 @@ export const routeNames = {
   ROLE_INDEX: '/roles',
   ROLE_CREATE: '/roles/create',
   ROLE_EDIT: (id) => `/roles/edit/${id}`,
+
+  ACCOUNT_INDEX: '/accounts',
+  ACCOUNT_SHOW: (id) => `/accounts/${id}/show`,
   
   // Branch routes
   BRANCHES_INDEX: '/branches',
