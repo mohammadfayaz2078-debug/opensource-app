@@ -190,7 +190,58 @@ class AccountController extends Controller
 
         $transactions = $account->transactions()
             ->with('reference')
+            ->orderBy('created_at', 'desc')
             ->paginate($request->get('per_page', 20));
+
+        return response()->json($transactions);
+    }
+
+    public function allTransactions(Request $request): JsonResponse
+    {
+        $companyId = $this->resolveCompanyId($request);
+        $branchId = $this->resolveBranchId($request);
+
+        if (!$companyId) {
+            return response()->json(['data' => [], 'total' => 0, 'current_page' => 1, 'last_page' => 1]);
+        }
+
+        $query = AccountTransaction::with(['account', 'reference'])
+            ->whereHas('account', function ($q) use ($companyId, $branchId) {
+                $q->where('company_id', $companyId);
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+            })
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+
+        if ($request->filled('reference_type')) {
+            $query->where('reference_type', $request->reference_type);
+        }
+
+        if ($request->filled('reference_id')) {
+            $query->where('reference_id', $request->reference_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhereHas('account', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $perPage = $request->get('per_page', 20);
+        $transactions = $query->paginate($perPage);
 
         return response()->json($transactions);
     }

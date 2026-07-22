@@ -98,16 +98,14 @@ class Purchase extends Model
 
     public static function generateReferenceNo(int $branchId): string
     {
-        $year   = date('Y');
-        $month  = date('m');
-        $prefix = "PUR-{$year}{$month}-";
+        $prefix = "BILL-";
         $last   = static::where('branch_id', $branchId)
             ->where('reference_no', 'like', "{$prefix}%")
             ->withTrashed()
             ->orderBy('reference_no', 'desc')
             ->lockForUpdate()
             ->value('reference_no');
-        $seq = $last ? (int) substr($last, -5) + 1 : 1;
-        return "{$prefix}" . str_pad($seq, 5, '0', STR_PAD_LEFT);
+        $seq = $last ? (int) substr($last, -6) + 1 : 1;
+        return "{$prefix}" . str_pad($seq, 6, '0', STR_PAD_LEFT);
     }
 }

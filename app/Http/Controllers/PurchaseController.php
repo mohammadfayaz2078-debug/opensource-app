@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\AuthHelper;
 use App\Models\Account;
+use App\Models\AccountTransaction;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Product;
@@ -255,19 +256,38 @@ class PurchaseController extends Controller
             'payment_status' => $paymentStatus,
         ]);
 
+        $transaction = null;
+
         // Update account balance - money goes out for purchases
         if ($purchase->account_id) {
             $account = Account::find($purchase->account_id);
             if ($account) {
-                $account->decrement('balance', (float) $validated['amount']);
+                $balanceBefore = (float) $account->balance;
+                $amount = (float) $validated['amount'];
+                $balanceAfter = $balanceBefore - $amount;
+
+                $account->decrement('balance', $amount);
+
+                // Record account transaction
+                $transaction = AccountTransaction::create([
+                    'account_id'     => $account->id,
+                    'type'           => AccountTransaction::TYPE_EXPENSE,
+                    'amount'         => $amount,
+                    'balance_after'  => $balanceAfter,
+                    'description'    => 'Payment for Bill #' . $purchase->id,
+                    'reference_id'   => $purchase->id,
+                    'reference_type' => Purchase::class,
+                    'created_by'     => Auth::id(),
+                ]);
             }
         }
 
         $purchase->load(['supplier', 'account', 'items.product', 'items.unit', 'creator']);
 
         return response()->json([
-            'data'    => $purchase,
-            'message' => 'Payment recorded successfully.',
+            'data'           => $purchase,
+            'transaction_id' => $transaction?->id,
+            'message'        => 'Payment recorded successfully.',
         ]);
     }
 
@@ -284,6 +304,27 @@ class PurchaseController extends Controller
         return response()->json([
             'data'    => $purchase,
             'message' => 'Purchase cancelled.',
+        ]);
+    }
+
+    public function paymentReceipt(Request $request, int $transactionId): JsonResponse
+    {
+        $branchId = $this->resolveBranchId($request);
+
+        $transaction = AccountTransaction::with(['account', 'reference'])
+            ->where('id', $transactionId)
+            ->where('reference_type', Purchase::class)
+            ->firstOrFail();
+
+        // Verify the purchase belongs to this branch
+        $purchase = Purchase::where('branch_id', $branchId)
+            ->with('supplier')
+            ->findOrFail($transaction->reference_id);
+
+        return response()->json([
+            'transaction' => $transaction,
+            'purchase'    => $purchase,
+            'account'     => $transaction->account,
         ]);
     }
 

@@ -113,8 +113,8 @@ export default function PurchaseCreate() {
           notes: it.notes || null,
         })),
       };
-      await api.post('/purchases', payload);
-      navigate('/purchases');
+      const res = await api.post('/purchases', payload);
+      navigate(`/purchases/${res.data.data.id}/invoice`);
     } catch (err) {
       if (err.response?.status === 422) setErrors(err.response.data.errors || {});
       else setErrors({ general: err.response?.data?.message || 'Failed to create purchase.' });

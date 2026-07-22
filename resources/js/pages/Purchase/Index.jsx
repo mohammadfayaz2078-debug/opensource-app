@@ -45,10 +45,15 @@ export default function PurchaseIndex() {
     if (!amount || amount <= 0 || !selectedPurchase) return;
     setPaying(true);
     try {
-      await api.post(`/purchases/${selectedPurchase.id}/pay`, { amount });
-      setShowPayModal(false);
-      setPayAmount('');
-      fetchPurchases(currentPage);
+      const res = await api.post(`/purchases/${selectedPurchase.id}/pay`, { amount });
+      const txId = res.data?.transaction_id;
+      if (txId) {
+        navigate(`/payment-receipt/${txId}`);
+      } else {
+        setShowPayModal(false);
+        setPayAmount('');
+        fetchPurchases(currentPage);
+      }
     } catch (err) { alert(err.response?.data?.message || 'Payment failed'); }
     finally { setPaying(false); }
   };
@@ -109,7 +114,7 @@ export default function PurchaseIndex() {
             <table className="min-w-full">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Reference</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Bill #</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Supplier</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Total</th>
@@ -121,7 +126,7 @@ export default function PurchaseIndex() {
               <tbody>
                 {purchases.map((p, idx) => (
                   <tr key={p.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50 transition-colors`}>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-sm font-medium text-gray-900">{p.reference_no}</td>
+                    <td className="px-4 py-2.5 whitespace-nowrap text-sm font-medium text-gray-900">Bill #{p.id}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">{p.purchase_date?.split('T')[0]}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">{p.supplier?.full_name || '—'}</td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-right">{parseFloat(p.total_amount).toFixed(2)}</td>
@@ -131,6 +136,9 @@ export default function PurchaseIndex() {
                       <div className="flex items-center justify-end gap-0.5">
                         <button onClick={() => navigate(`/purchases/${p.id}`)} className="p-1 rounded hover:bg-blue-50 text-gray-700 hover:text-blue-600" title="View">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </button>
+                        <button onClick={() => navigate(`/purchases/${p.id}/invoice`)} className="p-1 rounded hover:bg-gray-100 text-gray-700 hover:text-gray-900" title="Download Bill">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         </button>
                         {p.payment_status !== 'paid' && (
                           <button onClick={() => openPayModal(p)} className="px-2 py-0.5 rounded text-[11px] font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors" title="Pay">
@@ -173,7 +181,7 @@ export default function PurchaseIndex() {
             <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Make Payment</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{selectedPurchase.reference_no}</p>
+                <p className="text-sm text-gray-500 mt-0.5">Bill #{selectedPurchase.id}</p>
               </div>
               <button onClick={() => setShowPayModal(false)} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>

@@ -131,6 +131,7 @@ const Sidebar = ({
       'sidebar_unit_categories': 'Unit Category',
       'sidebar_units': 'Product Units',
       'sidebar_accounts': 'Accounts',
+      'sidebar_account_transactions': 'Account Transactions',
     };
     return translations[key] || key;
   };
@@ -185,6 +186,7 @@ const links = [
     translation_key: 'Accounting',
     children: [
       { name: 'Accounts', to: '/accounts', translation_key: 'sidebar_accounts' },
+      { name: 'Account Transactions', to: '/account-transactions', translation_key: 'sidebar_account_transactions' },
       { name: 'Income Category', to: '/income-categories', translation_key: 'sidebar_income_categories' },
       { name: 'Other Incomes', to: '/other-incomes', translation_key: 'sidebar_other_incomes' },
     ]

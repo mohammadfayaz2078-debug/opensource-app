@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\AuthHelper;
+use App\Models\AccountTransaction;
+use App\Models\Purchase;
 use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -299,6 +301,32 @@ class SupplierController extends Controller
             'data'    => $supplier,
             'message' => $supplier->is_active ? 'Supplier activated.' : 'Supplier deactivated.',
         ]);
+    }
+
+    /**
+     * GET /api/suppliers/{id}/payments
+     */
+    public function payments(Request $request, int $id): JsonResponse
+    {
+        $branchId = $this->resolveBranchId($request);
+
+        $supplier = Supplier::where('branch_id', $branchId)->findOrFail($id);
+
+        $purchaseIds = Purchase::where('supplier_id', $id)
+            ->where('branch_id', $branchId)
+            ->pluck('id');
+
+        if ($purchaseIds->isEmpty()) {
+            return response()->json(['data' => [], 'total' => 0, 'current_page' => 1, 'last_page' => 1]);
+        }
+
+        $payments = AccountTransaction::where('reference_type', Purchase::class)
+            ->whereIn('reference_id', $purchaseIds)
+            ->with(['account', 'reference'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 20));
+
+        return response()->json($payments);
     }
 
     /**
