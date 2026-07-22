@@ -15,6 +15,17 @@ export default function SaleShow() {
     try {
       const r = await api.get(`/sales/${id}`);
       setSale(r.data.data);
+      // Fetch payment history for this invoice
+      try {
+        const txRes = await api.get('/account-transactions', {
+          params: {
+            reference_type: 'App\\Models\\Sale',
+            reference_id: id,
+            per_page: 50
+          }
+        });
+        setPayments(txRes.data.data || []);
+      } catch (e) { /* ignore */ }
     } catch { navigate('/sales'); }
   };
 
@@ -22,15 +33,22 @@ export default function SaleShow() {
     fetchSale().finally(() => setLoading(false));
   }, [id, navigate]);
 
+  const [payments, setPayments] = useState([]);
+
   const handlePay = async () => {
     const amount = parseFloat(payAmount);
     if (!amount || amount <= 0) return;
     setPaying(true);
     try {
-      await api.post(`/sales/${id}/pay`, { amount });
-      await fetchSale();
-      setPayAmount('');
-      setShowPayModal(false);
+      const res = await api.post(`/sales/${id}/pay`, { amount });
+      const txId = res.data?.transaction_id;
+      if (txId) {
+        navigate(`/sale-payment-receipt/${txId}`);
+      } else {
+        await fetchSale();
+        setPayAmount('');
+        setShowPayModal(false);
+      }
     } catch (err) { alert(err.response?.data?.message || 'Payment failed'); }
     finally { setPaying(false); }
   };
@@ -128,8 +146,56 @@ export default function SaleShow() {
             </div>
           </div>
         </div>
+
+        {/* Payment History */}
+        <div className="lg:col-span-2">
+          {payments.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="px-4 py-3 border-b border-gray-200">
+                <h2 className="text-sm font-semibold text-gray-900">Payment History</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase">
+                      <th className="text-left py-2 px-4 font-medium">Date</th>
+                      <th className="text-right py-2 px-4 font-medium">Amount</th>
+                      <th className="text-right py-2 px-4 font-medium">Balance After</th>
+                      <th className="text-center py-2 px-4 font-medium">Receipt</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((pmt, idx) => (
+                      <tr key={pmt.id} className={`border-b border-gray-100 hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                        <td className="py-2 px-4 text-gray-600 whitespace-nowrap">
+                          {new Date(pmt.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </td>
+                        <td className="py-2 px-4 text-right font-medium text-green-600">
+                          +{parseFloat(pmt.amount).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-4 text-right text-gray-600">
+                          {parseFloat(pmt.balance_after).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-4 text-center">
+                          <button
+                            onClick={() => navigate(`/sale-payment-receipt/${pmt.id}`)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                            Receipt
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* Payment Modal */}
       {showPayModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black/40" onClick={() => setShowPayModal(false)}></div>

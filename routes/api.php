@@ -110,10 +110,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}',             [SupplierController::class, 'destroy']);
         Route::post('/{id}/toggle-status', [SupplierController::class, 'toggleStatus']);
         
+        Route::get('/{id}/payments',       [SupplierController::class, 'payments']);
         // Optional: Advanced supplier features (uncomment when needed)
         // Route::get('/{id}/transactions',   [SupplierController::class, 'transactions']);
         // Route::get('/{id}/balance',        [SupplierController::class, 'balance']);
-        // Route::get('/{id}/payments',       [SupplierController::class, 'payments']);
     });
 
 
@@ -265,6 +265,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/cancel',        [PurchaseController::class, 'cancel']);
     });
 
+    Route::get('/payment-receipt/{transactionId}', [PurchaseController::class, 'paymentReceipt']);
+    Route::get('/sale-payment-receipt/{transactionId}', [SaleController::class, 'paymentReceipt']);
+
     // Purchase Returns
     Route::prefix('purchase-returns')->group(function () {
         Route::get('/',                    [PurchaseReturnController::class, 'index']);
@@ -313,6 +316,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('account-withdrawals',             [AccountWithdrawalController::class, 'store']);
     Route::get('account-withdrawals/{accountWithdrawal}', [AccountWithdrawalController::class, 'show']);
 
+    Route::get('/account-transactions', [AccountController::class, 'allTransactions']);
     Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions']);
 });
 

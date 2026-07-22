@@ -11,7 +11,7 @@ export default function AccountIndex() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({ name: '', type: 'cash', description: '', balance: '0' });
+  const [form, setForm] = useState({ name: '', type: 'cash', description: '' });
 
   const fetchAccounts = async () => {
     setLoading(true);
@@ -29,7 +29,7 @@ export default function AccountIndex() {
   const openCreateModal = () => {
     setIsEditing(false);
     setSelectedAccount(null);
-    setForm({ name: '', type: 'cash', description: '', balance: '0' });
+    setForm({ name: '', type: 'cash', description: '' });
     setErrors({});
     setIsModalOpen(true);
   };
@@ -37,7 +37,7 @@ export default function AccountIndex() {
   const openEditModal = (account) => {
     setIsEditing(true);
     setSelectedAccount(account);
-    setForm({ name: account.name || '', type: account.type || 'cash', description: account.description || '', balance: String(account.balance || 0) });
+    setForm({ name: account.name || '', type: account.type || 'cash', description: account.description || '' });
     setErrors({});
     setIsModalOpen(true);
   };
@@ -158,10 +158,7 @@ export default function AccountIndex() {
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Description</label>
                   <input type="text" name="description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className={inputClass('description')} placeholder="Optional description" />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Initial Balance</label>
-                  <input type="number" step="0.01" name="balance" value={form.balance} onChange={e => setForm({ ...form, balance: e.target.value })} className={inputClass('balance')} />
-                </div>
+
               </div>
               <div className="px-5 py-3 border-t border-gray-200 flex justify-end gap-2">
                 <button type="button" onClick={closeModal} className="px-4 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>

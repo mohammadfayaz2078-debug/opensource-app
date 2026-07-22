@@ -45,10 +45,15 @@ export default function SaleIndex() {
     if (!amount || amount <= 0 || !selectedSale) return;
     setPaying(true);
     try {
-      await api.post(`/sales/${selectedSale.id}/pay`, { amount });
-      setShowPayModal(false);
-      setPayAmount('');
-      fetchSales(currentPage);
+      const res = await api.post(`/sales/${selectedSale.id}/pay`, { amount });
+      const txId = res.data?.transaction_id;
+      if (txId) {
+        navigate(`/sale-payment-receipt/${txId}`);
+      } else {
+        setShowPayModal(false);
+        setPayAmount('');
+        fetchSales(currentPage);
+      }
     } catch (err) { alert(err.response?.data?.message || 'Payment failed'); }
     finally { setPaying(false); }
   };

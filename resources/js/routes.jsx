@@ -21,6 +21,8 @@ import PurchaseIndex from './pages/Purchase/Index';
 import PurchaseCreate from './pages/Purchase/Create';
 import PurchaseEdit from './pages/Purchase/Edit';
 import PurchaseShow from './pages/Purchase/Show';
+import PurchaseInvoice from './pages/Purchase/Invoice';
+import PaymentReceipt from './pages/Purchase/PaymentReceipt';
 import PurchaseReturnIndex from './pages/PurchaseReturn/Index';
 import PurchaseReturnCreate from './pages/PurchaseReturn/Create';
 
@@ -31,6 +33,7 @@ import SaleEdit from './pages/Sale/Edit';
 import SaleShow from './pages/Sale/Show';
 import SaleReturnIndex from './pages/SaleReturn/Index';
 import SaleReturnCreate from './pages/SaleReturn/Create';
+import SalePaymentReceipt from './pages/Sale/PaymentReceipt';
 
 // Stock Pages
 import StockBalances from './pages/Stock/Balances';
@@ -39,6 +42,7 @@ import StockTransactions from './pages/Stock/Transactions';
 // Account Pages
 import AccountIndex from './pages/Account/Index';
 import AccountShow from './pages/Account/Show';
+import AccountTransactions from './pages/AccountTransaction/Index';
 
 // Expense Pages
 import ExpenseIndex from './pages/Expense/Index';
@@ -239,6 +243,7 @@ const routes = [
 
       { path: 'accounts', element: <AccountIndex /> },
       { path: 'accounts/:id', element: <AccountShow /> },
+      { path: 'account-transactions', element: <AccountTransactions /> },
       
       // Company admin can view their own company details
       { path: 'company', element: <CompanyShow /> },
@@ -302,6 +307,9 @@ const routes = [
       { path: 'purchases/create', element: <PurchaseCreate /> },
       { path: 'purchases/:id', element: <PurchaseShow /> },
       { path: 'purchases/:id/edit', element: <PurchaseEdit /> },
+      { path: 'purchases/:id/invoice', element: <PurchaseInvoice /> },
+      { path: 'payment-receipt/:transactionId', element: <PaymentReceipt /> },
+      { path: 'sale-payment-receipt/:transactionId', element: <SalePaymentReceipt /> },
       { path: 'purchase-returns', element: <PurchaseReturnIndex /> },
       { path: 'purchase-returns/create', element: <PurchaseReturnCreate /> },
 
@@ -350,6 +358,7 @@ export const routeNames = {
 
   ACCOUNT_INDEX: '/accounts',
   ACCOUNT_SHOW: (id) => `/accounts/${id}/show`,
+  ACCOUNT_TRANSACTIONS_INDEX: '/account-transactions',
   
   // Branch routes
   BRANCHES_INDEX: '/branches',

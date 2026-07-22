@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\AuthHelper;
 use App\Models\Account;
+use App\Models\AccountTransaction;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
@@ -255,19 +256,38 @@ class SaleController extends Controller
             'payment_status' => $paymentStatus,
         ]);
 
+        $transaction = null;
+
         // Update account balance - money comes in for sales
         if ($sale->account_id) {
             $account = Account::find($sale->account_id);
             if ($account) {
-                $account->increment('balance', (float) $validated['amount']);
+                $balanceBefore = (float) $account->balance;
+                $amount = (float) $validated['amount'];
+                $balanceAfter = $balanceBefore + $amount;
+
+                $account->increment('balance', $amount);
+
+                // Record account transaction
+                $transaction = AccountTransaction::create([
+                    'account_id'     => $account->id,
+                    'type'           => AccountTransaction::TYPE_INCOME,
+                    'amount'         => $amount,
+                    'balance_after'  => $balanceAfter,
+                    'description'    => 'Payment received for Invoice #' . $sale->id,
+                    'reference_id'   => $sale->id,
+                    'reference_type' => Sale::class,
+                    'created_by'     => Auth::id(),
+                ]);
             }
         }
 
         $sale->load(['customer', 'account', 'items.product', 'items.unit', 'creator']);
 
         return response()->json([
-            'data'    => $sale,
-            'message' => 'Payment recorded successfully.',
+            'data'           => $sale,
+            'transaction_id' => $transaction?->id,
+            'message'        => 'Payment recorded successfully.',
         ]);
     }
 
@@ -284,6 +304,27 @@ class SaleController extends Controller
         return response()->json([
             'data'    => $sale,
             'message' => 'Invoice cancelled.',
+        ]);
+    }
+
+    public function paymentReceipt(Request $request, int $transactionId): JsonResponse
+    {
+        $branchId = $this->resolveBranchId($request);
+
+        $transaction = AccountTransaction::with(['account', 'reference'])
+            ->where('id', $transactionId)
+            ->where('reference_type', Sale::class)
+            ->firstOrFail();
+
+        // Verify the sale belongs to this branch
+        $sale = Sale::where('branch_id', $branchId)
+            ->with('customer')
+            ->findOrFail($transaction->reference_id);
+
+        return response()->json([
+            'transaction' => $transaction,
+            'sale'        => $sale,
+            'account'     => $transaction->account,
         ]);
     }
 
