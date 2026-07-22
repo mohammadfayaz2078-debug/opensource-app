@@ -29,6 +29,10 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountDepositController;
 use App\Http\Controllers\AccountWithdrawalController;
+use App\Http\Controllers\SaleReportController;
+use App\Http\Controllers\PurchaseReportController;
+use App\Http\Controllers\ProfitLossReportController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 
 // Replace login route
@@ -329,6 +333,32 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/account-transactions', [AccountController::class, 'allTransactions']);
     Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions']);
+
+
+
+    // In routes/api.php
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    // In routes/api.php
+    Route::prefix('sales-report')->group(function () {
+        Route::get('/', [SaleReportController::class, 'index']);
+        Route::get('/filters', [SaleReportController::class, 'filterOptions']);
+        Route::get('/export', [SaleReportController::class, 'export']);
+    });
+
+
+    // In routes/api.php
+    Route::prefix('purchase-report')->group(function () {
+        Route::get('/', [PurchaseReportController::class, 'index']);
+        Route::get('/filters', [PurchaseReportController::class, 'filterOptions']);
+        Route::get('/export', [PurchaseReportController::class, 'export']);
+    });
+
+    // In routes/api.php
+    Route::prefix('profit-loss-report')->group(function () {
+        Route::get('/', [ProfitLossReportController::class, 'index']);
+        Route::get('/filters', [ProfitLossReportController::class, 'filterOptions']);
+        Route::get('/export', [ProfitLossReportController::class, 'export']);
+    });
 });
 
 

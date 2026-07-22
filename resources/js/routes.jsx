@@ -41,6 +41,10 @@ import SaleReturnEdit from './pages/SaleReturn/Edit';
 import StockBalances from './pages/Stock/Balances';
 import StockTransactions from './pages/Stock/Transactions';
 
+import SaleReport from './pages/Report/SaleReport';
+import PurchaseReport from './pages/Report/PurchaseReport';
+import ProfitLossReport from './pages/Report/ProfitLossReport';
+
 // Account Pages
 import AccountIndex from './pages/Account/Index';
 import AccountShow from './pages/Account/Show';
@@ -327,6 +331,11 @@ const routes = [
       // Stock
       { path: 'stock/balances', element: <StockBalances /> },
       { path: 'stock/transactions', element: <StockTransactions /> },
+
+
+      { path: 'sales-report', element: <SaleReport /> },
+      { path: 'purchase-report', element: <PurchaseReport /> },
+      { path: 'profit-loss-report', element: <ProfitLossReport /> },
     ]
   },
   

@@ -300,10 +300,10 @@ export default function UnitIndex() {
                       {getTypeBadge(unit.uom_type)}
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-right font-mono text-sm text-gray-700">
-                      {unit.factor}
+                      {Number(unit.factor).toFixed(2)}
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-right font-mono text-sm text-gray-700">
-                      {unit.rounding}
+                      {Number(unit.rounding).toFixed(2)}
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-center">
                       <button

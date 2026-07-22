@@ -171,45 +171,51 @@ export default function UnitShow() {
             </div>
           </div>
 
-          {/* Conversion Info */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Conversion Information</h2>
-            </div>
-            <div className="p-6">
-              <dl className="space-y-4">
-                {unit.uom_type !== 'reference' && (
-                  <>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <dt className="text-xs font-medium text-gray-500 uppercase">Conversion Factor</dt>
-                      <dd className="mt-1">
-                        <span className="text-lg font-mono font-semibold text-gray-900">{unit.factor}</span>
-                        <span className="text-sm text-gray-500 ml-2">
-                          {unit.name} = {unit.factor} {unit.reference_unit_name || 'reference unit'}
-                        </span>
-                      </dd>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <dt className="text-xs font-medium text-gray-500 uppercase">Inverse Factor</dt>
-                      <dd className="mt-1">
-                        <span className="text-lg font-mono font-semibold text-gray-900">{unit.factor_inv}</span>
-                        <span className="text-sm text-gray-500 ml-2">
-                          1 {unit.reference_unit_name || 'reference unit'} = {unit.factor_inv} {unit.name}
-                        </span>
-                      </dd>
-                    </div>
-                  </>
-                )}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Rounding Precision</dt>
-                  <dd className="mt-1">
-                    <span className="text-lg font-mono font-semibold text-gray-900">{unit.rounding}</span>
-                    <span className="text-sm text-gray-500 ml-2">Quantities rounded to this value</span>
-                  </dd>
-                </div>
-              </dl>
-            </div>
+{/* Conversion Info */}
+<div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+  <div className="px-6 py-4 border-b border-gray-200">
+    <h2 className="text-lg font-medium text-gray-900">Conversion Information</h2>
+  </div>
+  <div className="p-6">
+    <dl className="space-y-4">
+      {unit.uom_type !== 'reference' && (
+        <>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <dt className="text-xs font-medium text-gray-500 uppercase">Conversion Factor</dt>
+            <dd className="mt-1">
+              <span className="text-lg font-mono font-semibold text-gray-900">
+                {Number(unit.factor).toFixed(2)}
+              </span>
+              <span className="text-sm text-gray-500 ml-2">
+                {unit.name} = {Number(unit.factor).toFixed(2)} {unit.reference_unit_name || 'reference unit'}
+              </span>
+            </dd>
           </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <dt className="text-xs font-medium text-gray-500 uppercase">Inverse Factor</dt>
+            <dd className="mt-1">
+              <span className="text-lg font-mono font-semibold text-gray-900">
+                {Number(unit.factor_inv).toFixed(2)}
+              </span>
+              <span className="text-sm text-gray-500 ml-2">
+                1 {unit.reference_unit_name || 'reference unit'} = {Number(unit.factor_inv).toFixed(2)} {unit.name}
+              </span>
+            </dd>
+          </div>
+        </>
+      )}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <dt className="text-xs font-medium text-gray-500 uppercase">Rounding Precision</dt>
+        <dd className="mt-1">
+          <span className="text-lg font-mono font-semibold text-gray-900">
+            {Number(unit.rounding).toFixed(2)}
+          </span>
+          <span className="text-sm text-gray-500 ml-2">Quantities rounded to this value</span>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</div>
         </div>
 
         {/* Sidebar */}
@@ -235,35 +241,35 @@ export default function UnitShow() {
             </div>
           </div>
 
-          {/* Example Conversion */}
-          {unit.uom_type !== 'reference' && unit.reference_unit_name && (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Example Conversion</h2>
-              </div>
-              <div className="p-6">
-                <div className="space-y-3">
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      1 <span className="font-semibold">{unit.name}</span> = 
-                      <span className="font-mono font-bold text-blue-600"> {unit.factor}</span> 
-                      <span className="font-semibold"> {unit.reference_unit_name}</span>
-                    </p>
-                    <p className="text-sm text-gray-600 mt-2">
-                      1 <span className="font-semibold">{unit.reference_unit_name}</span> = 
-                      <span className="font-mono font-bold text-green-600"> {unit.factor_inv}</span> 
-                      <span className="font-semibold"> {unit.name}</span>
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-gray-400">
-                      Example: 10 {unit.name} = {10 * unit.factor} {unit.reference_unit_name}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+{/* Example Conversion */}
+{unit.uom_type !== 'reference' && unit.reference_unit_name && (
+  <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+    <div className="px-6 py-4 border-b border-gray-200">
+      <h2 className="text-lg font-medium text-gray-900">Example Conversion</h2>
+    </div>
+    <div className="p-6">
+      <div className="space-y-3">
+        <div className="text-center p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-gray-600">
+            1 <span className="font-semibold">{unit.name}</span> = 
+            <span className="font-mono font-bold text-blue-600"> {Number(unit.factor).toFixed(2)}</span> 
+            <span className="font-semibold"> {unit.reference_unit_name}</span>
+          </p>
+          <p className="text-sm text-gray-600 mt-2">
+            1 <span className="font-semibold">{unit.reference_unit_name}</span> = 
+            <span className="font-mono font-bold text-green-600"> {Number(unit.factor_inv).toFixed(2)}</span> 
+            <span className="font-semibold"> {unit.name}</span>
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-gray-400">
+            Example: 10 {unit.name} = {Number(10 * unit.factor).toFixed(2)} {unit.reference_unit_name}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
           {/* Audit Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">

@@ -1,276 +1,471 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
+import api from '../../plugins/axios';
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Package,
+  ShoppingCart,
+  Truck,
+  Wallet,
+  BarChart3,
+  Activity,
+  Clock,
+  Plus,
+  Minus,
+  Loader2,
+  RefreshCw,
+  ArrowUpRight,
+  ArrowDownRight,
+  AlertCircle,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
+
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Area,
+  ComposedChart,
+  AreaChart
+} from 'recharts';
+
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
 
 const Dashboard = () => {
-  const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({
-    customers: 0,
-    suppliers: 0,
-    expenses: 0,
-  });
-  const [recentCustomers, setRecentCustomers] = useState([]);
-  const [recentSuppliers, setRecentSuppliers] = useState([]);
-  const [recentExpenses, setRecentExpenses] = useState([]);
-
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboard();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboard = async () => {
     setLoading(true);
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Static data based on sidebar modules
-      setStats({
-        customers: 128,
-        suppliers: 45,
-        expenses: 342,
-      });
-
-      setRecentCustomers([
-        { id: 1, name: 'Customer 1', email: 'customer1@example.com', phone: '+1234567890', total_orders: 5 },
-        { id: 2, name: 'Customer 2', email: 'customer2@example.com', phone: '+1234567891', total_orders: 3 },
-        { id: 3, name: 'Customer 3', email: 'customer3@example.com', phone: '+1234567892', total_orders: 8 },
-        { id: 4, name: 'Customer 4', email: 'customer4@example.com', phone: '+1234567893', total_orders: 2 },
-        { id: 5, name: 'Customer 5', email: 'customer5@example.com', phone: '+1234567894', total_orders: 6 }
-      ]);
-
-      setRecentSuppliers([
-        { id: 1, name: 'Tech Supplies Co.', email: 'sales@techsupplies.com', phone: '+1234567895', total_purchases: 12500 },
-        { id: 2, name: 'Global Traders', email: 'info@globaltraders.com', phone: '+1234567896', total_purchases: 8700 },
-        { id: 3, name: 'Quality Goods Ltd.', email: 'contact@qualitygoods.com', phone: '+1234567897', total_purchases: 15400 },
-        { id: 4, name: 'Express Logistics', email: 'dispatch@expresslogistics.com', phone: '+1234567898', total_purchases: 4300 }
-      ]);
-
-      setRecentExpenses([
-        { id: 1, category: 'Utilities', type: 'Electricity', amount: 450, date: '2024-01-15', status: 'paid' },
-        { id: 2, category: 'Rent', type: 'Office Rent', amount: 2000, date: '2024-01-01', status: 'paid' },
-        { id: 3, category: 'Supplies', type: 'Office Supplies', amount: 125, date: '2024-01-10', status: 'paid' },
-        { id: 4, category: 'Transport', type: 'Fuel', amount: 280, date: '2024-01-12', status: 'pending' },
-        { id: 5, category: 'Marketing', type: 'Advertising', amount: 500, date: '2024-01-08', status: 'paid' }
-      ]);
+      const res = await api.get('/dashboard');
+      setData(res.data);
     } catch (err) {
-      console.error('Failed to fetch dashboard data:', err);
-      Swal.fire('Error', 'Failed to load dashboard data', 'error');
+      console.error('Failed to fetch dashboard:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString();
+  const refresh = async () => {
+    setRefreshing(true);
+    await fetchDashboard();
+    setRefreshing(false);
   };
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'AFN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount || 0);
+  };
+
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('en-US').format(num || 0);
+  };
+
+  const getStatusColor = (value) => {
+    if (value > 0) return 'text-green-600';
+    if (value < 0) return 'text-red-600';
+    return 'text-gray-500';
+  };
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'sale':
+        return <ShoppingCart className="w-4 h-4 text-blue-500" />;
+      case 'purchase':
+        return <Truck className="w-4 h-4 text-purple-500" />;
+      case 'customer':
+        return <Users className="w-4 h-4 text-emerald-500" />;
+      default:
+        return <Activity className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const getActivityColor = (type) => {
+    switch (type) {
+      case 'sale':
+        return 'bg-blue-50 border-blue-200';
+      case 'purchase':
+        return 'bg-purple-50 border-purple-200';
+      case 'customer':
+        return 'bg-emerald-50 border-emerald-200';
+      default:
+        return 'bg-gray-50 border-gray-200';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const summary = data?.summary || {};
+  const salesOverview = data?.sales_overview || {};
+  const revenueExpenses = data?.revenue_expenses || { labels: [], revenue: [], expenses: [], profit: [] };
+  const topProducts = data?.top_products || [];
+  const topCustomers = data?.top_customers || [];
+  const recentActivity = data?.recent_activity || [];
+  const quickStats = data?.quick_stats || {};
+  const monthlyTrend = data?.monthly_trend || [];
+  const inventoryStatus = data?.inventory_status || {};
+
+  // Chart data
+  const revenueChartData = revenueExpenses.labels.map((label, index) => ({
+    name: label,
+    revenue: revenueExpenses.revenue[index] || 0,
+    expenses: revenueExpenses.expenses[index] || 0,
+    profit: revenueExpenses.profit[index] || 0,
+  }));
+
+  const trendChartData = monthlyTrend.map(item => ({
+    month: item.month,
+    sales: item.sales || 0,
+    purchases: item.purchases || 0,
+    new_customers: item.new_customers || 0,
+  }));
+
+  // Payment breakdown for pie chart
+  const paymentData = salesOverview.payment_breakdown?.map(item => ({
+    name: item.status.toUpperCase(),
+    value: item.total,
+    count: item.count,
+  })) || [];
+
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Welcome, {user.first_name + ' ' + user.last_name || user.email || 'User'}
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Branch Dashboard — overview of your business activity
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 p-3 md:p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-emerald-500" />
+              Dashboard
+            </h1>
+            <p className="text-xs text-gray-500">Real-time business overview</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={refresh}
+              disabled={refreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <span className="text-xs text-gray-400">{data?.period?.this_month || ''}</span>
+          </div>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Customers</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.customers}</p>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Today's Sales</p>
+                <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.today?.sales)}</p>
+              </div>
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-blue-600" />
+              </div>
             </div>
-            <div className="bg-blue-100 rounded-full p-3">
-              <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+            <p className="text-[10px] text-gray-400 mt-1">+{formatNumber(summary.today?.sales_count || 0)} orders</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Month Sales</p>
+                <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.this_month?.sales)}</p>
+              </div>
+              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
+              </div>
+            </div>
+            <p className={`text-[10px] font-medium ${getStatusColor(summary.this_month?.profit)} mt-1`}>
+              Profit: {formatCurrency(summary.this_month?.profit)}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Month Expenses</p>
+                <p className="text-lg font-bold text-red-600">{formatCurrency(summary.this_month?.expenses)}</p>
+              </div>
+              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                <Wallet className="w-4 h-4 text-red-600" />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">vs {formatCurrency(summary.this_month?.purchases)} purchases</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Customers</p>
+                <p className="text-lg font-bold text-gray-900">{formatNumber(summary.counts?.customers)}</p>
+              </div>
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-purple-600" />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">{formatNumber(quickStats.customers?.today || 0)} new today</p>
+          </div>
+        </div>
+
+        {/* Quick Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Invoices</p>
+            <p className="text-sm font-bold text-gray-900">{formatNumber(quickStats.invoices?.total || 0)}</p>
+            <p className="text-[9px] text-gray-400">+{formatNumber(quickStats.invoices?.this_month || 0)} this month</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Bills</p>
+            <p className="text-sm font-bold text-gray-900">{formatNumber(quickStats.bills?.total || 0)}</p>
+            <p className="text-[9px] text-gray-400">+{formatNumber(quickStats.bills?.this_month || 0)} this month</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Products</p>
+            <p className="text-sm font-bold text-gray-900">{formatNumber(summary.counts?.products || 0)}</p>
+            <p className="text-[9px] text-gray-400">{formatNumber(inventoryStatus.in_stock || 0)} in stock</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Suppliers</p>
+            <p className="text-sm font-bold text-gray-900">{formatNumber(summary.counts?.suppliers || 0)}</p>
+            <p className="text-[9px] text-gray-400">Active suppliers</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Return Rate</p>
+            <p className="text-sm font-bold text-gray-900">{quickStats.return_rate || 0}%</p>
+            <p className="text-[9px] text-gray-400">Of total sales</p>
+          </div>
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          {/* Revenue vs Expenses Chart */}
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Revenue vs Expenses</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={revenueChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(value)}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend />
+                  <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="#93C5FD" fillOpacity={0.3} />
+                  <Area type="monotone" dataKey="expenses" stroke="#EF4444" fill="#FCA5A5" fillOpacity={0.3} />
+                  <Line type="monotone" dataKey="profit" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Payment Breakdown */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Payment Breakdown</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={paymentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={70}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {paymentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => formatCurrency(value)}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Suppliers</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">{stats.suppliers}</p>
+        {/* Monthly Trend */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Monthly Trend</h2>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={trendChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} />
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                <Legend />
+                <Bar dataKey="sales" fill="#3B82F6" name="Sales" />
+                <Bar dataKey="purchases" fill="#8B5CF6" name="Purchases" />
+                <Bar dataKey="new_customers" fill="#10B981" name="New Customers" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Top Products & Customers */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Package className="w-4 h-4 text-blue-500" />
+              Top Products (This Month)
+            </h2>
+            <div className="space-y-2">
+              {topProducts.length > 0 ? (
+                topProducts.map((product, index) => (
+                  <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+                        <p className="text-xs text-gray-500">{formatNumber(product.quantity)} units</p>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(product.revenue)}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-400 py-4 text-sm">No products sold this month</p>
+              )}
             </div>
-            <div className="bg-green-100 rounded-full p-3">
-              <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Users className="w-4 h-4 text-emerald-500" />
+              Top Customers (This Month)
+            </h2>
+            <div className="space-y-2">
+              {topCustomers.length > 0 ? (
+                topCustomers.map((customer, index) => (
+                  <div key={customer.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">{customer.name}</p>
+                        <p className="text-xs text-gray-500">{customer.order_count} orders</p>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(customer.total_spent)}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-400 py-4 text-sm">No customer data this month</p>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Expenses</p>
-              <p className="text-3xl font-bold text-purple-600 mt-1">{stats.expenses}</p>
+        {/* Inventory Status & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Inventory Status */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Package className="w-4 h-4 text-orange-500" />
+              Inventory Status
+            </h2>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
+                <span className="text-sm text-gray-700">In Stock</span>
+                <span className="text-sm font-bold text-green-600">{formatNumber(inventoryStatus.in_stock || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-yellow-50 rounded-lg">
+                <span className="text-sm text-gray-700">Low Stock</span>
+                <span className="text-sm font-bold text-yellow-600">{formatNumber(inventoryStatus.low_stock || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-red-50 rounded-lg">
+                <span className="text-sm text-gray-700">Out of Stock</span>
+                <span className="text-sm font-bold text-red-600">{formatNumber(inventoryStatus.out_of_stock || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">Total Products</span>
+                <span className="text-sm font-bold text-gray-900">{formatNumber(inventoryStatus.total_products || 0)}</span>
+              </div>
             </div>
-            <div className="bg-purple-100 rounded-full p-3">
-              <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 8h6m-5 0v8m2-8v8M4 4h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-              </svg>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-gray-500" />
+              Recent Activity
+            </h2>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {recentActivity.length > 0 ? (
+                recentActivity.map((activity, index) => (
+                  <div key={index} className={`flex items-center justify-between p-2 rounded-lg border ${getActivityColor(activity.type)}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      {getActivityIcon(activity.type)}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {activity.type === 'sale' && `Invoice ${activity.reference}`}
+                          {activity.type === 'purchase' && `Bill ${activity.reference}`}
+                          {activity.type === 'customer' && `New Customer: ${activity.name}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {activity.customer || activity.supplier || activity.code || ''}
+                          {' '}• {activity.time_ago || 'Just now'}
+                        </p>
+                      </div>
+                    </div>
+                    {activity.amount && (
+                      <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(activity.amount)}</p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-400 py-4 text-sm">No recent activity</p>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Recent Customers Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-8">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800">Recent Customers</h2>
-          <Link
-            to="/customers"
-            className="text-sm text-[#007c89] hover:text-[#006d77] font-medium"
-          >
-            View All →
-          </Link>
+        {/* Footer */}
+        <div className="mt-4 text-center text-[10px] text-gray-400">
+          Dashboard updated {data?.period?.today ? `on ${new Date(data.period.today).toLocaleString()}` : ''}
         </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-            <span className="ml-3 text-gray-500">Loading...</span>
-          </div>
-        ) : recentCustomers.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-500">No customers found</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {recentCustomers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{customer.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{customer.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{customer.phone}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{customer.total_orders}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Recent Suppliers Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-8">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800">Recent Suppliers</h2>
-          <Link
-            to="/suppliers"
-            className="text-sm text-[#007c89] hover:text-[#006d77] font-medium"
-          >
-            View All →
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          </div>
-        ) : recentSuppliers.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-500">No suppliers found</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Purchases</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {recentSuppliers.map((supplier) => (
-                  <tr key={supplier.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{supplier.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{supplier.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{supplier.phone}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">${supplier.total_purchases.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Recent Expenses Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800">Recent Expenses</h2>
-          <Link
-            to="/expenses"
-            className="text-sm text-[#007c89] hover:text-[#006d77] font-medium"
-          >
-            View All →
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          </div>
-        ) : recentExpenses.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-500">No expenses found</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {recentExpenses.map((expense) => (
-                  <tr key={expense.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-gray-900">{expense.category}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{expense.type}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">${expense.amount.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{formatDate(expense.date)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        expense.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {expense.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );
