@@ -53,10 +53,10 @@ return new class extends Migration
             |--------------------------------------------------------------------------
             */
 
-            $table->decimal('factor', 20, 10)
+            $table->decimal('factor', 20, 2)
                 ->default(1);
 
-            $table->decimal('factor_inv', 20, 10)
+            $table->decimal('factor_inv', 20, 2)
                 ->default(1);
 
             /*
@@ -65,7 +65,7 @@ return new class extends Migration
             |--------------------------------------------------------------------------
             */
 
-            $table->decimal('rounding', 20, 10)
+            $table->decimal('rounding', 20, 2)
                 ->default(0.01);
 
             /*

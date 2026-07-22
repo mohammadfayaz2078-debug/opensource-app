@@ -7,7 +7,9 @@ export default function OtherIncomeCreate() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [categories, setCategories] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [form, setForm] = useState({
+    account_id: '',
     income_category_id: '',
     income_date: new Date().toISOString().split('T')[0],
     description: '',
@@ -16,9 +18,15 @@ export default function OtherIncomeCreate() {
   });
 
   useEffect(() => {
+    // Fetch categories
     api.get('/income-categories?per_page=1000').then(r => {
       const payload = r.data.data;
       setCategories(Array.isArray(payload) ? payload : payload?.data || []);
+    }).catch(() => {});
+
+    // Fetch accounts
+    api.get('/accounts/list/options').then(r => {
+      setAccounts(r.data?.data || []);
     }).catch(() => {});
   }, []);
 
@@ -80,6 +88,27 @@ export default function OtherIncomeCreate() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
+                    Account <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="account_id"
+                    value={form.account_id}
+                    onChange={handleChange}
+                    className={inputClass('account_id')}
+                    required
+                  >
+                    <option value="">Select account</option>
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} - Balance: {parseFloat(acc.balance || 0).toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.account_id && <p className="text-red-500 text-xs mt-0.5">{errors.account_id[0]}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
                     Income Category
                   </label>
                   <select
@@ -99,7 +128,7 @@ export default function OtherIncomeCreate() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      Income Date *
+                      Income Date <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
@@ -107,13 +136,14 @@ export default function OtherIncomeCreate() {
                       value={form.income_date}
                       onChange={handleChange}
                       className={inputClass('income_date')}
+                      required
                     />
                     {errors.income_date && <p className="text-red-500 text-xs mt-0.5">{errors.income_date[0]}</p>}
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      Amount *
+                      Amount <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -124,6 +154,7 @@ export default function OtherIncomeCreate() {
                       min="0"
                       className={inputClass('amount')}
                       placeholder="0.00"
+                      required
                     />
                     {errors.amount && <p className="text-red-500 text-xs mt-0.5">{errors.amount[0]}</p>}
                   </div>

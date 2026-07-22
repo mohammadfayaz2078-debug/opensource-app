@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+
 
 class SaleReturn extends Model
 {
@@ -47,5 +49,34 @@ class SaleReturn extends Model
             ->value('reference_no');
         $seq = $last ? (int) substr($last, -5) + 1 : 1;
         return "{$prefix}" . str_pad($seq, 5, '0', STR_PAD_LEFT);
+    }
+
+
+    // In SaleReturn.php model
+    public function processReturn(): void
+    {
+        DB::transaction(function () {
+            foreach ($this->items as $returnItem) {
+                $saleItem = SaleItem::find($returnItem->sale_item_id);
+                
+                if ($saleItem) {
+                    // Update refunded quantity and amount
+                    $saleItem->refunded_quantity += $returnItem->quantity;
+                    $saleItem->refunded_amount += $returnItem->total;
+                    $saleItem->updateRefundStatus();
+                    $saleItem->save();
+                }
+            }
+
+            // Recalculate sale totals
+            $this->sale->recalculate();
+            $this->sale->updatePaymentStatus();
+
+            // Mark sale as returned if all items are fully refunded
+            if ($this->sale->isFullyRefunded()) {
+                $this->sale->status = Sale::STATUS_RETURNED;
+                $this->sale->save();
+            }
+        });
     }
 }

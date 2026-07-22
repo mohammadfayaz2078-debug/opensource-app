@@ -37,11 +37,17 @@ const SearchableSelect = ({
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
 
-  const selectedOption = options.find(opt => opt[valueKey] === value);
+  // Ensure options is always an array
+  const optionsArray = Array.isArray(options) ? options : [];
+  
+  // Safely find the selected option
+  const selectedOption = optionsArray.find(opt => opt && opt[valueKey] === value);
 
-  const filteredOptions = options.filter(opt => 
-    opt[displayKey].toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Safely filter options
+  const filteredOptions = optionsArray.filter(opt => {
+    if (!opt || !opt[displayKey]) return false;
+    return opt[displayKey].toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -160,7 +166,7 @@ const SearchableSelect = ({
           <div className="overflow-y-auto flex-1">
             {filteredOptions.length === 0 ? (
               <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                No options found
+                {optionsArray.length === 0 ? 'No options available' : 'No options found'}
               </div>
             ) : (
               filteredOptions.map((option, index) => (
@@ -214,18 +220,24 @@ const ExpenseCreate = () => {
   const fetchExpenseTypes = async () => {
     try {
       const res = await api.get('/expense-types?active_only=true');
-      setExpenseTypes(res.data?.data || []);
+      // Fix: Check if res.data is an array or has a data property
+      const typesData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setExpenseTypes(typesData);
     } catch (err) {
       console.error('Failed to fetch expense types:', err);
+      setExpenseTypes([]); // Set empty array on error
     }
   };
 
   const fetchAccounts = async () => {
     try {
       const res = await api.get('/accounts');
-      setAccounts(res.data || []);
+      // Fix: Check if res.data is an array or has a data property
+      const accountsData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setAccounts(accountsData);
     } catch (err) {
       console.error('Failed to fetch accounts:', err);
+      setAccounts([]); // Set empty array on error
     }
   };
 

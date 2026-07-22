@@ -212,7 +212,7 @@ export default function UnitCategoryShow() {
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created By</dt>
-                  <dd className="text-gray-700">{category.creator?.name || '—'}</dd>
+                  <dd className="text-gray-700">{category.creator?.first_name + ' ' + category.creator?.last_name || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created At</dt>

@@ -34,8 +34,14 @@ const AccountShow = () => {
 
       setAccount(accountRes.data.data);
       
-      const filteredDeposits = depositsRes.data.filter(d => d.account_id === parseInt(id));
-      const filteredWithdrawals = withdrawalsRes.data.filter(w => w.account_id === parseInt(id));
+      // Fix: Check if data exists before filtering
+      const filteredDeposits = depositsRes.data?.data 
+        ? depositsRes.data.data.filter(d => d.account_id === parseInt(id))
+        : [];
+      
+      const filteredWithdrawals = withdrawalsRes.data?.data 
+        ? withdrawalsRes.data.data.filter(w => w.account_id === parseInt(id))
+        : [];
       
       setDeposits(filteredDeposits);
       setWithdrawals(filteredWithdrawals);
@@ -103,6 +109,87 @@ const AccountShow = () => {
     }
   };
 
+  // Helper functions for transaction types
+  const getTransactionBadge = (type) => {
+    const badges = {
+      income: 'bg-green-100 text-green-800',
+      expense: 'bg-red-100 text-red-800',
+      deposit: 'bg-blue-100 text-blue-800',
+      withdraw: 'bg-orange-100 text-orange-800',
+      withdrawal: 'bg-orange-100 text-orange-800',
+      transfer: 'bg-purple-100 text-purple-800',
+      payment: 'bg-teal-100 text-teal-800',
+      refund: 'bg-indigo-100 text-indigo-800',
+      fee: 'bg-gray-100 text-gray-800',
+    };
+    return badges[type] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getTransactionIcon = (type) => {
+    const icons = {
+      income: (
+        <svg className="w-3 h-3 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+        </svg>
+      ),
+      expense: (
+        <svg className="w-3 h-3 mr-1 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+        </svg>
+      ),
+      deposit: (
+        <svg className="w-3 h-3 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      ),
+      withdraw: (
+        <svg className="w-3 h-3 mr-1 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      ),
+      withdrawal: (
+        <svg className="w-3 h-3 mr-1 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      ),
+      transfer: (
+        <svg className="w-3 h-3 mr-1 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      ),
+      payment: (
+        <svg className="w-3 h-3 mr-1 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      ),
+      refund: (
+        <svg className="w-3 h-3 mr-1 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      ),
+    };
+    return icons[type] || null;
+  };
+
+  const getTransactionTypeColor = (type) => {
+    const colors = {
+      income: 'text-green-600',
+      expense: 'text-red-600',
+      deposit: 'text-blue-600',
+      withdraw: 'text-orange-600',
+      withdrawal: 'text-orange-600',
+      transfer: 'text-purple-600',
+      payment: 'text-teal-600',
+      refund: 'text-indigo-600',
+    };
+    return colors[type] || 'text-gray-600';
+  };
+
+  const getTransactionSign = (type) => {
+    const positive = ['income', 'deposit', 'refund'];
+    return positive.includes(type) ? '+' : '-';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -111,19 +198,21 @@ const AccountShow = () => {
     );
   }
 
-  const getTransactionTypeColor = (type) => {
-    return type === 'deposit' ? 'text-green-600' : 'text-red-600';
-  };
-
-  const getTransactionTypeIcon = (type) => {
-    return type === 'deposit' ? '+' : '-';
-  };
-
-  const getTransactionBadge = (type) => {
-    return type === 'deposit' 
-      ? 'bg-green-100 text-green-700'
-      : 'bg-red-100 text-red-700';
-  };
+  if (!account) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Account not found</p>
+          <button
+            onClick={() => navigate('/accounts')}
+            className="mt-2 text-blue-600 hover:underline"
+          >
+            Go back to accounts
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -136,7 +225,7 @@ const AccountShow = () => {
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back
+          Back to Accounts
         </button>
 
         {/* Account Header */}
@@ -183,20 +272,23 @@ const AccountShow = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-xs font-medium">Current Balance</p>
-              <p className="text-2xl font-bold mt-0.5">{parseFloat(account.balance).toFixed(2)}</p> AFN
+              <p className="text-2xl font-bold mt-0.5">{parseFloat(account.balance).toFixed(2)}</p>
+              <p className="text-blue-100 text-xs">AFN</p>
             </div>
             <div className="flex gap-6">
               <div>
                 <p className="text-blue-100 text-xs">Deposits</p>
                 <p className="text-lg font-semibold">
-                  {deposits.reduce((sum, d) => sum + parseFloat(d.amount), 0).toFixed(2)} AFN
+                  {deposits.reduce((sum, d) => sum + parseFloat(d.amount), 0).toFixed(2)}
                 </p>
+                <p className="text-blue-100 text-xs">AFN</p>
               </div>
               <div>
                 <p className="text-blue-100 text-xs">Withdrawals</p>
                 <p className="text-lg font-semibold">
-                  {withdrawals.reduce((sum, w) => sum + parseFloat(w.amount), 0).toFixed(2)} AFN
+                  {withdrawals.reduce((sum, w) => sum + parseFloat(w.amount), 0).toFixed(2)}
                 </p>
+                <p className="text-blue-100 text-xs">AFN</p>
               </div>
             </div>
           </div>
@@ -282,12 +374,13 @@ const AccountShow = () => {
                           {transactions.map((transaction) => (
                             <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
                               <td className="py-2">
-                                <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${getTransactionBadge(transaction.type)}`}>
-                                  {transaction.type === 'deposit' ? 'Deposit' : 'Withdrawal'}
+                                <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getTransactionBadge(transaction.type)}`}>
+                                  {getTransactionIcon(transaction.type)}
+                                  {transaction.type?.charAt(0).toUpperCase() + transaction.type?.slice(1) || 'Unknown'}
                                 </span>
                               </td>
                               <td className={`py-2 font-medium ${getTransactionTypeColor(transaction.type)}`}>
-                                {getTransactionTypeIcon(transaction.type)} {parseFloat(transaction.amount).toFixed(2)} AFN
+                                {getTransactionSign(transaction.type)} {parseFloat(transaction.amount).toFixed(2)} AFN
                               </td>
                               <td className="py-2 text-gray-600">
                                 {parseFloat(transaction.balance_after).toFixed(2)} AFN

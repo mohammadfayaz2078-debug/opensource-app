@@ -26,6 +26,7 @@ import PurchaseInvoice from './pages/Purchase/Invoice';
 import PaymentReceipt from './pages/Purchase/PaymentReceipt';
 import PurchaseReturnIndex from './pages/PurchaseReturn/Index';
 import PurchaseReturnCreate from './pages/PurchaseReturn/Create';
+import PurchaseReturnEdit from './pages/PurchaseReturn/Edit';
 
 // Sale Pages
 import SaleIndex from './pages/Sale/Index';
@@ -35,13 +36,20 @@ import SaleShow from './pages/Sale/Show';
 import SaleInvoice from './pages/Sale/Invoice';
 import SaleReturnIndex from './pages/SaleReturn/Index';
 import SaleReturnCreate from './pages/SaleReturn/Create';
+import SaleReturnEdit from './pages/SaleReturn/Edit';
 
 // Stock Pages
 import StockBalances from './pages/Stock/Balances';
 import StockTransactions from './pages/Stock/Transactions';
 
+<<<<<<< HEAD
 // Publication Pages
 import PublicationIndex from './pages/Publication/ProductAnalytics';
+=======
+import SaleReport from './pages/Report/SaleReport';
+import PurchaseReport from './pages/Report/PurchaseReport';
+import ProfitLossReport from './pages/Report/ProfitLossReport';
+>>>>>>> fc062ef9846ee7d99db5b4de421e9a4ecd99308c
 
 // Account Pages
 import AccountIndex from './pages/Account/Index';
@@ -324,6 +332,7 @@ const routes = [
       { path: 'purchases/:id/invoice', element: <PurchaseInvoice /> },
       { path: 'purchase-returns', element: <PurchaseReturnIndex /> },
       { path: 'purchase-returns/create', element: <PurchaseReturnCreate /> },
+      { path: 'purchase-returns/:id/edit', element: <PurchaseReturnEdit /> },
 
       // Sales
       { path: 'sales', element: <SaleIndex /> },
@@ -333,13 +342,21 @@ const routes = [
       { path: 'sales/:id/invoice', element: <SaleInvoice /> },
       { path: 'sale-returns', element: <SaleReturnIndex /> },
       { path: 'sale-returns/create', element: <SaleReturnCreate /> },
+      { path: 'sale-returns/:id/edit', element: <SaleReturnEdit /> },
 
       // Stock
       { path: 'stock/balances', element: <StockBalances /> },
       { path: 'stock/transactions', element: <StockTransactions /> },
 
+<<<<<<< HEAD
       // Publications
       { path: 'publications', element: <PublicationIndex /> },
+=======
+
+      { path: 'sales-report', element: <SaleReport /> },
+      { path: 'purchase-report', element: <PurchaseReport /> },
+      { path: 'profit-loss-report', element: <ProfitLossReport /> },
+>>>>>>> fc062ef9846ee7d99db5b4de421e9a4ecd99308c
     ]
   },
   

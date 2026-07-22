@@ -35,6 +35,7 @@ class PurchaseReturn extends Model
         return $branchId ? $query->where('branch_id', $branchId) : $query;
     }
 
+    // In PurchaseReturn.php model
     public static function generateReferenceNo(int $branchId): string
     {
         $year   = date('Y');
@@ -47,5 +48,21 @@ class PurchaseReturn extends Model
             ->value('reference_no');
         $seq = $last ? (int) substr($last, -5) + 1 : 1;
         return "{$prefix}" . str_pad($seq, 5, '0', STR_PAD_LEFT);
+    }
+
+
+    // In PurchaseItem.php model
+    public function updateRefundStatus(): void
+    {
+        $refundedQty = (float) ($this->refunded_quantity ?? 0);
+        $quantity = (float) $this->quantity;
+
+        $status = match (true) {
+            $refundedQty <= 0                   => 'none',
+            $refundedQty >= $quantity           => 'full',
+            default                             => 'partial',
+        };
+
+        $this->refund_status = $status;
     }
 }

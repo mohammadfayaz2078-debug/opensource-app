@@ -6,6 +6,7 @@ use App\Helpers\AuthHelper;
 use App\Models\OtherIncome;
 use App\Models\IncomeCategory;
 use App\Models\Branch;
+use App\Models\Account;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,7 +36,7 @@ class OtherIncomeController extends Controller
         }
         
         $branchId = AuthHelper::getBranchId();
-        return $branchId ? \App\Models\Branch::find($branchId)?->company_id : null;
+        return $branchId ? Branch::find($branchId)?->company_id : null;
     }
 
     /**
@@ -67,7 +68,7 @@ class OtherIncomeController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = OtherIncome::with(['incomeCategory', 'creator'])
+        $query = OtherIncome::with(['incomeCategory', 'account', 'creator'])
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
 
@@ -82,6 +83,11 @@ class OtherIncomeController extends Controller
         // Filter by income category
         if ($request->filled('income_category_id')) {
             $query->where('income_category_id', $request->income_category_id);
+        }
+
+        // Filter by account
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
         }
 
         // Search functionality
@@ -146,6 +152,7 @@ class OtherIncomeController extends Controller
         $companyId = $this->resolveCompanyId($request);
 
         $validated = $request->validate([
+            'account_id'           => 'required|exists:accounts,id',
             'income_category_id'   => 'nullable|exists:income_categories,id',
             'income_number'        => ['nullable', 'string', 'max:50', Rule::unique('other_incomes')->where(fn($q) => $q->where('branch_id', $branchId))],
             'income_date'          => 'required|date',
@@ -166,10 +173,18 @@ class OtherIncomeController extends Controller
 
         $income = DB::transaction(function () use ($validated) {
             $income = OtherIncome::create($validated);
+            
+            // Update account balance (increase)
+            $account = Account::find($validated['account_id']);
+            if ($account) {
+                $account->balance += $validated['amount'];
+                $account->save();
+            }
+            
             return $income;
         });
 
-        $income->load(['incomeCategory', 'creator']);
+        $income->load(['incomeCategory', 'account', 'creator']);
 
         return response()->json([
             'data'    => $income,
@@ -185,7 +200,7 @@ class OtherIncomeController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $income = OtherIncome::where('branch_id', $branchId)
-            ->with(['incomeCategory', 'creator', 'company', 'branch'])
+            ->with(['incomeCategory', 'account', 'creator', 'company', 'branch'])
             ->findOrFail($id);
 
         return response()->json(['data' => $income]);
@@ -201,6 +216,7 @@ class OtherIncomeController extends Controller
         $income    = OtherIncome::where('branch_id', $branchId)->findOrFail($id);
 
         $validated = $request->validate([
+            'account_id'           => 'sometimes|exists:accounts,id',
             'income_category_id'   => 'nullable|exists:income_categories,id',
             'income_number'        => ['sometimes', 'string', 'max:50', Rule::unique('other_incomes')->where(fn($q) => $q->where('branch_id', $branchId))->ignore($income->id)],
             'income_date'          => 'sometimes|date',
@@ -209,10 +225,37 @@ class OtherIncomeController extends Controller
             'note'                 => 'nullable|string',
         ]);
 
-        $oldData = $income->toArray();
-        $income->update($validated);
+        DB::transaction(function () use ($income, $validated) {
+            $oldAmount = $income->amount;
+            $oldAccountId = $income->account_id;
+            $newAmount = $validated['amount'] ?? $oldAmount;
+            $newAccountId = $validated['account_id'] ?? $oldAccountId;
 
-        $income->load(['incomeCategory', 'creator']);
+            // If account changed or amount changed, update balances
+            if ($oldAccountId != $newAccountId || $oldAmount != $newAmount) {
+                // Reverse old account balance
+                if ($oldAccountId) {
+                    $oldAccount = Account::find($oldAccountId);
+                    if ($oldAccount) {
+                        $oldAccount->balance -= $oldAmount;
+                        $oldAccount->save();
+                    }
+                }
+
+                // Update new account balance
+                if ($newAccountId) {
+                    $newAccount = Account::find($newAccountId);
+                    if ($newAccount) {
+                        $newAccount->balance += $newAmount;
+                        $newAccount->save();
+                    }
+                }
+            }
+
+            $income->update($validated);
+        });
+
+        $income->load(['incomeCategory', 'account', 'creator']);
 
         return response()->json([
             'data'    => $income,
@@ -227,6 +270,19 @@ class OtherIncomeController extends Controller
     {
         $branchId = $this->resolveBranchId($request);
         $income   = OtherIncome::where('branch_id', $branchId)->findOrFail($id);
+
+        DB::transaction(function () use ($income) {
+            // Reverse account balance
+            if ($income->account_id) {
+                $account = Account::find($income->account_id);
+                if ($account) {
+                    $account->balance -= $income->amount;
+                    $account->save();
+                }
+            }
+            
+            $income->delete();
+        });
 
         return response()->json(['message' => 'Income deleted successfully.']);
     }
@@ -245,7 +301,16 @@ class OtherIncomeController extends Controller
         $newIncome->created_by = Auth::id();
         $newIncome->push();
 
-        $newIncome->load(['incomeCategory', 'creator']);
+        // Update account balance for the new income
+        if ($newIncome->account_id) {
+            $account = Account::find($newIncome->account_id);
+            if ($account) {
+                $account->balance += $newIncome->amount;
+                $account->save();
+            }
+        }
+
+        $newIncome->load(['incomeCategory', 'account', 'creator']);
 
         return response()->json([
             'data'    => $newIncome,
@@ -272,6 +337,11 @@ class OtherIncomeController extends Controller
             $query->whereDate('income_date', '<=', $request->to_date);
         }
 
+        // Filter by account
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+
         // Group by month/year
         $groupBy = $request->get('group_by', 'month');
         
@@ -285,6 +355,12 @@ class OtherIncomeController extends Controller
             $report = $query->selectRaw('income_category_id, SUM(amount) as total_amount, COUNT(*) as count')
                 ->with('incomeCategory')
                 ->groupBy('income_category_id')
+                ->orderBy('total_amount', 'desc')
+                ->get();
+        } elseif ($groupBy === 'account') {
+            $report = $query->selectRaw('account_id, SUM(amount) as total_amount, COUNT(*) as count')
+                ->with('account')
+                ->groupBy('account_id')
                 ->orderBy('total_amount', 'desc')
                 ->get();
         } else {
@@ -317,7 +393,7 @@ class OtherIncomeController extends Controller
 
         $query = OtherIncome::where('company_id', $companyId)
             ->where('branch_id', $branchId)
-            ->with(['incomeCategory']);
+            ->with(['incomeCategory', 'account']);
 
         if ($request->filled('from_date')) {
             $query->whereDate('income_date', '>=', $request->from_date);
@@ -332,6 +408,7 @@ class OtherIncomeController extends Controller
             'Income Number' => $income->income_number,
             'Date' => $income->income_date->format('Y-m-d'),
             'Category' => $income->incomeCategory?->name ?? 'Uncategorized',
+            'Account' => $income->account?->name ?? 'N/A',
             'Description' => $income->description ?? '',
             'Amount' => $income->amount,
             'Notes' => $income->note ?? '',
@@ -385,6 +462,16 @@ class OtherIncomeController extends Controller
             ->limit(5)
             ->get();
 
+        // Top accounts
+        $topAccounts = OtherIncome::where('company_id', $companyId)
+            ->where('branch_id', $branchId)
+            ->selectRaw('account_id, SUM(amount) as total')
+            ->with('account')
+            ->groupBy('account_id')
+            ->orderBy('total', 'desc')
+            ->limit(5)
+            ->get();
+
         // Monthly trend (last 12 months)
         $monthlyTrend = OtherIncome::where('company_id', $companyId)
             ->where('branch_id', $branchId)
@@ -409,8 +496,62 @@ class OtherIncomeController extends Controller
             ],
             'percentage_change' => round($percentageChange, 2),
             'top_categories' => $topCategories,
+            'top_accounts' => $topAccounts,
             'monthly_trend' => $monthlyTrend,
         ]);
     }
 
+    /**
+     * GET /api/other-incomes/account-summary
+     */
+    public function accountSummary(Request $request): JsonResponse
+    {
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
+
+        $accountSummary = OtherIncome::where('company_id', $companyId)
+            ->where('branch_id', $branchId)
+            ->selectRaw('account_id, SUM(amount) as total_amount, COUNT(*) as count')
+            ->with('account')
+            ->groupBy('account_id')
+            ->orderBy('total_amount', 'desc')
+            ->get();
+
+        $totalAll = $accountSummary->sum('total_amount');
+
+        return response()->json([
+            'data' => $accountSummary,
+            'summary' => [
+                'total_accounts' => $accountSummary->count(),
+                'total_amount' => $totalAll,
+            ],
+        ]);
+    }
+
+    /**
+     * GET /api/other-incomes/category-summary
+     */
+    public function categorySummary(Request $request): JsonResponse
+    {
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
+
+        $categorySummary = OtherIncome::where('company_id', $companyId)
+            ->where('branch_id', $branchId)
+            ->selectRaw('income_category_id, SUM(amount) as total_amount, COUNT(*) as count')
+            ->with('incomeCategory')
+            ->groupBy('income_category_id')
+            ->orderBy('total_amount', 'desc')
+            ->get();
+
+        $totalAll = $categorySummary->sum('total_amount');
+
+        return response()->json([
+            'data' => $categorySummary,
+            'summary' => [
+                'total_categories' => $categorySummary->count(),
+                'total_amount' => $totalAll,
+            ],
+        ]);
+    }
 }

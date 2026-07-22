@@ -11,8 +11,10 @@ export default function OtherIncomeIndex() {
     from_date: '',
     to_date: '',
     income_category_id: '',
+    account_id: '',
   });
   const [categories, setCategories] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [stats, setStats] = useState({
     current_month_total: 0,
     current_month_count: 0,
@@ -24,6 +26,7 @@ export default function OtherIncomeIndex() {
     fetchIncomes();
     fetchStats();
     fetchCategories();
+    fetchAccounts();
   }, [filters]);
 
   const fetchIncomes = async () => {
@@ -55,6 +58,13 @@ export default function OtherIncomeIndex() {
     } catch {}
   };
 
+  const fetchAccounts = async () => {
+    try {
+      const res = await api.get('/accounts/list/options');
+      setAccounts(res.data?.data || []);
+    } catch {}
+  };
+
   const handleDelete = async (id) => {
     if (!confirm('Delete this income record? This action cannot be undone.')) return;
     try {
@@ -76,13 +86,17 @@ export default function OtherIncomeIndex() {
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchIncomes();
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount || 0);
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '—';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   return (
@@ -136,6 +150,16 @@ export default function OtherIncomeIndex() {
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
+          <select
+            value={filters.account_id}
+            onChange={e => setFilters(prev => ({ ...prev, account_id: e.target.value }))}
+            className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
+          >
+            <option value="">All Accounts</option>
+            {accounts.map(acc => (
+              <option key={acc.id} value={acc.id}>{acc.name}</option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-2">
           <button
@@ -177,7 +201,7 @@ export default function OtherIncomeIndex() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-sm text-gray-700">
-                {search || filters.from_date || filters.to_date || filters.income_category_id
+                {search || filters.from_date || filters.to_date || filters.income_category_id || filters.account_id
                   ? 'No incomes match your filters.'
                   : 'No income records found.'}
               </p>
@@ -190,6 +214,7 @@ export default function OtherIncomeIndex() {
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Income #</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Account</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Description</th>
                     <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Created By</th>
@@ -205,12 +230,21 @@ export default function OtherIncomeIndex() {
                         </Link>
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
-                        {income.income_date ? new Date(income.income_date).toLocaleDateString() : '—'}
+                        {formatDate(income.income_date)}
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap">
                         {income.income_category ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
                             {income.income_category.name}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 whitespace-nowrap">
+                        {income.account ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700">
+                            {income.account.name}
                           </span>
                         ) : (
                           <span className="text-gray-400 text-xs">—</span>
@@ -223,7 +257,7 @@ export default function OtherIncomeIndex() {
                         {formatCurrency(income.amount)}
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
-                        {income.creator?.name || '—'}
+                        {income.creator?.first_name + ' ' + income.creator?.last_name || '—'}
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-0.5">

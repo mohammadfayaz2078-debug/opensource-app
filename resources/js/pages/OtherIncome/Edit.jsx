@@ -9,7 +9,9 @@ export default function OtherIncomeEdit() {
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
   const [categories, setCategories] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [form, setForm] = useState({
+    account_id: '',
     income_category_id: '',
     income_date: '',
     description: '',
@@ -18,14 +20,22 @@ export default function OtherIncomeEdit() {
   });
 
   useEffect(() => {
+    // Fetch categories
     api.get('/income-categories?per_page=1000').then(r => {
       const payload = r.data.data;
       setCategories(Array.isArray(payload) ? payload : payload?.data || []);
     }).catch(() => {});
 
+    // Fetch accounts
+    api.get('/accounts/list/options').then(r => {
+      setAccounts(r.data?.data || []);
+    }).catch(() => {});
+
+    // Fetch income record
     api.get(`/other-incomes/${id}`).then(r => {
       const income = r.data.data;
       setForm({
+        account_id: income.account_id || '',
         income_category_id: income.income_category_id || '',
         income_date: income.income_date ? income.income_date.split('T')[0] : '',
         description: income.description || '',
@@ -83,7 +93,7 @@ export default function OtherIncomeEdit() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
           <button onClick={() => navigate(`/other-incomes/${id}`)} className="hover:text-[#007c89]">
-            {form.income_number || `#${id}`}
+            #{id}
           </button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -110,6 +120,27 @@ export default function OtherIncomeEdit() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Account <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="account_id"
+                      value={form.account_id}
+                      onChange={handleChange}
+                      className={inputClass('account_id')}
+                      required
+                    >
+                      <option value="">Select account</option>
+                      {accounts.map(acc => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} - Balance: {parseFloat(acc.balance || 0).toFixed(2)}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.account_id && <p className="text-red-500 text-xs mt-1">{errors.account_id[0]}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                       Income Category
                     </label>
                     <select
@@ -128,7 +159,7 @@ export default function OtherIncomeEdit() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Date *
+                      Income Date <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
@@ -136,6 +167,7 @@ export default function OtherIncomeEdit() {
                       value={form.income_date}
                       onChange={handleChange}
                       className={inputClass('income_date')}
+                      required
                     />
                     {errors.income_date && <p className="text-red-500 text-xs mt-1">{errors.income_date[0]}</p>}
                   </div>
@@ -150,13 +182,14 @@ export default function OtherIncomeEdit() {
                       onChange={handleChange}
                       rows="3"
                       className={inputClass('description')}
+                      placeholder="Describe the income..."
                     />
                     {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description[0]}</p>}
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Amount *
+                      Amount <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -166,6 +199,8 @@ export default function OtherIncomeEdit() {
                       step="0.01"
                       min="0"
                       className={inputClass('amount')}
+                      placeholder="0.00"
+                      required
                     />
                     {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount[0]}</p>}
                   </div>
@@ -185,6 +220,7 @@ export default function OtherIncomeEdit() {
                   onChange={handleChange}
                   rows="3"
                   className={inputClass('note')}
+                  placeholder="Additional notes..."
                 />
                 {errors.note && <p className="text-red-500 text-xs mt-1">{errors.note[0]}</p>}
               </div>

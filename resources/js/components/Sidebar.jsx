@@ -46,6 +46,12 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1 5h12l-1-5M5 21h.01M19 21h.01" />
     </svg>
   ),
+    // Income Icon - Added
+  income: () => (
+    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
   package: () => (
     <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -124,9 +130,9 @@ const Sidebar = ({
       'sidebar_product_categories': 'Product Category',
       'sidebar_products': 'Products',
       'sidebar_journals': 'Journals',
-      'sidebar_report1': 'Report 1',
-      'sidebar_report2': 'Report 2',
-      'sidebar_report3': 'Report 3',
+      'sidebar_sales': 'Sale Report',
+      'sidebar_purchases': 'Purchase Report',
+      'sidebar_profit_loss': 'Profit & Loss',
       'sidebar_profile': 'Profile',
       'sidebar_unit_categories': 'Unit Category',
       'sidebar_units': 'Product Units',
@@ -189,6 +195,13 @@ const links = [
     children: [
       { name: 'Accounts', to: '/accounts', translation_key: 'sidebar_accounts' },
       { name: 'Account Transactions', to: '/account-transactions', translation_key: 'sidebar_account_transactions' },
+    ]
+  },
+  {
+    title: 'Incomes',
+    icon: 'income',
+    translation_key: 'Incomes',
+    children: [
       { name: 'Income Category', to: '/income-categories', translation_key: 'sidebar_income_categories' },
       { name: 'Other Incomes', to: '/other-incomes', translation_key: 'sidebar_other_incomes' },
     ]
@@ -215,9 +228,9 @@ const links = [
     icon: 'chart',
     translation_key: 'Reports',
     children: [
-      { name: 'Report 1', to: '#', translation_key: 'sidebar_report1' },
-      { name: 'Report 2', to: '#', translation_key: 'sidebar_report2' },
-      { name: 'Report 3', to: '#', translation_key: 'sidebar_report3' }
+      { name: 'Sale Report', to: '/sales-report', translation_key: 'sidebar_sales' },
+      { name: 'Purchase Report', to: '/purchase-report', translation_key: 'sidebar_purchases' },
+      { name: 'Profit & Loss', to: '/profit-loss-report', translation_key: 'sidebar_profit_loss' }
     ]
   },
   {

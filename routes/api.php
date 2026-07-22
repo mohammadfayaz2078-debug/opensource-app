@@ -31,6 +31,10 @@ use App\Http\Controllers\PublicationController;
 use App\Http\Controllers\CommentOrderController;
 use App\Http\Controllers\AccountDepositController;
 use App\Http\Controllers\AccountWithdrawalController;
+use App\Http\Controllers\SaleReportController;
+use App\Http\Controllers\PurchaseReportController;
+use App\Http\Controllers\ProfitLossReportController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 
 // Replace login route
@@ -161,17 +165,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-    // Other Incomes
+    // In routes/api.php
     Route::prefix('other-incomes')->group(function () {
-        Route::get('/',                    [OtherIncomeController::class, 'index']);
-        Route::post('/',                   [OtherIncomeController::class, 'store']);
-        Route::get('/report',              [OtherIncomeController::class, 'report']);
-        Route::get('/export/data',         [OtherIncomeController::class, 'export']);
-        Route::get('/stats',               [OtherIncomeController::class, 'stats']);
-        Route::get('/{id}',                [OtherIncomeController::class, 'show']);
-        Route::put('/{id}',                [OtherIncomeController::class, 'update']);
-        Route::delete('/{id}',             [OtherIncomeController::class, 'destroy']);
-        Route::post('/{id}/duplicate',     [OtherIncomeController::class, 'duplicate']);
+        Route::get('/', [OtherIncomeController::class, 'index']);
+        Route::post('/', [OtherIncomeController::class, 'store']);
+        Route::get('/{id}', [OtherIncomeController::class, 'show']);
+        Route::put('/{id}', [OtherIncomeController::class, 'update']);
+        Route::delete('/{id}', [OtherIncomeController::class, 'destroy']);
+        Route::post('/{id}/duplicate', [OtherIncomeController::class, 'duplicate']);
+        Route::get('/report', [OtherIncomeController::class, 'report']);
+        Route::get('/export', [OtherIncomeController::class, 'export']);
+        Route::get('/stats', [OtherIncomeController::class, 'stats']);
+        Route::get('/account-summary', [OtherIncomeController::class, 'accountSummary']);
+        Route::get('/category-summary', [OtherIncomeController::class, 'categorySummary']);
     });
 
 
@@ -311,7 +317,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/',                    [PurchaseReturnController::class, 'index']);
         Route::post('/',                   [PurchaseReturnController::class, 'store']);
         Route::get('/{id}',                [PurchaseReturnController::class, 'show']);
+        Route::put('/{id}',                [PurchaseReturnController::class, 'update']);
+        Route::patch('/{id}',              [PurchaseReturnController::class, 'update']);
         Route::delete('/{id}',             [PurchaseReturnController::class, 'destroy']);
+        Route::get('/refundable/{purchaseId}', [PurchaseReturnController::class, 'getRefundableItems']);
     });
 
     // ── Sales Module ─────────────────────────────────────────────────────────
@@ -335,8 +344,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/',                    [SaleReturnController::class, 'index']);
         Route::post('/',                   [SaleReturnController::class, 'store']);
         Route::get('/{id}',                [SaleReturnController::class, 'show']);
+        Route::put('/{id}',                [SaleReturnController::class, 'update']);  // Add this for update
+        Route::patch('/{id}',              [SaleReturnController::class, 'update']); // Optional: for partial updates
         Route::delete('/{id}',             [SaleReturnController::class, 'destroy']);
+
+        Route::get('/refundable/{saleId}', [SaleReturnController::class, 'getRefundableItems']);
     });
+
+    
 
     // ── Stock Module ─────────────────────────────────────────────────────────
 
@@ -356,6 +371,32 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/account-transactions', [AccountController::class, 'allTransactions']);
     Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions']);
+
+
+
+    // In routes/api.php
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    // In routes/api.php
+    Route::prefix('sales-report')->group(function () {
+        Route::get('/', [SaleReportController::class, 'index']);
+        Route::get('/filters', [SaleReportController::class, 'filterOptions']);
+        Route::get('/export', [SaleReportController::class, 'export']);
+    });
+
+
+    // In routes/api.php
+    Route::prefix('purchase-report')->group(function () {
+        Route::get('/', [PurchaseReportController::class, 'index']);
+        Route::get('/filters', [PurchaseReportController::class, 'filterOptions']);
+        Route::get('/export', [PurchaseReportController::class, 'export']);
+    });
+
+    // In routes/api.php
+    Route::prefix('profit-loss-report')->group(function () {
+        Route::get('/', [ProfitLossReportController::class, 'index']);
+        Route::get('/filters', [ProfitLossReportController::class, 'filterOptions']);
+        Route::get('/export', [ProfitLossReportController::class, 'export']);
+    });
 });
 
 
