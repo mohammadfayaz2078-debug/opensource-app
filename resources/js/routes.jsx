@@ -36,6 +36,10 @@ import SaleReturnCreate from './pages/SaleReturn/Create';
 import StockBalances from './pages/Stock/Balances';
 import StockTransactions from './pages/Stock/Transactions';
 
+// Account Pages
+import AccountIndex from './pages/Account/Index';
+import AccountShow from './pages/Account/Show';
+
 // Expense Pages
 import ExpenseIndex from './pages/Expense/Index';
 import ExpenseCreate from './pages/Expense/Create';
@@ -95,10 +99,6 @@ import NotFound from './pages/Error/NotFound';
 import RoleIndex from './pages/Role/Index';
 import RoleCreate from './pages/Role/Create';
 import RoleEdit from './pages/Role/Edit';
-
-
-import AccountIndex from './pages/Account/Index';
-import AccountShow from './pages/Account/Show';
 
 
 // Company Admin Pages

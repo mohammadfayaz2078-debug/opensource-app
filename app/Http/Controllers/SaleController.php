@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\AuthHelper;
+use App\Models\Account;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
@@ -76,8 +77,8 @@ class SaleController extends Controller
 
         $validated = $request->validate([
             'customer_id'        => 'nullable|exists:customers,id',
+            'account_id'         => 'required|exists:accounts,id',
             'document_date'      => 'required|date',
-            'due_date'           => 'nullable|date',
             'discount_type'      => 'nullable|in:percent,fixed',
             'discount_value'     => 'nullable|numeric|min:0',
             'shipping_cost'      => 'nullable|numeric|min:0',
@@ -96,10 +97,10 @@ class SaleController extends Controller
         $validated['branch_id']     = $branchId;
         $validated['created_by']    = Auth::id();
         $validated['reference_no']  = Sale::generateReferenceNo($branchId);
-        $validated['status']        = Sale::STATUS_DRAFT;
+        $validated['status']        = Sale::STATUS_CONFIRMED;
         $validated['payment_status']= Sale::PAYMENT_STATUS_UNPAID;
 
-        $sale = DB::transaction(function () use ($validated) {
+        $sale = DB::transaction(function () use ($validated, $companyId, $branchId) {
             $items = $validated['items'];
             unset($validated['items']);
 
@@ -121,7 +122,22 @@ class SaleController extends Controller
             $sale = Sale::create($validated);
 
             foreach ($items as $item) {
-                $sale->items()->create($item);
+                $saleItem = $sale->items()->create($item);
+
+                if ($saleItem->product_id) {
+                    StockService::record(
+                        companyId: $companyId,
+                        branchId: $branchId,
+                        productId: $saleItem->product_id,
+                        movementType: 'out',
+                        quantity: (float) $saleItem->quantity,
+                        unitCost: (float) $saleItem->unit_price,
+                        referenceType: 'Sale',
+                        referenceId: $sale->id,
+                        notes: "Sale {$sale->reference_no}",
+                        unitId: $saleItem->unit_id,
+                    );
+                }
             }
 
             return $sale;
@@ -139,7 +155,7 @@ class SaleController extends Controller
     {
         $branchId = $this->resolveBranchId($request);
         $sale = Sale::where('branch_id', $branchId)
-            ->with(['customer', 'items.product', 'items.unit', 'creator', 'returns'])
+            ->with(['customer', 'account', 'items.product', 'items.unit', 'creator', 'returns'])
             ->findOrFail($id);
 
         return response()->json(['data' => $sale]);
@@ -151,13 +167,12 @@ class SaleController extends Controller
         $sale = Sale::where('branch_id', $branchId)->findOrFail($id);
 
         if (!$sale->canBeEdited()) {
-            return response()->json(['message' => 'Cannot edit a confirmed or delivered invoice.'], 422);
+            return response()->json(['message' => 'Cannot edit a cancelled invoice.'], 422);
         }
 
         $validated = $request->validate([
             'customer_id'        => 'nullable|exists:customers,id',
             'document_date'      => 'sometimes|date',
-            'due_date'           => 'nullable|date',
             'discount_type'      => 'nullable|in:percent,fixed',
             'discount_value'     => 'nullable|numeric|min:0',
             'shipping_cost'      => 'nullable|numeric|min:0',
@@ -206,7 +221,7 @@ class SaleController extends Controller
         $branchId = $this->resolveBranchId($request);
         $sale = Sale::where('branch_id', $branchId)->findOrFail($id);
 
-        if ($sale->status === Sale::STATUS_CONFIRMED && $sale->items()->where('delivered_qty', '>', 0)->exists()) {
+        if ($sale->status === Sale::STATUS_CONFIRMED) {
             StockService::reverse('Sale', $sale->id);
         }
 
@@ -215,72 +230,44 @@ class SaleController extends Controller
         return response()->json(['message' => 'Invoice deleted successfully.']);
     }
 
-    public function confirm(Request $request, int $id): JsonResponse
+    public function pay(Request $request, int $id): JsonResponse
     {
         $branchId = $this->resolveBranchId($request);
         $sale = Sale::where('branch_id', $branchId)->findOrFail($id);
 
-        if (!$sale->canBeConfirmed()) {
-            return response()->json(['message' => 'Only draft invoices can be confirmed.'], 422);
-        }
-
-        $sale->update(['status' => Sale::STATUS_CONFIRMED]);
-
-        return response()->json([
-            'data'    => $sale,
-            'message' => 'Invoice confirmed.',
-        ]);
-    }
-
-    public function deliver(Request $request, int $id): JsonResponse
-    {
-        $branchId  = $this->resolveBranchId($request);
-        $companyId = $this->resolveCompanyId($request);
-        $sale = Sale::where('branch_id', $branchId)->with('items')->findOrFail($id);
-
-        if ($sale->status !== Sale::STATUS_CONFIRMED) {
-            return response()->json(['message' => 'Only confirmed invoices can deliver items.'], 422);
-        }
-
         $validated = $request->validate([
-            'items'              => 'required|array|min:1',
-            'items.*.id'         => 'required|integer',
-            'items.*.quantity'   => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01',
         ]);
 
-        DB::transaction(function () use ($sale, $validated, $companyId, $branchId) {
-            foreach ($validated['items'] as $itemData) {
-                $item = $sale->items()->where('id', $itemData['id'])->firstOrFail();
+        $newPaid = (float) $sale->paid_amount + (float) $validated['amount'];
+        $totalAmount = (float) $sale->total_amount;
+        $dueAmount = max(0, $totalAmount - $newPaid);
 
-                $remaining = $item->quantity - $item->delivered_qty;
-                if ($itemData['quantity'] > $remaining + 1e-4) {
-                    throw new \RuntimeException("Cannot deliver more than invoiced for item #{$item->id}.");
-                }
+        $paymentStatus = match (true) {
+            $dueAmount <= 0   => Sale::PAYMENT_STATUS_PAID,
+            $newPaid > 0      => Sale::PAYMENT_STATUS_PARTIAL,
+            default           => Sale::PAYMENT_STATUS_UNPAID,
+        };
 
-                $item->increment('delivered_qty', $itemData['quantity']);
+        $sale->update([
+            'paid_amount'    => $newPaid,
+            'due_amount'     => $dueAmount,
+            'payment_status' => $paymentStatus,
+        ]);
 
-                if ($item->product_id) {
-                    StockService::record(
-                        companyId: $companyId,
-                        branchId: $branchId,
-                        productId: $item->product_id,
-                        movementType: 'out',
-                        quantity: $itemData['quantity'],
-                        unitCost: (float) $item->unit_price,
-                        referenceType: 'Sale',
-                        referenceId: $sale->id,
-                        notes: "Delivered for {$sale->reference_no}",
-                        unitId: $item->unit_id,
-                    );
-                }
+        // Update account balance - money comes in for sales
+        if ($sale->account_id) {
+            $account = Account::find($sale->account_id);
+            if ($account) {
+                $account->increment('balance', (float) $validated['amount']);
             }
-        });
+        }
 
-        $sale->refresh()->load(['items.product', 'items.unit']);
+        $sale->load(['customer', 'account', 'items.product', 'items.unit', 'creator']);
 
         return response()->json([
             'data'    => $sale,
-            'message' => 'Items delivered. Stock updated.',
+            'message' => 'Payment recorded successfully.',
         ]);
     }
 
@@ -290,9 +277,7 @@ class SaleController extends Controller
         $sale = Sale::where('branch_id', $branchId)->findOrFail($id);
 
         DB::transaction(function () use ($sale) {
-            if ($sale->items()->where('delivered_qty', '>', 0)->exists()) {
-                StockService::reverse('Sale', $sale->id);
-            }
+            StockService::reverse('Sale', $sale->id);
             $sale->update(['status' => Sale::STATUS_CANCELLED]);
         });
 

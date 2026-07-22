@@ -46,6 +46,7 @@ export default function StockBalances() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Avg Cost</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Value</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Movement</th>
@@ -56,6 +57,7 @@ export default function StockBalances() {
                 <tr key={b.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">{b.product?.name || '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-900 text-right">{parseFloat(b.quantity).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{b.product?.stock_unit?.name || '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 text-right">{parseFloat(b.avg_cost).toFixed(2)}</td>
                   <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">{parseFloat(b.total_value).toFixed(2)}</td>
                   <td className="px-4 py-3 text-sm text-gray-500">{b.last_movement_at ? new Date(b.last_movement_at).toLocaleDateString() : '—'}</td>

@@ -92,7 +92,6 @@ const Sidebar = ({
       'sidebar_supplier_list': 'Suppliers',
       'sidebar_mileage_list': 'Mileage List',
       'sidebar_vehicle_list': 'Vehicle List',
-      'sidebar_due_date': 'Due Date',
       'sidebar_last_invoice': 'Last Invoice',
       'sidebar_salesperson': 'Salesperson',
       'sidebar_expenses': 'Expenses',

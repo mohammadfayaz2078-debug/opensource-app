@@ -36,6 +36,8 @@ class Supplier extends Model
         'created_by',
     ];
 
+    protected $appends = ['full_name'];
+
     /**
      * Casts
      */

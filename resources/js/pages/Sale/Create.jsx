@@ -7,6 +7,7 @@ export default function SaleCreate() {
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [units, setUnits] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [productSearch, setProductSearch] = useState('');
@@ -15,8 +16,8 @@ export default function SaleCreate() {
 
   const [form, setForm] = useState({
     customer_id: '',
+    account_id: '',
     document_date: new Date().toISOString().slice(0, 10),
-    due_date: '',
     reference_no: '',
     discount_type: 'fixed',
     discount_value: '0',
@@ -32,10 +33,12 @@ export default function SaleCreate() {
       api.get('/customers/list/options'),
       api.get('/products/list/options'),
       api.get('/units/list/options'),
-    ]).then(([cRes, pRes, uRes]) => {
+      api.get('/accounts/list/options'),
+    ]).then(([cRes, pRes, uRes, aRes]) => {
       setCustomers(cRes.data?.data || []);
       setProducts(pRes.data?.data || []);
       setUnits(uRes.data?.data || []);
+      setAccounts(aRes.data?.data || []);
     }).catch(() => {});
   }, []);
 
@@ -148,12 +151,15 @@ export default function SaleCreate() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date *</label>
-                <input type="date" name="document_date" value={form.document_date} onChange={e => setForm({ ...form, document_date: e.target.value })} className={inputClassErr('document_date')} required />
+                <label className="block text-xs font-medium text-gray-600 mb-1">Account</label>
+                <select name="account_id" value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className={inputClass}>
+                  <option value="">Select account</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Due Date</label>
-                <input type="date" name="due_date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} className={inputClass} />
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date *</label>
+                <input type="date" name="document_date" value={form.document_date} onChange={e => setForm({ ...form, document_date: e.target.value })} className={inputClassErr('document_date')} required />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Reference #</label>

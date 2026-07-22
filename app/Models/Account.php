@@ -3,31 +3,39 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+<<<<<<< HEAD
 use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 use Exception;
+=======
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+>>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
 use Illuminate\Database\Eloquent\Builder;
 
 class Account extends Model
 {
-    use SoftDeletes;
-
     protected $fillable = [
+<<<<<<< HEAD
         'company_id',
         'branch_id',
         'name',
         'balance',
         'description',
         'is_active',
+=======
+        'company_id', 'branch_id', 'name', 'type',
+        'description', 'balance', 'is_active',
+>>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
     ];
 
     protected $casts = [
-        'balance' => 'decimal:2',
+        'balance'   => 'decimal:2',
         'is_active' => 'boolean',
         'company_id' => 'integer',
         'branch_id' => 'integer',
     ];
 
+<<<<<<< HEAD
     // ── Relationships ─────────────────────────────────────────────────────────
 
     public function company()
@@ -69,6 +77,14 @@ class Account extends Model
         return $branchId === null
             ? $query
             : $query->where('branch_id', $branchId);
+=======
+    public function company(): BelongsTo { return $this->belongsTo(Company::class); }
+    public function branch(): BelongsTo  { return $this->belongsTo(Branch::class); }
+
+    public function scopeForBranch(Builder $query, ?int $branchId): Builder
+    {
+        return $branchId ? $query->where('branch_id', $branchId) : $query;
+>>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
     }
 
     public function scopeActive(Builder $query): Builder
@@ -76,41 +92,30 @@ class Account extends Model
         return $query->where('is_active', true);
     }
 
+<<<<<<< HEAD
     // ── Methods ───────────────────────────────────────────────────────────────
 
     /**
      * Deposit money into the account.
      */
+=======
+>>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
     public function deposit(float $amount): void
     {
-        if ($amount <= 0) {
-            throw new InvalidArgumentException('Deposit amount must be greater than zero.');
-        }
-
         $this->increment('balance', $amount);
     }
 
-    /**
-     * Withdraw money from the account.
-     */
     public function withdraw(float $amount): void
     {
-        if ($amount <= 0) {
-            throw new InvalidArgumentException('Withdrawal amount must be greater than zero.');
-        }
-
-        if ($this->balance < $amount) {
-            throw new Exception('Insufficient balance.');
-        }
-
         $this->decrement('balance', $amount);
     }
 
-    /**
-     * Check whether the account has sufficient balance.
-     */
     public function hasEnoughBalance(float $amount): bool
     {
-        return $this->balance >= $amount;
+        return (float) $this->balance >= $amount;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
