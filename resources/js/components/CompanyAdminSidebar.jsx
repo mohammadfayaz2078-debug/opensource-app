@@ -81,7 +81,7 @@ const CompanyAdminSidebar = ({
     {
       title: 'Settings',
       icon: 'settings',
-      translation_key: 'settings',
+      translation_key: 'Settings',
       children: [
         { 
           name: 'Database Seeder', 
