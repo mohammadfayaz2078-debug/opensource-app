@@ -88,7 +88,6 @@ export default function CustomerShow() {
     catch (err) { alert(err.response?.data?.message || 'Failed'); }
   };
 
-<<<<<<< HEAD
   const handleConvertToCustomer = async () => {
     if (!confirm('Convert this lead to a customer?\n\nPending orders will be converted to invoices.')) return;
     try {
@@ -98,7 +97,8 @@ export default function CustomerShow() {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to convert lead.');
     }
-=======
+  };
+
   const openPayModal = (invoice) => {
     // Don't allow payment for returned or cancelled sales
     if (invoice.status === 'returned' || invoice.status === 'cancelled') {
@@ -111,7 +111,6 @@ export default function CustomerShow() {
   const handlePaymentSuccess = () => {
     // Refresh invoices after payment
     fetchTabData('invoices');
->>>>>>> fc062ef9846ee7d99db5b4de421e9a4ecd99308c
   };
 
   const tabs = [
