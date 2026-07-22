@@ -9,6 +9,8 @@ export default function PurchaseShow() {
   const [loading, setLoading] = useState(true);
   const [showPayModal, setShowPayModal] = useState(false);
   const [payAmount, setPayAmount] = useState('');
+  const [payAccountId, setPayAccountId] = useState('');
+  const [accounts, setAccounts] = useState([]);
   const [paying, setPaying] = useState(false);
   const [payments, setPayments] = useState([]);
 
@@ -32,6 +34,7 @@ export default function PurchaseShow() {
 
   useEffect(() => {
     fetchPurchase().finally(() => setLoading(false));
+    api.get('/accounts/list/options').then(r => setAccounts(r.data?.data || [])).catch(() => {});
   }, [id, navigate]);
 
   const handlePay = async () => {
@@ -39,14 +42,15 @@ export default function PurchaseShow() {
     if (!amount || amount <= 0) return;
     setPaying(true);
     try {
-      const res = await api.post(`/purchases/${id}/pay`, { amount });
+      const res = await api.post(`/purchases/${id}/pay`, { amount, account_id: payAccountId });
+      setPayAmount('');
+      setPayAccountId('');
+      setShowPayModal(false);
       const txId = res.data?.transaction_id;
       if (txId) {
         navigate(`/payment-receipt/${txId}`);
       } else {
         await fetchPurchase();
-        setPayAmount('');
-        setShowPayModal(false);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Payment failed');
@@ -75,7 +79,7 @@ export default function PurchaseShow() {
               Invoice
             </button>
             {purchase.payment_status !== 'paid' && (
-              <button onClick={() => setShowPayModal(true)}
+              <button onClick={() => { setPayAccountId(purchase?.account_id || ''); setShowPayModal(true); }}
                 className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
                 Pay Now
               </button>
@@ -254,6 +258,14 @@ export default function PurchaseShow() {
               </div>
 
               {/* Payment Input */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Account *</label>
+                <select value={payAccountId} onChange={e => setPayAccountId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]">
+                  <option value="">Select account</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payment Amount *</label>
                 <div className="relative">

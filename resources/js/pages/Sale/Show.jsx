@@ -9,6 +9,8 @@ export default function SaleShow() {
   const [loading, setLoading] = useState(true);
   const [showPayModal, setShowPayModal] = useState(false);
   const [payAmount, setPayAmount] = useState('');
+  const [payAccountId, setPayAccountId] = useState('');
+  const [accounts, setAccounts] = useState([]);
   const [paying, setPaying] = useState(false);
 
   const fetchSale = async () => {
@@ -31,6 +33,7 @@ export default function SaleShow() {
 
   useEffect(() => {
     fetchSale().finally(() => setLoading(false));
+    api.get('/accounts/list/options').then(r => setAccounts(r.data?.data || [])).catch(() => {});
   }, [id, navigate]);
 
   const [payments, setPayments] = useState([]);
@@ -40,14 +43,15 @@ export default function SaleShow() {
     if (!amount || amount <= 0) return;
     setPaying(true);
     try {
-      const res = await api.post(`/sales/${id}/pay`, { amount });
+      const res = await api.post(`/sales/${id}/pay`, { amount, account_id: payAccountId });
+      setPayAmount('');
+      setPayAccountId('');
+      setShowPayModal(false);
       const txId = res.data?.transaction_id;
       if (txId) {
         navigate(`/sale-payment-receipt/${txId}`);
       } else {
         await fetchSale();
-        setPayAmount('');
-        setShowPayModal(false);
       }
     } catch (err) { alert(err.response?.data?.message || 'Payment failed'); }
     finally { setPaying(false); }
@@ -79,7 +83,7 @@ export default function SaleShow() {
           </div>
           <div className="flex gap-2">
             {sale.payment_status !== 'paid' && (
-              <button onClick={() => setShowPayModal(true)} className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">Pay Now</button>
+              <button onClick={() => { setPayAccountId(sale?.account_id || ''); setShowPayModal(true); }} className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">Pay Now</button>
             )}
             {sale.status !== 'cancelled' && (
               <button onClick={handleCancel} className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors">Cancel</button>
@@ -228,6 +232,14 @@ export default function SaleShow() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Account *</label>
+                <select value={payAccountId} onChange={e => setPayAccountId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]">
+                  <option value="">Select account</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payment Amount *</label>
                 <div className="relative">

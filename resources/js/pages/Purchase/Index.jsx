@@ -15,6 +15,8 @@ export default function PurchaseIndex() {
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const [payAmount, setPayAmount] = useState('');
+  const [payAccountId, setPayAccountId] = useState('');
+  const [accounts, setAccounts] = useState([]);
   const [paying, setPaying] = useState(false);
 
   const fetchPurchases = async (page = 1) => {
@@ -31,12 +33,24 @@ export default function PurchaseIndex() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { const t = setTimeout(() => fetchPurchases(), 300); return () => clearTimeout(t); }, [searchQuery, statusFilter]);
+  const fetchAccounts = async () => {
+    try {
+      const res = await api.get('/accounts/list/options');
+      setAccounts(res.data?.data || []);
+    } catch (err) { console.error(err); }
+  };
+
+  useEffect(() => {
+    fetchAccounts();
+    const t = setTimeout(() => fetchPurchases(), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery, statusFilter]);
 
   const openPayModal = (purchase) => {
     setSelectedPurchase(purchase);
     const unpaid = parseFloat(purchase.total_amount) - parseFloat(purchase.paid_amount);
     setPayAmount(unpaid > 0 ? String(unpaid) : '');
+    setPayAccountId(purchase.account_id || '');
     setShowPayModal(true);
   };
 
@@ -45,13 +59,14 @@ export default function PurchaseIndex() {
     if (!amount || amount <= 0 || !selectedPurchase) return;
     setPaying(true);
     try {
-      const res = await api.post(`/purchases/${selectedPurchase.id}/pay`, { amount });
+      const res = await api.post(`/purchases/${selectedPurchase.id}/pay`, { amount, account_id: payAccountId });
+      setShowPayModal(false);
+      setPayAmount('');
+      setPayAccountId('');
       const txId = res.data?.transaction_id;
       if (txId) {
         navigate(`/payment-receipt/${txId}`);
       } else {
-        setShowPayModal(false);
-        setPayAmount('');
         fetchPurchases(currentPage);
       }
     } catch (err) { alert(err.response?.data?.message || 'Payment failed'); }
@@ -194,6 +209,14 @@ export default function PurchaseIndex() {
                   <div><p className="text-xs text-gray-500 uppercase">Paid</p><p className="text-lg font-bold text-green-600">{parseFloat(selectedPurchase.paid_amount).toFixed(2)}</p></div>
                   <div><p className="text-xs text-gray-500 uppercase">Due</p><p className="text-lg font-bold text-red-600">{unpaid.toFixed(2)}</p></div>
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Account *</label>
+                <select value={payAccountId} onChange={e => setPayAccountId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]">
+                  <option value="">Select account</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payment Amount *</label>

@@ -31,9 +31,9 @@ import SaleIndex from './pages/Sale/Index';
 import SaleCreate from './pages/Sale/Create';
 import SaleEdit from './pages/Sale/Edit';
 import SaleShow from './pages/Sale/Show';
+import SaleInvoice from './pages/Sale/Invoice';
 import SaleReturnIndex from './pages/SaleReturn/Index';
 import SaleReturnCreate from './pages/SaleReturn/Create';
-import SalePaymentReceipt from './pages/Sale/PaymentReceipt';
 
 // Stock Pages
 import StockBalances from './pages/Stock/Balances';
@@ -308,8 +308,6 @@ const routes = [
       { path: 'purchases/:id', element: <PurchaseShow /> },
       { path: 'purchases/:id/edit', element: <PurchaseEdit /> },
       { path: 'purchases/:id/invoice', element: <PurchaseInvoice /> },
-      { path: 'payment-receipt/:transactionId', element: <PaymentReceipt /> },
-      { path: 'sale-payment-receipt/:transactionId', element: <SalePaymentReceipt /> },
       { path: 'purchase-returns', element: <PurchaseReturnIndex /> },
       { path: 'purchase-returns/create', element: <PurchaseReturnCreate /> },
 
@@ -318,6 +316,7 @@ const routes = [
       { path: 'sales/create', element: <SaleCreate /> },
       { path: 'sales/:id', element: <SaleShow /> },
       { path: 'sales/:id/edit', element: <SaleEdit /> },
+      { path: 'sales/:id/invoice', element: <SaleInvoice /> },
       { path: 'sale-returns', element: <SaleReturnIndex /> },
       { path: 'sale-returns/create', element: <SaleReturnCreate /> },
 

@@ -15,6 +15,8 @@ export default function SaleIndex() {
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const [payAmount, setPayAmount] = useState('');
+  const [payAccountId, setPayAccountId] = useState('');
+  const [accounts, setAccounts] = useState([]);
   const [paying, setPaying] = useState(false);
 
   const fetchSales = async (page = 1) => {
@@ -31,12 +33,24 @@ export default function SaleIndex() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { const t = setTimeout(() => fetchSales(), 300); return () => clearTimeout(t); }, [searchQuery, statusFilter]);
+  const fetchAccounts = async () => {
+    try {
+      const res = await api.get('/accounts/list/options');
+      setAccounts(res.data?.data || []);
+    } catch (err) { console.error(err); }
+  };
+
+  useEffect(() => {
+    fetchAccounts();
+    const t = setTimeout(() => fetchSales(), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery, statusFilter]);
 
   const openPayModal = (sale) => {
     setSelectedSale(sale);
     const unpaid = parseFloat(sale.total_amount) - parseFloat(sale.paid_amount);
     setPayAmount(unpaid > 0 ? String(unpaid) : '');
+    setPayAccountId(sale.account_id || '');
     setShowPayModal(true);
   };
 
@@ -45,13 +59,14 @@ export default function SaleIndex() {
     if (!amount || amount <= 0 || !selectedSale) return;
     setPaying(true);
     try {
-      const res = await api.post(`/sales/${selectedSale.id}/pay`, { amount });
+      const res = await api.post(`/sales/${selectedSale.id}/pay`, { amount, account_id: payAccountId });
+      setShowPayModal(false);
+      setPayAmount('');
+      setPayAccountId('');
       const txId = res.data?.transaction_id;
       if (txId) {
         navigate(`/sale-payment-receipt/${txId}`);
       } else {
-        setShowPayModal(false);
-        setPayAmount('');
         fetchSales(currentPage);
       }
     } catch (err) { alert(err.response?.data?.message || 'Payment failed'); }
@@ -135,6 +150,9 @@ export default function SaleIndex() {
                         <button onClick={() => navigate(`/sales/${s.id}`)} className="p-1.5 rounded hover:bg-blue-50 text-gray-700 hover:text-[#007c89]" title="View">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                         </button>
+                        <button onClick={() => navigate(`/sales/${s.id}/invoice`)} className="p-1.5 rounded hover:bg-gray-100 text-gray-700 hover:text-gray-900" title="Download Invoice">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        </button>
                         {s.payment_status !== 'paid' && (
                           <button onClick={() => openPayModal(s)} className="px-2 py-0.5 rounded text-[11px] font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors" title="Pay">Pay</button>
                         )}
@@ -181,6 +199,14 @@ export default function SaleIndex() {
                   <div><p className="text-xs text-gray-500 uppercase">Paid</p><p className="text-lg font-bold text-green-600">{parseFloat(selectedSale.paid_amount).toFixed(2)}</p></div>
                   <div><p className="text-xs text-gray-500 uppercase">Due</p><p className="text-lg font-bold text-red-600">{unpaid.toFixed(2)}</p></div>
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Account *</label>
+                <select value={payAccountId} onChange={e => setPayAccountId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]">
+                  <option value="">Select account</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payment Amount *</label>
