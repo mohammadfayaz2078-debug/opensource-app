@@ -37,11 +37,14 @@ export default function OtherIncomeShow() {
   const handleDuplicate = async () => {
     try {
       await api.post(`/other-incomes/${id}/duplicate`);
-      alert('Income duplicated successfully');
       navigate('/other-incomes');
     } catch (err) {
       alert(err.response?.data?.message || 'Duplicate failed');
     }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount || 0);
   };
 
   if (loading) {
@@ -64,14 +67,15 @@ export default function OtherIncomeShow() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">{income.income_number}</span>
+          <span className="text-gray-700">{income.income_number || `#${income.id}`}</span>
         </div>
-        
+
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{income.income_number}</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">{income.income_number || 'Other Income'}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              {new Date(income.income_date).toLocaleDateString()}
+              {income.income_date ? new Date(income.income_date).toLocaleDateString() : ''}
+              {income.income_category ? ` — ${income.income_category.name}` : ''}
             </p>
           </div>
           <div className="flex gap-2">
@@ -137,74 +141,28 @@ export default function OtherIncomeShow() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Amount Card */}
-          <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4">
-              <p className="text-xs font-medium text-green-600 uppercase tracking-wide">Amount Received</p>
-              <p className="text-3xl font-bold text-green-700 mt-2">
-                {income.amount?.toLocaleString()} {income.currency?.code || 'AFN'}
-              </p>
-              {income.currency?.code !== 'AFN' && (
-                <p className="text-sm text-green-600 mt-1">
-                  Base Amount: {income.amount_base?.toLocaleString()} AFN
-                </p>
-              )}
-              {income.exchange_rate !== 1 && (
-                <p className="text-xs text-green-500 mt-1">
-                  Exchange Rate: 1 {income.currency?.code} = {income.exchange_rate} AFN
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Category & Accounts */}
+          {/* Amount */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Category & Accounts</h2>
+              <h2 className="text-lg font-medium text-gray-900">Amount</h2>
             </div>
             <div className="p-6">
               <dl className="space-y-4">
                 <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Income Category</dt>
-                  <dd className="mt-1">
-                    {income.income_category ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded text-sm bg-blue-100 text-blue-700">
-                        {income.income_category.name}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">Uncategorized</span>
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Income Account (Credit)</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    {income.income_account?.name || '—'}
-                    {income.income_account?.code && (
-                      <span className="text-xs text-gray-400 ml-1">({income.income_account.code})</span>
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Payment Account (Debit)</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    {income.payment_account?.name || '—'}
-                    {income.payment_account?.code && (
-                      <span className="text-xs text-gray-400 ml-1">({income.payment_account.code})</span>
-                    )}
-                  </dd>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">Amount</dt>
+                  <dd className="mt-1 text-xl font-bold text-gray-900">{formatCurrency(income.amount)}</dd>
                 </div>
               </dl>
             </div>
           </div>
 
-          {/* Audit Info */}
+          {/* Status & Audit */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Audit Information</h2>
+              <h2 className="text-lg font-medium text-gray-900">Audit</h2>
             </div>
             <div className="p-6">
-              <dl className="space-y-2 text-sm">
+              <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created By</dt>
                   <dd className="text-gray-700">{income.creator?.name || '—'}</dd>

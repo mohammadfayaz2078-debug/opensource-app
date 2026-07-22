@@ -8,22 +8,13 @@ return [
     ],
 
     'guards' => [
-        // 👤 Normal users (company users)
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
-
-        // 🏢 Company Admin
         'company' => [
             'driver' => 'session',
             'provider' => 'companies',
-        ],
-
-        // 👑 Super Admin
-        'super_admin' => [
-            'driver' => 'session',
-            'provider' => 'super_admins',
         ],
     ],
 
@@ -32,15 +23,9 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
         ],
-
         'companies' => [
             'driver' => 'eloquent',
             'model' => App\Models\Company::class,
-        ],
-
-        'super_admins' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\SuperAdmin::class,
         ],
     ],
 

@@ -26,12 +26,7 @@ class Product extends Model
         'purchase_price',
         'sale_price',
 
-        'expense_account_id',
-        'income_account_id',
-
         'low_stock_warning_count',
-
-        'inventory_asset_account_id',
 
         'reorder_point',
     ];
@@ -96,36 +91,6 @@ class Product extends Model
         return $this->belongsTo(
             Unit::class,
             'stock_unit_id'
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Accounting Accounts
-    |--------------------------------------------------------------------------
-    */
-
-    public function expenseAccount()
-    {
-        return $this->belongsTo(
-            ChartOfAccount::class,
-            'expense_account_id'
-        );
-    }
-
-    public function incomeAccount()
-    {
-        return $this->belongsTo(
-            ChartOfAccount::class,
-            'income_account_id'
-        );
-    }
-
-    public function inventoryAssetAccount()
-    {
-        return $this->belongsTo(
-            ChartOfAccount::class,
-            'inventory_asset_account_id'
         );
     }
 

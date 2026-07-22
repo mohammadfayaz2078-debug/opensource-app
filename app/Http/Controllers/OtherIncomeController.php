@@ -5,10 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\AuthHelper;
 use App\Models\OtherIncome;
 use App\Models\IncomeCategory;
-use App\Models\Currency;
 use App\Models\Branch;
-use App\Models\ChartOfAccount;
-use App\Services\JournalEntryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,27 +21,16 @@ class OtherIncomeController extends Controller
      */
     private function resolveBranchId(Request $request): ?int
     {
-        $user = Auth::user();
-        
-        if ($user instanceof \App\Models\SuperAdmin) {
-            return $request->filled('branch_id') ? (int) $request->branch_id : null;
-        }
-        
         if (AuthHelper::isCompanyAdmin()) {
             return $request->filled('branch_id') ? (int) $request->branch_id : null;
         }
-        
+
         return AuthHelper::getBranchId();
     }
 
-    /**
-     * Resolve company ID based on authenticated user
-     */
     private function resolveCompanyId(Request $request): ?int
     {
-        $user = Auth::user();
-        
-        if ($user instanceof \App\Models\SuperAdmin || AuthHelper::isCompanyAdmin()) {
+        if (AuthHelper::isCompanyAdmin()) {
             return $request->filled('company_id') ? (int) $request->company_id : null;
         }
         
@@ -71,27 +57,6 @@ class OtherIncomeController extends Controller
         return 'INC-' . date('Ymd') . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Calculate base amount using exchange rate
-     */
-    private function calculateBaseAmount(float $amount, int $currencyId, int $branchId): float
-    {
-        $branch = Branch::find($branchId);
-        $baseCurrency = $branch?->baseCurrency;
-        
-        if (!$baseCurrency || $baseCurrency->id == $currencyId) {
-            return round($amount, 2);
-        }
-        
-        $currency = Currency::find($currencyId);
-        if ($currency && $currency->latestRate) {
-            $rate = (float) $currency->latestRate->rate;
-            return round($amount * $rate, 2);
-        }
-        
-        return round($amount, 2);
-    }
-
     // ── Other Income CRUD ──────────────────────────────────────────────────
 
     /**
@@ -102,7 +67,7 @@ class OtherIncomeController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = OtherIncome::with(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator'])
+        $query = OtherIncome::with(['incomeCategory', 'creator'])
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
 
@@ -117,16 +82,6 @@ class OtherIncomeController extends Controller
         // Filter by income category
         if ($request->filled('income_category_id')) {
             $query->where('income_category_id', $request->income_category_id);
-        }
-
-        // Filter by currency
-        if ($request->filled('currency_id')) {
-            $query->where('currency_id', $request->currency_id);
-        }
-
-        // Filter by payment account
-        if ($request->filled('payment_account_id')) {
-            $query->where('payment_account_id', $request->payment_account_id);
         }
 
         // Search functionality
@@ -151,7 +106,7 @@ class OtherIncomeController extends Controller
         $sortField = $request->get('sort_by', 'income_date');
         $sortOrder = $request->get('sort_order', 'desc');
         
-        $allowedSorts = ['income_date', 'income_number', 'amount', 'amount_base', 'created_at'];
+        $allowedSorts = ['income_date', 'income_number', 'amount', 'created_at'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortOrder);
         } else {
@@ -167,9 +122,6 @@ class OtherIncomeController extends Controller
             'total_amount' => OtherIncome::where('company_id', $companyId)
                 ->where('branch_id', $branchId)
                 ->sum('amount'),
-            'total_amount_base' => OtherIncome::where('company_id', $companyId)
-                ->where('branch_id', $branchId)
-                ->sum('amount_base'),
             'average_amount' => OtherIncome::where('company_id', $companyId)
                 ->where('branch_id', $branchId)
                 ->avg('amount') ?? 0,
@@ -199,10 +151,6 @@ class OtherIncomeController extends Controller
             'income_date'          => 'required|date',
             'description'          => 'nullable|string',
             'amount'               => 'required|numeric|min:0.01|max:999999999999.99',
-            'currency_id'          => 'nullable|exists:currencies,id',
-            'exchange_rate'        => 'nullable|numeric|min:0.000001',
-            'payment_account_id'   => 'nullable|exists:chart_of_accounts,id',
-            'income_account_id'    => 'nullable|exists:chart_of_accounts,id',
             'note'                 => 'nullable|string',
         ]);
 
@@ -210,47 +158,18 @@ class OtherIncomeController extends Controller
         $validated['company_id'] = $companyId;
         $validated['branch_id']  = $branchId;
         $validated['created_by'] = Auth::id();
-        
+
         // Generate income number if not provided
         if (empty($validated['income_number'])) {
             $validated['income_number'] = $this->generateIncomeNumber($branchId);
         }
-        
-        // Set default currency if not provided
-        if (empty($validated['currency_id'])) {
-            $branch = Branch::find($branchId);
-            $validated['currency_id'] = $branch?->base_currency_id;
-        }
-        
-        // Calculate exchange rate and base amount
-        if (empty($validated['exchange_rate'])) {
-            $validated['exchange_rate'] = 1;
-        }
-        
-        $validated['amount_base'] = $this->calculateBaseAmount(
-            $validated['amount'],
-            $validated['currency_id'],
-            $branchId
-        );
-
-        // If income account not provided, try to get from category
-        if (empty($validated['income_account_id']) && !empty($validated['income_category_id'])) {
-            $category = IncomeCategory::find($validated['income_category_id']);
-            if ($category && $category->income_account_id) {
-                $validated['income_account_id'] = $category->income_account_id;
-            }
-        }
 
         $income = DB::transaction(function () use ($validated) {
             $income = OtherIncome::create($validated);
-            
-            // Create journal entry
-            $this->createJournalEntry($income);
-            
             return $income;
         });
 
-        $income->load(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator']);
+        $income->load(['incomeCategory', 'creator']);
 
         return response()->json([
             'data'    => $income,
@@ -266,7 +185,7 @@ class OtherIncomeController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $income = OtherIncome::where('branch_id', $branchId)
-            ->with(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator', 'company', 'branch'])
+            ->with(['incomeCategory', 'creator', 'company', 'branch'])
             ->findOrFail($id);
 
         return response()->json(['data' => $income]);
@@ -287,39 +206,13 @@ class OtherIncomeController extends Controller
             'income_date'          => 'sometimes|date',
             'description'          => 'nullable|string',
             'amount'               => 'sometimes|numeric|min:0.01|max:999999999999.99',
-            'currency_id'          => 'nullable|exists:currencies,id',
-            'exchange_rate'        => 'nullable|numeric|min:0.000001',
-            'payment_account_id'   => 'nullable|exists:chart_of_accounts,id',
-            'income_account_id'    => 'nullable|exists:chart_of_accounts,id',
             'note'                 => 'nullable|string',
         ]);
 
-        // Recalculate base amount if amount or currency changed
-        if (isset($validated['amount']) || isset($validated['currency_id'])) {
-            $amount = $validated['amount'] ?? $income->amount;
-            $currencyId = $validated['currency_id'] ?? $income->currency_id;
-            $validated['amount_base'] = $this->calculateBaseAmount($amount, $currencyId, $branchId);
-        }
-
-        // If income account not provided but category changed, try to get from new category
-        if (empty($validated['income_account_id']) && isset($validated['income_category_id']) && $validated['income_category_id'] != $income->income_category_id) {
-            $category = IncomeCategory::find($validated['income_category_id']);
-            if ($category && $category->income_account_id) {
-                $validated['income_account_id'] = $category->income_account_id;
-            }
-        }
-        
         $oldData = $income->toArray();
         $income->update($validated);
-        
-        // Update journal entry if significant changes occurred
-        if ($this->hasAccountingChanges($oldData, $income->toArray())) {
-            DB::transaction(function () use ($income, $oldData) {
-                $this->updateJournalEntry($income, $oldData);
-            });
-        }
 
-        $income->load(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator']);
+        $income->load(['incomeCategory', 'creator']);
 
         return response()->json([
             'data'    => $income,
@@ -334,13 +227,6 @@ class OtherIncomeController extends Controller
     {
         $branchId = $this->resolveBranchId($request);
         $income   = OtherIncome::where('branch_id', $branchId)->findOrFail($id);
-
-        DB::transaction(function () use ($income) {
-            // Reverse journal entry
-            $this->reverseJournalEntry($income);
-            
-            $income->delete();
-        });
 
         return response()->json(['message' => 'Income deleted successfully.']);
     }
@@ -359,7 +245,7 @@ class OtherIncomeController extends Controller
         $newIncome->created_by = Auth::id();
         $newIncome->push();
 
-        $newIncome->load(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount', 'creator']);
+        $newIncome->load(['incomeCategory', 'creator']);
 
         return response()->json([
             'data'    => $newIncome,
@@ -431,7 +317,7 @@ class OtherIncomeController extends Controller
 
         $query = OtherIncome::where('company_id', $companyId)
             ->where('branch_id', $branchId)
-            ->with(['incomeCategory', 'currency', 'paymentAccount', 'incomeAccount']);
+            ->with(['incomeCategory']);
 
         if ($request->filled('from_date')) {
             $query->whereDate('income_date', '>=', $request->from_date);
@@ -448,11 +334,6 @@ class OtherIncomeController extends Controller
             'Category' => $income->incomeCategory?->name ?? 'Uncategorized',
             'Description' => $income->description ?? '',
             'Amount' => $income->amount,
-            'Currency' => $income->currency?->code ?? 'AFN',
-            'Base Amount' => $income->amount_base,
-            'Exchange Rate' => $income->exchange_rate,
-            'Payment Account' => $income->paymentAccount?->name ?? '',
-            'Income Account' => $income->incomeAccount?->name ?? '',
             'Notes' => $income->note ?? '',
             'Created At' => $income->created_at->format('Y-m-d H:i:s'),
         ]);
@@ -532,120 +413,4 @@ class OtherIncomeController extends Controller
         ]);
     }
 
-    // ── Journal Entry Methods ─────────────────────────────────────────────
-
-    /**
-     * Create journal entry for income
-     * Debit: Payment Account (Cash/Bank)
-     * Credit: Income Account (Revenue)
-     */
-    private function createJournalEntry(OtherIncome $income): void
-    {
-        // Skip if accounts not configured
-        if (!$income->payment_account_id || !$income->income_account_id) {
-            return;
-        }
-
-        $description = sprintf(
-            "Income: %s - %s",
-            $income->income_number,
-            $income->description ?? $income->incomeCategory?->name ?? 'Other Income'
-        );
-
-        JournalEntryService::postSimple(
-            [
-                'branch_id'      => $income->branch_id,
-                'journal_type'   => 'other_income',
-                'reference_type' => 'other_income',
-                'reference_id'   => $income->id,
-                'entry_date'     => $income->income_date->toDateString(),
-                'description'    => $description,
-                'currency'       => $income->currency?->code ?? 'USD',
-                'exchange_rate'  => $income->exchange_rate,
-            ],
-            [
-                'account_id'  => $income->payment_account_id,
-                'amount'      => $income->amount_base,
-                'description' => 'Income received',
-            ],
-            [
-                'account_id'  => $income->income_account_id,
-                'amount'      => $income->amount_base,
-                'description' => 'Income recognized',
-            ]
-        );
-    }
-
-    /**
-     * Update journal entry when income changes
-     */
-    private function updateJournalEntry(OtherIncome $income, array $oldData): void
-    {
-        // Reverse old entry
-        $this->reverseJournalEntry($income, $oldData);
-        // Create new entry
-        $this->createJournalEntry($income);
-    }
-
-    /**
-     * Reverse journal entry
-     */
-    private function reverseJournalEntry(OtherIncome $income, ?array $oldData = null): void
-    {
-        $amount = $oldData['amount_base'] ?? $income->amount_base;
-        $paymentAccountId = $oldData['payment_account_id'] ?? $income->payment_account_id;
-        $incomeAccountId = $oldData['income_account_id'] ?? $income->income_account_id;
-        $incomeDate = isset($oldData['income_date']) ? date('Y-m-d', strtotime($oldData['income_date'])) : $income->income_date->toDateString();
-
-        if (!$paymentAccountId || !$incomeAccountId) {
-            return;
-        }
-
-        $description = sprintf(
-            "Reversal: Income %s",
-            $oldData['income_number'] ?? $income->income_number
-        );
-
-        JournalEntryService::postSimple(
-            [
-                'branch_id'      => $income->branch_id,
-                'journal_type'   => 'other_income_reversal',
-                'reference_type' => 'other_income',
-                'reference_id'   => $income->id,
-                'entry_date'     => now()->toDateString(),
-                'description'    => $description,
-                'currency'       => $income->currency?->code ?? 'USD',
-                'exchange_rate'  => $income->exchange_rate,
-            ],
-            [
-                'account_id'  => $incomeAccountId,
-                'amount'      => $amount,
-                'description' => 'Reversal - debit to income account',
-            ],
-            [
-                'account_id'  => $paymentAccountId,
-                'amount'      => $amount,
-                'description' => 'Reversal - credit to payment account',
-            ]
-        );
-    }
-
-    /**
-     * Check if accounting changes occurred
-     */
-    private function hasAccountingChanges(array $oldData, array $newData): bool
-    {
-        $fields = ['amount', 'amount_base', 'payment_account_id', 'income_account_id', 'currency_id', 'exchange_rate'];
-        
-        foreach ($fields as $field) {
-            $oldValue = $oldData[$field] ?? null;
-            $newValue = $newData[$field] ?? null;
-            
-            if ($oldValue != $newValue) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
 }

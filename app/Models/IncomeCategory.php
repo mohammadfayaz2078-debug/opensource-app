@@ -17,8 +17,6 @@ class IncomeCategory extends Model
         'name',
         'description',
 
-        'income_account_id',
-
         'is_active',
 
         'created_by',
@@ -46,14 +44,6 @@ class IncomeCategory extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
-    }
-
-    public function incomeAccount()
-    {
-        return $this->belongsTo(
-            ChartOfAccount::class,
-            'income_account_id'
-        );
     }
 
     public function creator()

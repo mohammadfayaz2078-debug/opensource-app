@@ -58,10 +58,9 @@ const AuthenticatedLayout = () => {
         raw: userData
       };
     }
-    
-    // Super Admin (from super_admins table)
+
     return {
-      name: userData.name || 'Super Admin',
+      name: userData.name || 'User',
       email: userData.email || '',
       raw: userData
     };
@@ -418,8 +417,6 @@ const getUserTypeDisplay = () => {
   const userType = localStorage.getItem('user_type');
   if (userType === 'company_admin') {
     return 'Company Admin';
-  } else if (userType === 'super_admin') {
-    return 'Super Admin';
   } else {
     return '';
   }
@@ -479,10 +476,6 @@ const userTypeDisplay = getUserTypeDisplay();
       localStorage.removeItem('user');
       localStorage.removeItem('user_type');
       localStorage.removeItem('permissions');
-      localStorage.removeItem('sa_token');
-      localStorage.removeItem('sa_user');
-      localStorage.removeItem('sa_user_type');
-      localStorage.removeItem('impersonating');
       localStorage.removeItem('ca_token');
       localStorage.removeItem('ca_user');
       localStorage.removeItem('ca_user_type');
@@ -565,26 +558,8 @@ const userTypeDisplay = getUserTypeDisplay();
     setSidebarKey(prev => prev + 1);
   }, [currentLanguage]);
 
-  // Handle "Back to Super Admin" when impersonating
-  const isImpersonating = localStorage.getItem('impersonating') === 'true';
+  // Handle impersonation
   const isImpersonatingBranch = localStorage.getItem('impersonating_branch') === 'true';
-
-  const backToSuperAdmin = () => {
-    const saToken = localStorage.getItem('sa_token');
-    const saUser = localStorage.getItem('sa_user');
-    const saUserType = localStorage.getItem('sa_user_type');
-    if (saToken) {
-      localStorage.setItem('api_token', saToken);
-      localStorage.setItem('user', saUser);
-      localStorage.setItem('user_type', saUserType);
-      localStorage.removeItem('sa_token');
-      localStorage.removeItem('sa_user');
-      localStorage.removeItem('sa_user_type');
-      localStorage.removeItem('impersonating');
-      localStorage.removeItem('permissions');
-      window.location.href = '/super-admin/dashboard';
-    }
-  };
 
   const backToCompanyAdmin = async () => {
     const caToken = localStorage.getItem('ca_token');
@@ -593,10 +568,8 @@ const userTypeDisplay = getUserTypeDisplay();
 
     if (!caToken) return;
 
-    // Grab the impersonated token before we overwrite it
     const impersonatedToken = localStorage.getItem('api_token');
 
-    // Restore Company Admin session FIRST to prevent 401 interceptor from hijacking
     localStorage.setItem('api_token', caToken);
     localStorage.setItem('user', caUser);
     localStorage.setItem('user_type', caUserType);
@@ -606,42 +579,19 @@ const userTypeDisplay = getUserTypeDisplay();
     localStorage.removeItem('impersonating_branch');
     localStorage.removeItem('permissions');
 
-    // Notify backend to log the stop action (using the old impersonated token)
-    try {
-      await api.post('/impersonation/stop', {}, {
-        headers: { Authorization: `Bearer ${impersonatedToken}` }
-      });
-    } catch (err) {
-      // Continue even if logging fails
-      console.warn('Failed to log impersonation stop:', err);
-    }
-
+    // Navigate immediately, fire-and-forget the stop API
     window.location.href = '/company-admin/dashboard';
+
+    try {
+      await fetch('/api/impersonation/stop', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${impersonatedToken}`, Accept: 'application/json' }
+      });
+    } catch (e) {}
   };
 
   return (
     <div className={`min-h-screen bg-gray-50 flex flex-col ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Impersonation Banner - Back to Super Admin (only when SA impersonated company, not when also branch-impersonating) */}
-      {isImpersonating && !isImpersonatingBranch && (
-        <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-between z-50 relative">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>You are viewing as <strong>{user.name}</strong></span>
-          </div>
-          <button
-            onClick={backToSuperAdmin}
-            className="inline-flex items-center px-3 py-1 bg-white text-amber-700 text-xs font-bold rounded-md hover:bg-amber-50 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-            </svg>
-            Back to Super Admin
-          </button>
-        </div>
-      )}
-
       {/* Impersonation Banner - Back to Company Admin (when CA impersonated branch user) */}
       {isImpersonatingBranch && (
         <div className="bg-[#007c89] text-white px-4 py-2 flex items-center justify-between z-50 relative">

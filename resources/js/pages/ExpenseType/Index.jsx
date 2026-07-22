@@ -5,7 +5,6 @@ import Swal from 'sweetalert2';
 const ExpenseTypeIndex = () => {
   const [types, setTypes] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,11 +15,9 @@ const ExpenseTypeIndex = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [form, setForm] = useState({
     expense_category_id: '',
-    expense_account_id: '',
     name: '',
     description: '',
     is_active: true,
-    default_payment_account_id: '',
     sort_order: 0,
   });
 
@@ -45,18 +42,8 @@ const ExpenseTypeIndex = () => {
     }
   };
 
-  const fetchAccounts = async () => {
-    try {
-      const res = await api.get('/chart-of-accounts');
-      setAccounts(res.data?.data?.data || res.data?.data || []);
-    } catch (err) {
-      console.error('Failed to fetch accounts:', err);
-    }
-  };
-
   useEffect(() => {
     fetchCategories();
-    fetchAccounts();
   }, []);
 
   useEffect(() => {
@@ -69,11 +56,9 @@ const ExpenseTypeIndex = () => {
     setSelectedType(null);
     setForm({
       expense_category_id: '',
-      expense_account_id: '',
       name: '',
       description: '',
       is_active: true,
-      default_payment_account_id: '',
       sort_order: 0,
     });
     setErrors({});
@@ -85,11 +70,9 @@ const ExpenseTypeIndex = () => {
     setSelectedType(type);
     setForm({
       expense_category_id: type.expense_category_id || '',
-      expense_account_id: type.expense_account_id || '',
       name: type.name || '',
       description: type.description || '',
       is_active: type.is_active ?? true,
-      default_payment_account_id: type.default_payment_account_id || '',
       sort_order: type.sort_order || 0,
     });
     setErrors({});
@@ -119,8 +102,6 @@ const ExpenseTypeIndex = () => {
       const payload = { ...form };
       if (payload.sort_order) payload.sort_order = parseInt(payload.sort_order);
       if (!payload.description) delete payload.description;
-      if (!payload.default_payment_account_id) delete payload.default_payment_account_id;
-      if (!payload.expense_account_id) delete payload.expense_account_id;
 
       let res;
       if (isEditing && selectedType) {
@@ -175,7 +156,7 @@ const ExpenseTypeIndex = () => {
     <div>
       <div className="mb-4">
         <h1 className="text-2xl font-semibold text-gray-900">Expense Types</h1>
-        <p className="text-sm text-gray-500 mt-1">Define expense types and link them to Chart of Accounts</p>
+        <p className="text-sm text-gray-500 mt-1">Define expense types for your organization</p>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-5">
@@ -216,8 +197,6 @@ const ExpenseTypeIndex = () => {
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expense Account</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Account</th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -239,24 +218,6 @@ const ExpenseTypeIndex = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{type.category?.name || '—'}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                        {type.expense_account?.name ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
-                            {type.expense_account.name} ({type.expense_account.code})
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                        {type.default_payment_account?.name ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700">
-                            {type.default_payment_account.name} ({type.default_payment_account.code})
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
                       <td className="px-4 py-3 whitespace-nowrap text-center">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${type.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                           {type.is_active ? 'Active' : 'Inactive'}
@@ -296,9 +257,6 @@ const ExpenseTypeIndex = () => {
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-900">{type.name}</p>
                         <p className="text-xs text-gray-500">{type.category?.name || '—'}</p>
-                        {type.expense_account?.name && (
-                          <p className="text-xs text-blue-600 mt-1">{type.expense_account.name}</p>
-                        )}
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button onClick={() => openEditModal(type)} className="p-2 rounded hover:bg-yellow-50 text-yellow-600">
@@ -353,30 +311,6 @@ const ExpenseTypeIndex = () => {
                   <input type="text" name="name" value={form.name} onChange={handleInputChange}
                     className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.name ? 'border-red-500' : 'border-gray-300'}`} required />
                   {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name[0]}</p>}
-                </div>
-
-                {/* Expense Account */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expense Account (CoA)</label>
-                  <select name="expense_account_id" value={form.expense_account_id} onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]">
-                    <option value="">Select CoA Account</option>
-                    {accounts.filter(a => a.account_type?.type === 'expense').map(a => (
-                      <option key={a.id} value={a.id}>{a.name} ({a.code})</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Default Payment Account */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Default Payment Account</label>
-                  <select name="default_payment_account_id" value={form.default_payment_account_id} onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]">
-                    <option value="">Select Account</option>
-                    {accounts.filter(a => a.account_type?.type === 'asset').map(a => (
-                      <option key={a.id} value={a.id}>{a.name} ({a.code})</option>
-                    ))}
-                  </select>
                 </div>
 
                 {/* Description */}

@@ -22,8 +22,6 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('manager_password');
             $table->enum('language', ['en', 'fa', 'ps'])->default('en');
-            $table->unsignedBigInteger('base_currency_id')->nullable();
-            $table->foreignId('created_by')->constrained('super_admins')->onDelete('cascade');
             $table->timestamps();
         });
     }

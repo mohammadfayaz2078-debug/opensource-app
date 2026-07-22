@@ -10,24 +10,13 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\API\BackupController;
 use App\Http\Controllers\API\SuperAdminAuthController;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\SuperAdminController;
-use App\Http\Controllers\ChartOfAccountController;
-use App\Http\Controllers\AccountGroupController;
-use App\Http\Controllers\AccountTypeController;
-use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseTypeController;
 use App\Http\Controllers\ExpenseController;
-use App\Http\Controllers\JournalController;
-use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\ContractController;
-use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\IncomeCategoryController;
 use App\Http\Controllers\OtherIncomeController;
-use App\Http\Controllers\WarehouseTowerController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UnitCategoryController;
 use App\Http\Controllers\ProductCategoryController;
@@ -61,35 +50,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::patch('branches/{branch}/toggle-status', [BranchController::class, 'toggleStatus']);
     Route::apiResource('roles', RoleController::class);
-
-    // ─── Chart of Accounts ───────────────────────────────────
-    Route::get('chart-of-accounts/tree', [ChartOfAccountController::class, 'tree']);
-    Route::get('chart-of-accounts/types', [ChartOfAccountController::class, 'getAccountTypes']);
-    Route::get('chart-of-accounts/groups', [ChartOfAccountController::class, 'getAccountGroups']);
-    Route::get('chart-of-accounts/parent-options', [ChartOfAccountController::class, 'getParentOptions']);
-    Route::get('chart-of-accounts/summary', [ChartOfAccountController::class, 'summary']);
-    Route::post('chart-of-accounts/import', [ChartOfAccountController::class, 'import']);
-    Route::post('chart-of-accounts/{id}/toggle-deprecated', [ChartOfAccountController::class, 'toggleDeprecated']);
-    Route::post('chart-of-accounts/{id}/toggle-active', [ChartOfAccountController::class, 'toggleActive']);
-    Route::apiResource('chart-of-accounts', ChartOfAccountController::class);
-
-    // ─── Account Types ────────────────────────────────────────
-    Route::post('account-types/seed', [AccountTypeController::class, 'seed']);
-    Route::apiResource('account-types', AccountTypeController::class);
-
-    // ─── Account Groups ──────────────────────────────────────
-    Route::get('account-groups/tree', [AccountGroupController::class, 'tree']);
-    Route::apiResource('account-groups', AccountGroupController::class);
-
-    // ─── Currencies (Multi-Currency) ─────────────────────────
-    Route::get('currencies/active-list', [CurrencyController::class, 'activeList']);
-    Route::post('currencies/convert', [CurrencyController::class, 'convert']);
-    Route::post('currencies/{id}/set-base', [CurrencyController::class, 'setBase']);
-    Route::post('currencies/{id}/toggle-active', [CurrencyController::class, 'toggleActive']);
-    Route::get('currencies/{id}/rates', [CurrencyController::class, 'getRates']);
-    Route::post('currencies/{id}/rates', [CurrencyController::class, 'storeRate']);
-    Route::delete('currencies/{id}/rates/{rateId}', [CurrencyController::class, 'destroyRate']);
-    Route::apiResource('currencies', CurrencyController::class);
 
     // ── Expense Module ──────────────────────────────────────────────────────
 
@@ -125,48 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/submit',     [ExpenseController::class, 'submit']);
         Route::post('/{id}/pay',        [ExpenseController::class, 'pay']);
         Route::post('/{id}/cancel',     [ExpenseController::class, 'cancel']);
-        Route::get('/{id}/journal-entries', [ExpenseController::class, 'journalEntries']);
     });
-
-    // Journals
-    Route::prefix('journals')->group(function () {
-        Route::get('/',     [JournalController::class, 'index']);
-        Route::post('/',    [JournalController::class, 'store']);
-        Route::get('/{id}', [JournalController::class, 'show']);
-        Route::put('/{id}', [JournalController::class, 'update']);
-    });
-
-    // Journal Entries
-    Route::prefix('journal-entries')->group(function () {
-        Route::get('/',              [JournalController::class, 'entries']);
-        Route::post('/',             [JournalController::class, 'storeEntry']);
-        Route::get('/report',        [JournalController::class, 'report']);
-        Route::get('/{id}',          [JournalController::class, 'showEntry']);
-        Route::post('/{id}/post',    [JournalController::class, 'postEntry']);
-        Route::post('/{id}/reverse', [JournalController::class, 'reverseEntry']);
-    });
-
-    // ── Employee & Payroll Module ──────────────────────────────────────────
-
-    // Employees
-    Route::prefix('employees')->group(function () {
-        Route::get('/',                    [EmployeeController::class, 'index']);
-        Route::post('/',                   [EmployeeController::class, 'store']);
-        Route::get('/{id}',                [EmployeeController::class, 'show']);
-        Route::put('/{id}',                [EmployeeController::class, 'update']);
-        Route::delete('/{id}',             [EmployeeController::class, 'destroy']);
-        Route::get('/{id}/payroll',         [EmployeeController::class, 'payroll']);
-        Route::post('/{id}/payslips',       [EmployeeController::class, 'generatePayslip']);
-
-        // Employee Contracts
-        Route::get('/{employeeId}/contracts',          [ContractController::class, 'index']);
-        Route::post('/{employeeId}/contracts',         [ContractController::class, 'store']);
-        Route::get('/{employeeId}/contracts/{contractId}',    [ContractController::class, 'show']);
-        Route::put('/{employeeId}/contracts/{contractId}',  [ContractController::class, 'update']);
-        Route::delete('/{employeeId}/contracts/{contractId}', [ContractController::class, 'destroy']);
-    });
-
-
 
     Route::prefix('suppliers')->group(function () {
         Route::get('/',                    [SupplierController::class, 'index']);
@@ -295,22 +214,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{productId}/attachments/{attachmentId}', [ProductController::class, 'deleteAttachment']);
     });
 
-    // Warehouse Towers
-    Route::prefix('warehouse-towers')->group(function () {
-        Route::get('/',                    [WarehouseTowerController::class, 'index']);
-        Route::post('/',                   [WarehouseTowerController::class, 'store']);
-        Route::get('/list/options',        [WarehouseTowerController::class, 'getLocationList']);
-        Route::get('/export/data',         [WarehouseTowerController::class, 'export']);
-        Route::get('/statistics',          [WarehouseTowerController::class, 'statistics']);
-        Route::get('/nearby',              [WarehouseTowerController::class, 'nearby']);
-        Route::delete('/bulk/delete',      [WarehouseTowerController::class, 'bulkDelete']);
-        Route::get('/{id}',                [WarehouseTowerController::class, 'show']);
-        Route::put('/{id}',                [WarehouseTowerController::class, 'update']);
-        Route::delete('/{id}',             [WarehouseTowerController::class, 'destroy']);
-        Route::post('/{id}/change-type',   [WarehouseTowerController::class, 'changeType']);
-    });
-
-
     // ── Customer Module ──────────────────────────────────────────────────────
     // Customers
     Route::prefix('customers')->group(function () {
@@ -325,35 +228,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}',             [CustomerController::class, 'destroy']);
         Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus']);
     });
-
-    // Attendance
-    Route::prefix('attendance')->group(function () {
-        Route::get('/',                [AttendanceController::class, 'index']);
-        Route::get('/summary',         [AttendanceController::class, 'summary']);
-        Route::post('/check-in',       [AttendanceController::class, 'checkIn']);
-        Route::post('/check-out',      [AttendanceController::class, 'checkOut']);
-        Route::put('/{id}',            [AttendanceController::class, 'update']);
-        Route::delete('/{id}',         [AttendanceController::class, 'destroy']);
-    });
-
-    // Payslips (global scope)
-    Route::prefix('payslips')->group(function () {
-        Route::get('/',                [EmployeeController::class, 'payslips']);
-        Route::post('/bulk-generate',  [EmployeeController::class, 'bulkGenerate']);
-        Route::post('/{id}/pay',       [EmployeeController::class, 'payPayslip']);
-    });
 });
 
-
-Route::prefix('super-admin')
-    ->middleware(['auth:sanctum'])
-    ->group(function () {
-        Route::apiResource('super-admins', SuperAdminController::class);
-        Route::apiResource('companies', CompanyController::class);
-        Route::post('companies/{id}/toggle', [CompanyController::class, 'toggleStatus']);
-        Route::post('companies/{id}/impersonate', [CompanyController::class, 'impersonate']);
-        Route::get('branches', [BranchController::class, 'index']);
-});
 
 Route::prefix('company-admin')
     ->middleware(['auth:sanctum'])

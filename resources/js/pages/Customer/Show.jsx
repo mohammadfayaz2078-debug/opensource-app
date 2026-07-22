@@ -249,15 +249,6 @@ export default function CustomerShow() {
             <div className="p-6">
               <dl className="space-y-4">
                 <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Receivable Account</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    {customer.receivable_account?.name || '—'}
-                    {customer.receivable_account?.code && (
-                      <span className="text-xs text-gray-400 ml-1">({customer.receivable_account.code})</span>
-                    )}
-                  </dd>
-                </div>
-                <div>
                   <dt className="text-xs font-medium text-gray-500 uppercase">Opening Balance</dt>
                   <dd className="mt-1">
                     <span className={`text-lg font-semibold ${

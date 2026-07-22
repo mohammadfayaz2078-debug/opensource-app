@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\ProductAttachment;
 use App\Models\ProductCategory;
 use App\Models\Unit;
-use App\Models\ChartOfAccount;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,27 +23,16 @@ class ProductController extends Controller
      */
     private function resolveBranchId(Request $request): ?int
     {
-        $user = Auth::user();
-        
-        if ($user instanceof \App\Models\SuperAdmin) {
-            return $request->filled('branch_id') ? (int) $request->branch_id : null;
-        }
-        
         if (AuthHelper::isCompanyAdmin()) {
             return $request->filled('branch_id') ? (int) $request->branch_id : null;
         }
-        
+
         return AuthHelper::getBranchId();
     }
 
-    /**
-     * Resolve company ID based on authenticated user
-     */
     private function resolveCompanyId(Request $request): ?int
     {
-        $user = Auth::user();
-        
-        if ($user instanceof \App\Models\SuperAdmin || AuthHelper::isCompanyAdmin()) {
+        if (AuthHelper::isCompanyAdmin()) {
             return $request->filled('company_id') ? (int) $request->company_id : null;
         }
         
@@ -103,13 +91,10 @@ class ProductController extends Controller
         $companyId = $this->resolveCompanyId($request);
 
         $query = Product::with([
-            'category', 
-            'purchaseUnit', 
-            'saleUnit', 
+            'category',
+            'purchaseUnit',
+            'saleUnit',
             'stockUnit',
-            'expenseAccount',
-            'incomeAccount',
-            'inventoryAssetAccount'
         ])
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
@@ -199,10 +184,7 @@ class ProductController extends Controller
             'stock_unit_id'             => 'nullable|exists:units,id',
             'purchase_price'            => 'nullable|numeric|min:0|max:999999999999.99',
             'sale_price'                => 'nullable|numeric|min:0|max:999999999999.99',
-            'expense_account_id'        => 'nullable|exists:chart_of_accounts,id',
-            'income_account_id'         => 'nullable|exists:chart_of_accounts,id',
             'low_stock_warning_count'   => 'nullable|integer|min:0',
-            'inventory_asset_account_id'=> 'nullable|exists:chart_of_accounts,id',
             'reorder_point'             => 'nullable|integer|min:0',
         ]);
 
@@ -257,7 +239,6 @@ class ProductController extends Controller
 
         $product->load([
             'category', 'purchaseUnit', 'saleUnit', 'stockUnit',
-            'expenseAccount', 'incomeAccount', 'inventoryAssetAccount'
         ]);
         $product->attachments_count = $product->attachments()->count();
 
@@ -276,13 +257,10 @@ class ProductController extends Controller
 
         $product = Product::where('branch_id', $branchId)
             ->with([
-                'category', 
-                'purchaseUnit', 
-                'saleUnit', 
+                'category',
+                'purchaseUnit',
+                'saleUnit',
                 'stockUnit',
-                'expenseAccount',
-                'incomeAccount',
-                'inventoryAssetAccount',
                 'attachments' => function($q) {
                     $q->orderBy('created_at', 'desc');
                 }
@@ -310,10 +288,7 @@ class ProductController extends Controller
             'stock_unit_id'             => 'nullable|exists:units,id',
             'purchase_price'            => 'nullable|numeric|min:0|max:999999999999.99',
             'sale_price'                => 'nullable|numeric|min:0|max:999999999999.99',
-            'expense_account_id'        => 'nullable|exists:chart_of_accounts,id',
-            'income_account_id'         => 'nullable|exists:chart_of_accounts,id',
             'low_stock_warning_count'   => 'nullable|integer|min:0',
-            'inventory_asset_account_id'=> 'nullable|exists:chart_of_accounts,id',
             'reorder_point'             => 'nullable|integer|min:0',
         ]);
 
@@ -353,7 +328,6 @@ class ProductController extends Controller
 
         $product->load([
             'category', 'purchaseUnit', 'saleUnit', 'stockUnit',
-            'expenseAccount', 'incomeAccount', 'inventoryAssetAccount'
         ]);
         $product->attachments_count = $product->attachments()->count();
 

@@ -144,33 +144,6 @@ export default function IncomeCategoryShow() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Accounting Info */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
-            </div>
-            <div className="p-6">
-              <dl className="space-y-4">
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Income Account</dt>
-                  <dd className="mt-1">
-                    {category.income_account ? (
-                      <div>
-                        <span className="text-sm font-medium text-gray-900">{category.income_account.name}</span>
-                        <span className="text-xs text-gray-400 ml-2">({category.income_account.code})</span>
-                        {category.income_account.account_type && (
-                          <p className="text-xs text-gray-500 mt-1">Type: {category.income_account.account_type}</p>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">No income account assigned</span>
-                    )}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-
           {/* Status & Audit */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">

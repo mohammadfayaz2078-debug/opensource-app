@@ -26,8 +26,6 @@ class Supplier extends Model
         'city',
         'country',
 
-        'payable_account_id',
-
         'opening_balance',
         'opening_balance_type',
 
@@ -62,14 +60,6 @@ class Supplier extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
-    }
-
-    public function payableAccount()
-    {
-        return $this->belongsTo(
-            ChartOfAccount::class,
-            'payable_account_id'
-        );
     }
 
     public function creator()

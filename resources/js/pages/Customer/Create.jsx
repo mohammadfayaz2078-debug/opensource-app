@@ -4,7 +4,6 @@ import api from '../../plugins/axios';
 
 export default function CustomerCreate() {
   const navigate = useNavigate();
-  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
@@ -19,20 +18,11 @@ export default function CustomerCreate() {
     gps_lat: '',
     gps_lng: '',
     country: 'Afghanistan',
-    receivable_account_id: '',
     opening_balance: '',
     opening_balance_type: 'debit',
     note: '',
     is_active: true,
   });
-
-  useEffect(() => {
-    // Fetch chart of accounts for receivable account selection
-    api.get('/chart-of-accounts?per_page=1000&type=asset').then(r => {
-      const payload = r.data.data;
-      setAccounts(Array.isArray(payload) ? payload : payload?.data || []);
-    }).catch(() => {});
-  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -273,29 +263,7 @@ export default function CustomerCreate() {
                 <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
               </div>
               <div className="p-6">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Receivable Account
-                    </label>
-                    <select
-                      name="receivable_account_id"
-                      value={form.receivable_account_id}
-                      onChange={handleChange}
-                      className={inputClass('receivable_account_id')}
-                    >
-                      <option value="">Select account</option>
-                      {accounts.map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.code})
-                        </option>
-                      ))}
-                    </select>
-                    {errors.receivable_account_id && <p className="text-red-500 text-xs mt-1">{errors.receivable_account_id[0]}</p>}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                       Opening Balance

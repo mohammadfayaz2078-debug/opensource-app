@@ -40,16 +40,6 @@ return new class extends Migration
             $table->text('description')
                 ->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Accounting
-            |--------------------------------------------------------------------------
-            */
-
-            $table->foreignId('income_account_id')
-                ->nullable()
-                ->constrained('chart_of_accounts')
-                ->nullOnDelete();
 
             /*
             |--------------------------------------------------------------------------

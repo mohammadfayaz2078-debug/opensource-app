@@ -31,8 +31,6 @@ class Customer extends Model
 
         'country',
 
-        'receivable_account_id',
-
         'opening_balance',
         'opening_balance_type',
 
@@ -70,14 +68,6 @@ class Customer extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
-    }
-
-    public function receivableAccount()
-    {
-        return $this->belongsTo(
-            ChartOfAccount::class,
-            'receivable_account_id'
-        );
     }
 
     public function creator()

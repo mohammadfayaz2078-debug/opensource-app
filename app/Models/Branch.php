@@ -15,7 +15,6 @@ class Branch extends Model
 
     protected $fillable = [
         'company_id',
-        'base_currency_id',
         'branch_name',
         'branch_slogan',
         'branch_logo_url',
@@ -31,7 +30,6 @@ class Branch extends Model
     ];
 
     protected $casts = [
-        'base_currency_id' => 'integer',
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -51,14 +49,6 @@ class Branch extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
-    }
-
-    /**
-     * Get the base currency for the branch
-     */
-    public function baseCurrency(): BelongsTo
-    {
-        return $this->belongsTo(Currency::class, 'base_currency_id');
     }
 
     /**

@@ -212,15 +212,6 @@ export default function SupplierShow() {
             <div className="p-6">
               <dl className="space-y-4">
                 <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Payable Account</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    {supplier.payable_account?.name || '—'}
-                    {supplier.payable_account?.code && (
-                      <span className="text-xs text-gray-400 ml-1">({supplier.payable_account.code})</span>
-                    )}
-                  </dd>
-                </div>
-                <div>
                   <dt className="text-xs font-medium text-gray-500 uppercase">Opening Balance</dt>
                   <dd className="mt-1">
                     <span className={`text-lg font-semibold ${

@@ -47,9 +47,7 @@ const submit = async (e) => {
     }
 
     // Redirect based on user type
-    if (userType === 'super_admin') {
-      navigate('/super-admin/dashboard');
-    } else if (userType === 'company_admin') {
+    if (userType === 'company_admin') {
       navigate('/company-admin/dashboard');
     } else {
       navigate('/dashboard');

@@ -84,23 +84,9 @@ return new class extends Migration
             |--------------------------------------------------------------------------
             */
 
-            $table->foreignId('expense_account_id')
-                ->nullable()
-                ->constrained('chart_of_accounts')
-                ->nullOnDelete();
-
-            $table->foreignId('income_account_id')
-                ->nullable()
-                ->constrained('chart_of_accounts')
-                ->nullOnDelete();
 
             $table->integer('low_stock_warning_count')
                 ->default(0);
-
-            $table->foreignId('inventory_asset_account_id')
-                ->nullable()
-                ->constrained('chart_of_accounts')
-                ->nullOnDelete();
 
             /*
             |--------------------------------------------------------------------------

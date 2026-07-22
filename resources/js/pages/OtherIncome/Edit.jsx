@@ -5,98 +5,40 @@ import api from '../../plugins/axios';
 export default function OtherIncomeEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
-  const [currencies, setCurrencies] = useState([]);
-  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
+  const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     income_category_id: '',
-    income_number: '',
     income_date: '',
     description: '',
     amount: '',
-    currency_id: '',
-    exchange_rate: 1,
-    payment_account_id: '',
-    income_account_id: '',
     note: '',
   });
 
   useEffect(() => {
-    fetchCategories();
-    fetchCurrencies();
-    fetchAccounts();
-    fetchIncome();
-  }, [id]);
+    api.get('/income-categories?per_page=1000').then(r => {
+      const payload = r.data.data;
+      setCategories(Array.isArray(payload) ? payload : payload?.data || []);
+    }).catch(() => {});
 
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get('/income-categories/list/options');
-      setCategories(res.data.data || []);
-    } catch {
-      setCategories([]);
-    }
-  };
-
-  const fetchCurrencies = async () => {
-    try {
-      const res = await api.get('/currencies/active-list');
-      setCurrencies(res.data.data || []);
-    } catch {
-      setCurrencies([]);
-    }
-  };
-
-  const fetchAccounts = async () => {
-    try {
-      const res = await api.get('/chart-of-accounts?per_page=1000');
-      const payload = res.data.data;
-      setAccounts(Array.isArray(payload) ? payload : payload?.data || []);
-    } catch {
-      setAccounts([]);
-    }
-  };
-
-  const fetchIncome = async () => {
-    try {
-      const res = await api.get(`/other-incomes/${id}`);
-      const income = res.data.data;
+    api.get(`/other-incomes/${id}`).then(r => {
+      const income = r.data.data;
       setForm({
         income_category_id: income.income_category_id || '',
-        income_number: income.income_number || '',
-        income_date: income.income_date || '',
+        income_date: income.income_date ? income.income_date.split('T')[0] : '',
         description: income.description || '',
         amount: income.amount || '',
-        currency_id: income.currency_id || '',
-        exchange_rate: income.exchange_rate || 1,
-        payment_account_id: income.payment_account_id || '',
-        income_account_id: income.income_account_id || '',
         note: income.note || '',
       });
-    } catch {
-      navigate('/other-incomes');
-    } finally {
-      setFetching(false);
-    }
-  };
+    }).catch(() => navigate('/other-incomes')).finally(() => setFetching(false));
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
-  };
-
-  const handleCategoryChange = (e) => {
-    const categoryId = e.target.value;
-    const selectedCategory = categories.find(c => c.id === parseInt(categoryId));
-    
-    setForm(prev => ({
-      ...prev,
-      income_category_id: categoryId,
-      income_account_id: selectedCategory?.income_account_id || prev.income_account_id
-    }));
   };
 
   const handleSubmit = async (e) => {
@@ -109,6 +51,9 @@ export default function OtherIncomeEdit() {
     } catch (err) {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
+        if (err.response.data.message && !err.response.data.errors) {
+          setErrors({ general: err.response.data.message });
+        }
       } else {
         setErrors({ general: err.response?.data?.message || 'Failed to update income record.' });
       }
@@ -138,7 +83,7 @@ export default function OtherIncomeEdit() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
           <button onClick={() => navigate(`/other-incomes/${id}`)} className="hover:text-[#007c89]">
-            {form.income_number}
+            {form.income_number || `#${id}`}
           </button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -154,29 +99,36 @@ export default function OtherIncomeEdit() {
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main form */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Income Information */}
+            {/* Basic Information */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900">Income Information</h2>
               </div>
               <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Number
+                      Income Category
                     </label>
-                    <input
-                      name="income_number"
-                      value={form.income_number}
+                    <select
+                      name="income_category_id"
+                      value={form.income_category_id}
                       onChange={handleChange}
-                      className={inputClass('income_number')}
-                    />
-                    {errors.income_number && <p className="text-red-500 text-xs mt-1">{errors.income_number[0]}</p>}
+                      className={inputClass('income_category_id')}
+                    >
+                      <option value="">Select category</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                    {errors.income_category_id && <p className="text-red-500 text-xs mt-1">{errors.income_category_id[0]}</p>}
                   </div>
+
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Date
+                      Income Date *
                     </label>
                     <input
                       type="date"
@@ -187,7 +139,8 @@ export default function OtherIncomeEdit() {
                     />
                     {errors.income_date && <p className="text-red-500 text-xs mt-1">{errors.income_date[0]}</p>}
                   </div>
-                  <div className="md:col-span-2">
+
+                  <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                       Description
                     </label>
@@ -195,132 +148,26 @@ export default function OtherIncomeEdit() {
                       name="description"
                       value={form.description}
                       onChange={handleChange}
-                      rows="2"
+                      rows="3"
                       className={inputClass('description')}
                     />
                     {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description[0]}</p>}
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Amount & Currency */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Amount & Currency</h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Amount
+                      Amount *
                     </label>
                     <input
                       type="number"
-                      step="0.01"
                       name="amount"
                       value={form.amount}
                       onChange={handleChange}
+                      step="0.01"
+                      min="0"
                       className={inputClass('amount')}
                     />
                     {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount[0]}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Currency
-                    </label>
-                    <select
-                      name="currency_id"
-                      value={form.currency_id}
-                      onChange={handleChange}
-                      className={inputClass('currency_id')}
-                    >
-                      {currencies.map(currency => (
-                        <option key={currency.id} value={currency.id}>
-                          {currency.code} - {currency.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.currency_id && <p className="text-red-500 text-xs mt-1">{errors.currency_id[0]}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Exchange Rate
-                    </label>
-                    <input
-                      type="number"
-                      step="0.000001"
-                      name="exchange_rate"
-                      value={form.exchange_rate}
-                      onChange={handleChange}
-                      className={inputClass('exchange_rate')}
-                    />
-                    {errors.exchange_rate && <p className="text-red-500 text-xs mt-1">{errors.exchange_rate[0]}</p>}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Category & Accounts */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Category & Accounts</h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Category
-                    </label>
-                    <select
-                      name="income_category_id"
-                      value={form.income_category_id}
-                      onChange={handleCategoryChange}
-                      className={inputClass('income_category_id')}
-                    >
-                      <option value="">Select category</option>
-                      {categories.map(category => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Account
-                    </label>
-                    <select
-                      name="income_account_id"
-                      value={form.income_account_id}
-                      onChange={handleChange}
-                      className={inputClass('income_account_id')}
-                    >
-                      <option value="">Select income account</option>
-                      {accounts.filter(a => a.type === 'income' || a.type === 'revenue').map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.code})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Payment Account
-                    </label>
-                    <select
-                      name="payment_account_id"
-                      value={form.payment_account_id}
-                      onChange={handleChange}
-                      className={inputClass('payment_account_id')}
-                    >
-                      <option value="">Select payment account</option>
-                      {accounts.filter(a => a.type === 'asset' || a.type === 'bank').map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.code})
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
               </div>
@@ -329,7 +176,7 @@ export default function OtherIncomeEdit() {
             {/* Notes */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Additional Notes</h2>
+                <h2 className="text-lg font-medium text-gray-900">Notes</h2>
               </div>
               <div className="p-6">
                 <textarea
@@ -339,6 +186,7 @@ export default function OtherIncomeEdit() {
                   rows="3"
                   className={inputClass('note')}
                 />
+                {errors.note && <p className="text-red-500 text-xs mt-1">{errors.note[0]}</p>}
               </div>
             </div>
           </div>

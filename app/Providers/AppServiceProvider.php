@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Policies\PermissionPolicy;
-use App\Models\SuperAdmin;
 use App\Models\Company;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,22 +25,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function ($user, $ability, $arguments = []) {
-            // Super Admin has full access
-            if ($user instanceof SuperAdmin) {
-                return true;
-            }
-            
-            // Company Admin has full access
             if ($user instanceof Company) {
                 return true;
             }
-            
-            // Regular user with admin role has full access
+
             if ($user->role && $user->role->role_name === 'admin') {
                 return true;
             }
-            
-            // Return null to let other gates decide
+
             return null;
         });
 

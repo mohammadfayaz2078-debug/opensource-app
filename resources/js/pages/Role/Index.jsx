@@ -173,7 +173,7 @@ useEffect(() => {
   fetchRoles(1);
 }, []);
   
-  const isSuperAdmin = userType === 'super_admin';
+  const isSuperAdmin = false;
   
   // Get role badge color
   const getRoleBadgeColor = (roleName) => {

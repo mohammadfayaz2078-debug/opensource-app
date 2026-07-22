@@ -23,12 +23,6 @@ class OtherIncome extends Model
         'description',
 
         'amount',
-        'currency_id',
-        'exchange_rate',
-        'amount_base',
-
-        'payment_account_id',
-        'income_account_id',
 
         'note',
 
@@ -43,10 +37,6 @@ class OtherIncome extends Model
         'income_date' => 'date',
 
         'amount' => 'decimal:2',
-
-        'exchange_rate' => 'decimal:6',
-
-        'amount_base' => 'decimal:2',
     ];
 
     /*
@@ -73,27 +63,6 @@ class OtherIncome extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
-    }
-
-    public function currency()
-    {
-        return $this->belongsTo(Currency::class);
-    }
-
-    public function paymentAccount()
-    {
-        return $this->belongsTo(
-            ChartOfAccount::class,
-            'payment_account_id'
-        );
-    }
-
-    public function incomeAccount()
-    {
-        return $this->belongsTo(
-            ChartOfAccount::class,
-            'income_account_id'
-        );
     }
 
     public function creator()

@@ -7,33 +7,32 @@ export default function OtherIncomeIndex() {
   const [incomes, setIncomes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [filters, setFilters] = useState({
+    from_date: '',
+    to_date: '',
+    income_category_id: '',
+  });
   const [categories, setCategories] = useState([]);
-  const [summary, setSummary] = useState({
-    total_incomes: 0,
-    total_amount: 0,
-    average_amount: 0
+  const [stats, setStats] = useState({
+    current_month_total: 0,
+    current_month_count: 0,
+    previous_month_total: 0,
+    change_percentage: 0,
   });
 
   useEffect(() => {
     fetchIncomes();
-    fetchCategories();
     fetchStats();
-  }, [fromDate, toDate, selectedCategory]);
+    fetchCategories();
+  }, [filters]);
 
   const fetchIncomes = async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (fromDate) params.from_date = fromDate;
-      if (toDate) params.to_date = toDate;
-      if (selectedCategory) params.income_category_id = selectedCategory;
-      
+      const params = { ...filters };
+      if (search) params.search = search;
       const res = await api.get('/other-incomes', { params });
       setIncomes(res.data.data || []);
-      setSummary(res.data.summary || {});
     } catch {
       setIncomes([]);
     } finally {
@@ -41,29 +40,26 @@ export default function OtherIncomeIndex() {
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get('/income-categories/list/options');
-      setCategories(res.data.data || []);
-    } catch {
-      setCategories([]);
-    }
-  };
-
   const fetchStats = async () => {
     try {
       const res = await api.get('/other-incomes/stats');
-      setSummary(prev => ({ ...prev, ...res.data }));
-    } catch {
-      // Silently fail
-    }
+      setStats(prev => ({ ...prev, ...res.data }));
+    } catch {}
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/income-categories?per_page=1000');
+      const payload = res.data.data;
+      setCategories(Array.isArray(payload) ? payload : payload?.data || []);
+    } catch {}
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this income record? This action cannot be undone.')) return;
     try {
       await api.delete(`/other-incomes/${id}`);
-      fetchIncomes();
+      setIncomes(prev => prev.filter(i => i.id !== id));
       fetchStats();
     } catch (err) {
       alert(err.response?.data?.message || 'Delete failed');
@@ -75,23 +71,18 @@ export default function OtherIncomeIndex() {
       await api.post(`/other-incomes/${id}/duplicate`);
       fetchIncomes();
       fetchStats();
-      alert('Income duplicated successfully');
     } catch (err) {
       alert(err.response?.data?.message || 'Duplicate failed');
     }
   };
 
-  const filtered = incomes.filter(income =>
-    income.income_number?.toLowerCase().includes(search.toLowerCase()) ||
-    income.description?.toLowerCase().includes(search.toLowerCase()) ||
-    income.income_category?.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchIncomes();
+  };
 
-  const resetFilters = () => {
-    setFromDate('');
-    setToDate('');
-    setSelectedCategory('');
-    setSearch('');
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount || 0);
   };
 
   return (
@@ -101,8 +92,8 @@ export default function OtherIncomeIndex() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Incomes</p>
-              <p className="text-2xl font-bold text-gray-900">{summary.total_incomes || 0}</p>
+              <p className="text-sm text-gray-500">This Month Total</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.current_month_total)}</p>
             </div>
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,30 +102,26 @@ export default function OtherIncomeIndex() {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Amount</p>
-              <p className="text-2xl font-bold text-green-600">
-                {summary.total_amount?.toLocaleString()} AFN
-              </p>
+              <p className="text-sm text-gray-500">This Month Count</p>
+              <p className="text-2xl font-bold text-green-600">{stats.current_month_count || 0}</p>
             </div>
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Average Amount</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {summary.average_amount?.toLocaleString()} AFN
-              </p>
+              <p className="text-sm text-gray-500">Previous Month</p>
+              <p className="text-2xl font-bold text-purple-600">{formatCurrency(stats.previous_month_total)}</p>
             </div>
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,31 +134,26 @@ export default function OtherIncomeIndex() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">This Month</p>
-              <p className="text-2xl font-bold text-orange-600">
-                {summary.current_month?.total?.toLocaleString()} AFN
+              <p className="text-sm text-gray-500">Change</p>
+              <p className={`text-2xl font-bold ${stats.change_percentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {stats.change_percentage != null ? `${stats.change_percentage >= 0 ? '+' : ''}${stats.change_percentage.toFixed(1)}%` : '0%'}
               </p>
             </div>
             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
               </svg>
             </div>
           </div>
-          {summary.percentage_change !== undefined && (
-            <p className={`text-xs mt-2 ${summary.percentage_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {summary.percentage_change >= 0 ? '↑' : '↓'} {Math.abs(summary.percentage_change)}% from last month
-            </p>
-          )}
         </div>
       </div>
 
       {/* Toolbar */}
       <div className="bg-white border border-gray-200 shadow-sm mb-6">
         <div className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex flex-1 gap-3 flex-wrap">
-              <div className="relative flex-1 min-w-[200px]">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-1 gap-3">
+              <div className="relative flex-1 max-w-md">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -179,30 +161,30 @@ export default function OtherIncomeIndex() {
                   type="text"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Search by number, description..."
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
+                  placeholder="Search income number, description, or note..."
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
                 />
               </div>
-              
+
               <input
                 type="date"
-                value={fromDate}
-                onChange={e => setFromDate(e.target.value)}
+                value={filters.from_date}
+                onChange={e => setFilters(prev => ({ ...prev, from_date: e.target.value }))}
                 className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
-                placeholder="From Date"
+                title="From date"
               />
-              
+
               <input
                 type="date"
-                value={toDate}
-                onChange={e => setToDate(e.target.value)}
+                value={filters.to_date}
+                onChange={e => setFilters(prev => ({ ...prev, to_date: e.target.value }))}
                 className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
-                placeholder="To Date"
+                title="To date"
               />
-              
+
               <select
-                value={selectedCategory}
-                onChange={e => setSelectedCategory(e.target.value)}
+                value={filters.income_category_id}
+                onChange={e => setFilters(prev => ({ ...prev, income_category_id: e.target.value }))}
                 className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
               >
                 <option value="">All Categories</option>
@@ -210,39 +192,23 @@ export default function OtherIncomeIndex() {
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
-
-              <button
-                onClick={resetFilters}
-                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Clear
-              </button>
             </div>
-            
+
             <div className="flex gap-2">
               <button
-                onClick={() => navigate('/other-incomes/report')}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Report
-              </button>
-              
-              <button
-                onClick={() => navigate('/other-incomes/export')}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
+                type="button"
+                onClick={() => navigate('/other-incomes?export=1')}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 Export
               </button>
-              
+
               <Link
                 to="/other-incomes/create"
-                className="inline-flex items-center px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77]"
+                className="inline-flex items-center px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77] transition-colors"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -250,7 +216,7 @@ export default function OtherIncomeIndex() {
                 New Income
               </Link>
             </div>
-          </div>
+          </form>
         </div>
       </div>
 
@@ -265,14 +231,14 @@ export default function OtherIncomeIndex() {
       {/* Table */}
       {!loading && (
         <div className="bg-white border border-gray-200 shadow-sm overflow-hidden rounded-lg">
-          {filtered.length === 0 ? (
+          {incomes.length === 0 ? (
             <div className="p-12 text-center">
               <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-sm text-gray-500">
-                {search || fromDate || toDate || selectedCategory 
-                  ? 'No incomes match your filters.' 
+                {search || filters.from_date || filters.to_date || filters.income_category_id
+                  ? 'No incomes match your filters.'
                   : 'No income records found. Create your first income record to get started.'}
               </p>
             </div>
@@ -286,41 +252,38 @@ export default function OtherIncomeIndex() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(income => (
+                  {incomes.map(income => (
                     <tr key={income.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <Link to={`/other-incomes/${income.id}`} className="font-mono text-sm font-medium text-[#007c89] hover:underline">
-                          {income.income_number}
+                        <Link to={`/other-incomes/${income.id}`} className="text-sm font-medium text-[#007c89] hover:underline">
+                          {income.income_number || '—'}
                         </Link>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(income.income_date).toLocaleDateString()}
+                        {income.income_date ? new Date(income.income_date).toLocaleDateString() : '—'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                          {income.income_category?.name || 'Uncategorized'}
-                        </span>
+                        {income.income_category ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                            {income.income_category.name}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
                         {income.description || '—'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right">
-                        <span className="text-sm font-semibold text-green-600">
-                          {income.amount?.toLocaleString()} {income.currency?.code || 'AFN'}
-                        </span>
-                        {income.currency?.code !== 'AFN' && (
-                          <span className="text-xs text-gray-400 ml-1">
-                            ({income.amount_base?.toLocaleString()} AFN)
-                          </span>
-                        )}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium text-gray-900">
+                        {formatCurrency(income.amount)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {income.payment_account?.name || '—'}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {income.creator?.name || '—'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-1">

@@ -66,11 +66,6 @@ return new class extends Migration
             |--------------------------------------------------------------------------
             */
 
-            $table->foreignId('payable_account_id')
-                ->nullable()
-                ->constrained('chart_of_accounts')
-                ->nullOnDelete();
-
             $table->decimal('opening_balance', 15, 2)
                 ->default(0);
 

@@ -4,23 +4,13 @@ import api from '../../plugins/axios';
 
 export default function IncomeCategoryCreate() {
   const navigate = useNavigate();
-  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
     name: '',
     description: '',
-    income_account_id: '',
     is_active: true,
   });
-
-  useEffect(() => {
-    // Fetch income accounts from chart of accounts
-    api.get('/chart-of-accounts?per_page=1000&type=income').then(r => {
-      const payload = r.data.data;
-      setAccounts(Array.isArray(payload) ? payload : payload?.data || []);
-    }).catch(() => {});
-  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -117,37 +107,6 @@ export default function IncomeCategoryCreate() {
             </div>
 
             {/* Accounting */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Accounting</h2>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Account
-                    </label>
-                    <select
-                      name="income_account_id"
-                      value={form.income_account_id}
-                      onChange={handleChange}
-                      className={inputClass('income_account_id')}
-                    >
-                      <option value="">Select income account</option>
-                      {accounts.map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.code})
-                        </option>
-                      ))}
-                    </select>
-                    {errors.income_account_id && <p className="text-red-500 text-xs mt-1">{errors.income_account_id[0]}</p>}
-                    <p className="text-xs text-gray-400 mt-1">
-                      Select the Chart of Accounts entry that will be credited for income in this category.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Sidebar Actions */}

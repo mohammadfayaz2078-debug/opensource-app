@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\ExpenseType;
-use App\Models\JournalEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +25,6 @@ class ExpenseController extends Controller
         $query = Expense::forBranch($branchId)
             ->with([
                 'expenseType.category',
-                'paymentAccount:id,name,code',
                 'createdBy:id,first_name,last_name',
                 'paidBy:id,first_name,last_name',
             ]);
@@ -115,20 +113,8 @@ class ExpenseController extends Controller
                 }
                 $q->where('is_active', true)->whereNull('deleted_at');
             })],
-            'payment_account_id' => ['nullable', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
-                }
-                $q->where('is_active', true);
-            })],
+
             'amount'             => 'required|numeric|min:0.01|max:999999999',
-            'currency'           => [
-                'required',
-                'string',
-                Rule::exists('currencies', 'name')->where(function ($q) use ($branchId) {
-                    $q->where('branch_id', $branchId)->where('is_active', true);
-                }),
-            ],
             'description'        => 'required|string|max:500',
             'paid_to'            => 'nullable|string|max:150',
             'date'               => 'required|date|before_or_equal:today',
@@ -140,14 +126,6 @@ class ExpenseController extends Controller
         $validated['created_by'] = Auth::id();
         $validated['status']     = Expense::STATUS_SUBMITTED;
 
-        // Auto-fill payment account from expense type default if not provided
-        if (empty($validated['payment_account_id']) && !empty($validated['expense_type_id'])) {
-            $expenseType = ExpenseType::find($validated['expense_type_id']);
-            if ($expenseType?->default_payment_account_id) {
-                $validated['payment_account_id'] = $expenseType->default_payment_account_id;
-            }
-        }
-
         // Handle file upload (legacy `file` column)
         if ($request->hasFile('file')) {
             $validated['file'] = $this->uploadFile($request, $branchId);
@@ -156,7 +134,7 @@ class ExpenseController extends Controller
         DB::beginTransaction();
         try {
             $expense = Expense::create($validated);
-            $expense->load('expenseType.category', 'paymentAccount:id,name,code', 'createdBy:id,first_name,last_name');
+            $expense->load('expenseType.category', 'createdBy:id,first_name,last_name');
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -179,14 +157,10 @@ class ExpenseController extends Controller
 
         $expense->load([
             'expenseType.category',
-            'expenseType.expenseAccount:id,name,code',
-            'paymentAccount:id,name,code',
             'createdBy:id,first_name,last_name,email',
             'submittedBy:id,first_name,last_name',
             'paidBy:id,first_name,last_name',
             'cancelledBy:id,first_name,last_name',
-            'journalEntries.lines',
-            'journalEntries.journal:id,name,code',
         ]);
 
         return response()->json(['data' => $expense]);
@@ -214,20 +188,7 @@ class ExpenseController extends Controller
                 }
                 $q->where('is_active', true)->whereNull('deleted_at');
             })],
-            'payment_account_id' => ['nullable', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
-                }
-                $q->where('is_active', true);
-            })],
             'amount'             => 'sometimes|numeric|min:0.01|max:999999999',
-            'currency'           => [
-                'sometimes',
-                'string',
-                Rule::exists('currencies', 'name')->where(function ($q) use ($branchId) {
-                    $q->where('branch_id', $branchId)->where('is_active', true);
-                }),
-            ],
             'description'        => 'sometimes|string|max:500',
             'paid_to'            => 'nullable|string|max:150',
             'date'               => 'sometimes|date|before_or_equal:today',
@@ -244,7 +205,7 @@ class ExpenseController extends Controller
         }
 
         $expense->update($validated);
-        $expense->refresh()->load('expenseType.category', 'paymentAccount:id,name,code');
+        $expense->refresh()->load('expenseType.category');
 
         return response()->json([
             'data'    => $expense,
@@ -304,19 +265,9 @@ class ExpenseController extends Controller
 
         $validated = $request->validate([
             'payment_method'    => ['required', Rule::in(Expense::PAYMENT_METHODS)],
-            'payment_account_id' => ['required', 'integer', Rule::exists('chart_of_accounts', 'id')->where(function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId)->where('is_active', true);
-            })],
             'payment_reference' => 'nullable|string|max:100',
             'comment'           => 'nullable|string|max:500',
         ]);
-
-        // Require expense type to have a linked Chart of Accounts expense account
-        if (! $expense->expenseType?->expense_account_id) {
-            return response()->json([
-                'message' => 'Expense type does not have a linked Chart of Accounts expense account. Please configure it first.',
-            ], 422);
-        }
 
         // Save payment account to expense if not already set
         if (! $expense->payment_account_id) {
@@ -344,7 +295,7 @@ class ExpenseController extends Controller
         }
 
         return response()->json([
-            'data'    => $expense->fresh()->load('paidBy:id,first_name,last_name', 'journalEntries'),
+            'data'    => $expense->fresh()->load('paidBy:id,first_name,last_name'),
             'message' => 'Expense marked as paid. Journal entry created.',
         ]);
     }
@@ -377,21 +328,6 @@ class ExpenseController extends Controller
     }
 
     /**
-     * GET /api/expenses/{id}/journal-entries
-     */
-    public function journalEntries(Request $request, int $id): JsonResponse
-    {
-        $branchId = $this->resolveBranchId($request);
-        $expense  = $this->findOrFail($id, $branchId);
-
-        $entries = $expense->journalEntries()
-            ->with(['journal:id,name,code', 'lines', 'postedBy:id,first_name,last_name'])
-            ->get();
-
-        return response()->json(['data' => $entries]);
-    }
-
-    /**
      * GET /api/expenses/summary
      * Dashboard summary totals by status.
      */
@@ -400,14 +336,13 @@ class ExpenseController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $summary = Expense::forBranch($branchId)
-            ->selectRaw('status, COUNT(*) as count, SUM(total_amount) as total, currency')
-            ->groupBy('status', 'currency')
+            ->selectRaw('status, COUNT(*) as count, SUM(total_amount) as total')
+            ->groupBy('status')
             ->get();
 
         $totals = Expense::forBranch($branchId)
-            ->selectRaw('currency, SUM(total_amount) as total, COUNT(*) as count')
+            ->selectRaw('SUM(total_amount) as total, COUNT(*) as count')
             ->where('status', Expense::STATUS_PAID)
-            ->groupBy('currency')
             ->get();
 
         $byCategory = Expense::forBranch($branchId)
@@ -418,19 +353,9 @@ class ExpenseController extends Controller
             ->get()
             ->groupBy(fn($e) => $e->expenseType?->category?->name ?? 'Uncategorized');
 
-        // Compute base-currency total from journal entries for paid expenses
-        $baseTotal = DB::table('journal_entry_lines as jel')
-            ->join('journal_entries as je', 'je.id', '=', 'jel.journal_entry_id')
-            ->join('expenses as ex', 'ex.id', '=', 'je.expense_id')
-            ->where('ex.branch_id', $branchId)
-            ->where('ex.status', Expense::STATUS_PAID)
-            ->where('jel.type', 'debit')
-            ->sum('jel.amount_base') ?? 0;
-
         return response()->json([
             'by_status'      => $summary,
             'paid_totals'    => $totals,
-            'paid_base_total' => (float) $baseTotal,
             'by_category'    => $byCategory,
         ]);
     }

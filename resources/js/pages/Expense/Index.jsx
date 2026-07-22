@@ -6,13 +6,12 @@ import { useNavigate } from 'react-router-dom';
 const ExpenseIndex = () => {
   const navigate = useNavigate();
   const userType = localStorage.getItem('user_type');
-  const isAdmin = userType === 'super_admin' || userType === 'company_admin';
+  const isAdmin = userType === 'company_admin';
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userBranchId = currentUser.branch_id || currentUser.raw?.branch_id || null;
 
   const [expenses, setExpenses] = useState([]);
   const [expenseTypes, setExpenseTypes] = useState([]);
-  const [paymentAccounts, setPaymentAccounts] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -29,9 +28,7 @@ const ExpenseIndex = () => {
 
   const [form, setForm] = useState({
     expense_type_id: '',
-    payment_account_id: '',
     amount: '',
-    currency: 'Dollar',
     description: '',
     paid_to: '',
     date: new Date().toISOString().split('T')[0],
@@ -85,17 +82,6 @@ const ExpenseIndex = () => {
     }
   };
 
-  const fetchPaymentAccounts = async () => {
-    try {
-      const res = await api.get('/chart-of-accounts');
-      const accounts = res.data?.data?.data || res.data?.data || [];
-      // Filter for asset accounts (cash/bank)
-      setPaymentAccounts(accounts.filter(a => a.account_type?.type === 'asset'));
-    } catch (err) {
-      console.error('Failed to fetch accounts:', err);
-    }
-  };
-
   const fetchBranches = async () => {
     if (!isAdmin) return;
     try {
@@ -108,7 +94,6 @@ const ExpenseIndex = () => {
 
   useEffect(() => {
     fetchExpenseTypes();
-    fetchPaymentAccounts();
   }, []);
 
   useEffect(() => {
@@ -123,9 +108,7 @@ const ExpenseIndex = () => {
     setSelectedExpense(null);
     setForm({
       expense_type_id: '',
-      payment_account_id: '',
       amount: '',
-      currency: 'Dollar',
       description: '',
       paid_to: '',
       date: new Date().toISOString().split('T')[0],
@@ -142,9 +125,7 @@ const ExpenseIndex = () => {
     setSelectedExpense(expense);
     setForm({
       expense_type_id: expense.expense_type_id || '',
-      payment_account_id: expense.payment_account_id || '',
       amount: expense.amount || '',
-      currency: expense.currency || 'Dollar',
       description: expense.description || '',
       paid_to: expense.paid_to || '',
       date: expense.date || new Date().toISOString().split('T')[0],
@@ -160,7 +141,7 @@ const ExpenseIndex = () => {
     setSelectedExpense(expense);
     setPayForm({
       payment_method: 'cash',
-      payment_account_id: expense.payment_account_id || '',
+      payment_account_id: '',
       payment_reference: '',
       comment: '',
     });
@@ -353,7 +334,7 @@ const ExpenseIndex = () => {
       {/* Header */}
       <div className="mb-4">
         <h1 className="text-2xl font-semibold text-gray-900">Expenses</h1>
-        <p className="text-sm text-gray-500 mt-1">Track and manage business expenses with Chart of Accounts integration</p>
+        <p className="text-sm text-gray-500 mt-1">Track and manage business expenses</p>
       </div>
 
       {/* Summary Cards */}
@@ -433,7 +414,6 @@ const ExpenseIndex = () => {
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -458,16 +438,15 @@ const ExpenseIndex = () => {
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate">{expense.description}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                          {parseFloat(expense.total_amount || 0).toFixed(2)} {expense.currency}
+                          {parseFloat(expense.total_amount || 0).toFixed(2)}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-center">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${status.color}`}>
                             {status.label}
                           </span>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{new Date(expense.date).toLocaleDateString()}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                          {expense.payment_account?.name || '—'}
+                          {new Date(expense.date).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-1">
@@ -532,7 +511,7 @@ const ExpenseIndex = () => {
                       <p className="text-sm text-gray-700 mb-2 line-clamp-2">{expense.description}</p>
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-gray-900">
-                          {parseFloat(expense.total_amount || 0).toFixed(2)} {expense.currency}
+                          {parseFloat(expense.total_amount || 0).toFixed(2)}
                         </p>
                         <div className="flex items-center gap-1">
                           {(expense.status === 'draft' || expense.status === 'submitted') && (
@@ -587,33 +566,12 @@ const ExpenseIndex = () => {
                   {errors.expense_type_id && <p className="text-xs text-red-500 mt-1">{errors.expense_type_id[0]}</p>}
                 </div>
 
-                {/* Payment Account */}
+                {/* Amount */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Account</label>
-                  <select name="payment_account_id" value={form.payment_account_id} onChange={handleInputChange}
-                    className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.payment_account_id ? 'border-red-500' : 'border-gray-300'}`}>
-                    <option value="">Auto (from expense type)</option>
-                    {paymentAccounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.code})</option>)}
-                  </select>
-                  {errors.payment_account_id && <p className="text-xs text-red-500 mt-1">{errors.payment_account_id[0]}</p>}
-                </div>
-
-                {/* Amount + Currency */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount <span className="text-red-500">*</span></label>
-                    <input type="number" name="amount" value={form.amount} onChange={handleInputChange} step="0.01" min="0.01"
-                      className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.amount ? 'border-red-500' : 'border-gray-300'}`} required />
-                    {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount[0]}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Currency <span className="text-red-500">*</span></label>
-                    <select name="currency" value={form.currency} onChange={handleInputChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]">
-                      <option value="Dollar">USD</option>
-                      <option value="Afghani">AFN</option>
-                    </select>
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount <span className="text-red-500">*</span></label>
+                  <input type="number" name="amount" value={form.amount} onChange={handleInputChange} step="0.01" min="0.01"
+                    className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.amount ? 'border-red-500' : 'border-gray-300'}`} required />
+                  {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount[0]}</p>}
                 </div>
 
                 {/* Description */}
@@ -716,7 +674,7 @@ const ExpenseIndex = () => {
               <div className="px-6 py-5 space-y-4">
                 <div className="bg-gray-50 rounded-lg p-3 text-sm">
                   <p><strong>Ref:</strong> {selectedExpense?.reference_no}</p>
-                  <p><strong>Amount:</strong> {parseFloat(selectedExpense?.total_amount || 0).toFixed(2)} {selectedExpense?.currency}</p>
+                  <p><strong>Amount:</strong> {parseFloat(selectedExpense?.total_amount || 0).toFixed(2)}</p>
                 </div>
 
                 <div>
@@ -725,16 +683,6 @@ const ExpenseIndex = () => {
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]">
                     {paymentMethods.map(m => <option key={m} value={m}>{m.replace('_', ' ').toUpperCase()}</option>)}
                   </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Account <span className="text-red-500">*</span></label>
-                  <select name="payment_account_id" value={payForm.payment_account_id} onChange={handlePayInputChange} required
-                    className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.payment_account_id ? 'border-red-500' : 'border-gray-300'}`}>
-                    <option value="">Select Account</option>
-                    {paymentAccounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.code})</option>)}
-                  </select>
-                  {errors.payment_account_id && <p className="text-xs text-red-500 mt-1">{errors.payment_account_id[0]}</p>}
                 </div>
 
                 <div>
