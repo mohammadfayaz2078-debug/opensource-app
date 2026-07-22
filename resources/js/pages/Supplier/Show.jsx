@@ -7,224 +7,204 @@ export default function SupplierShow() {
   const navigate = useNavigate();
   const [supplier, setSupplier] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('info');
 
-  useEffect(() => {
-    fetchSupplier();
-  }, [id]);
+  // Tab data
+  const [purchases, setPurchases] = useState([]);
+  const [returns, setReturns] = useState([]);
+  const [loadingTab, setLoadingTab] = useState(false);
+
+  useEffect(() => { fetchSupplier(); }, [id]);
 
   const fetchSupplier = async () => {
     try {
       const res = await api.get(`/suppliers/${id}`);
       setSupplier(res.data.data);
-    } catch (err) {
-      console.error('Failed to fetch supplier', err);
-      navigate('/suppliers');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { navigate('/suppliers'); }
+    finally { setLoading(false); }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Delete this supplier? This action cannot be undone.')) return;
+  const fetchTabData = async (tab) => {
+    setLoadingTab(true);
     try {
-      await api.delete(`/suppliers/${id}`);
-      navigate('/suppliers');
-    } catch (err) {
-      alert(err.response?.data?.message || 'Delete failed');
-    }
+      if (tab === 'purchases') {
+        const res = await api.get('/purchases', { params: { supplier_id: id } });
+        setPurchases(res.data?.data || []);
+      } else if (tab === 'returns') {
+        const res = await api.get('/purchase-returns');
+        setReturns((res.data?.data || []).filter(r => r.purchase?.supplier_id == id));
+      }
+    } catch (err) { console.error(err); }
+    finally { setLoadingTab(false); }
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'info') fetchTabData(activeTab);
+  }, [activeTab, id]);
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this supplier?')) return;
+    try { await api.delete(`/suppliers/${id}`); navigate('/suppliers'); }
+    catch (err) { alert(err.response?.data?.message || 'Delete failed'); }
   };
 
   const handleToggleStatus = async () => {
     try {
-      const res = await api.post(`/suppliers/${id}/toggle-status`);
+      await api.post(`/suppliers/${id}/toggle-status`);
       setSupplier(prev => ({ ...prev, is_active: !prev.is_active }));
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to toggle status');
-    }
+    } catch (err) { alert(err.response?.data?.message || 'Failed'); }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading supplier...</span>
-      </div>
-    );
-  }
+  const tabs = [
+    { id: 'info', label: 'Info' },
+    { id: 'purchases', label: 'Purchases' },
+    { id: 'returns', label: 'Returns' },
+    { id: 'payments', label: 'Payments' },
+  ];
 
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading supplier...</div>;
   if (!supplier) return null;
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/suppliers')} className="hover:text-[#007c89]">Suppliers</button>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="text-gray-700">{supplier.first_name} {supplier.last_name}</span>
-        </div>
-        
-        <div className="flex justify-between items-start">
+      <div className="mb-4">
+        <button onClick={() => navigate('/suppliers')} className="text-sm text-[#007c89] hover:underline">&larr; Back to Suppliers</button>
+        <div className="flex justify-between items-start mt-1">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{supplier.first_name} {supplier.last_name}</h1>
-            <p className="text-sm text-gray-500 mt-1">Code: {supplier.supplier_code}</p>
+            <h1 className="text-xl font-semibold text-gray-900">{supplier.first_name} {supplier.last_name}</h1>
+            <p className="text-sm text-gray-500">Code: {supplier.supplier_code} | {supplier.is_active ? 'Active' : 'Inactive'}</p>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={handleToggleStatus}
-              className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                supplier.is_active 
-                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
-              }`}
-            >
+            <button onClick={() => navigate(`/suppliers/${id}/edit`)}
+              className="px-4 py-2 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77]">Edit</button>
+            <button onClick={handleToggleStatus}
+              className={`px-4 py-2 text-sm rounded-md ${supplier.is_active ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
               {supplier.is_active ? 'Deactivate' : 'Activate'}
             </button>
-            <button
-              onClick={() => navigate(`/suppliers/${id}/edit`)}
-              className="inline-flex items-center px-3 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77]"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              className="inline-flex items-center px-3 py-2 border border-red-300 text-red-700 text-sm font-medium rounded-md hover:bg-red-50"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Delete
-            </button>
+            <button onClick={handleDelete}
+              className="px-4 py-2 text-sm border border-red-300 text-red-700 rounded-md hover:bg-red-50">Delete</button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Supplier Info */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Supplier Information</h2>
-            </div>
-            <div className="p-6">
-              <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Supplier Code</dt>
-                  <dd className="mt-1 font-mono text-sm text-gray-900">{supplier.supplier_code}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Contact Person</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{supplier.contact_person || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Status</dt>
-                  <dd className="mt-1">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      supplier.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {supplier.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Created By</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    {supplier.creator?.name || '—'}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-4">
+        <nav className="flex gap-6">
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={`py-2.5 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id ? 'border-[#007c89] text-[#007c89]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
-          {/* Contact */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Contact Information</h2>
-            </div>
-            <div className="p-6">
-              <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Phone</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{supplier.phone || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Email</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{supplier.email || '—'}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Address</h2>
-            </div>
-            <div className="p-6">
-              <dl className="space-y-2">
-                {supplier.address && (
-                  <div>
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Street Address</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{supplier.address}</dd>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {supplier.city && (
-                    <div>
-                      <dt className="text-xs font-medium text-gray-500 uppercase">City</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{supplier.city}</dd>
-                    </div>
-                  )}
-                  <div>
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Country</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{supplier.country}</dd>
-                  </div>
-                </div>
-              </dl>
-            </div>
-          </div>
-
-          {/* Notes */}
-          {supplier.note && (
+      {/* Tab Content */}
+      {activeTab === 'info' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-4">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Notes</h2>
+              <div className="px-4 py-3 border-b border-gray-200"><h2 className="text-sm font-semibold text-gray-900">Supplier Information</h2></div>
+              <div className="p-4">
+                <dl className="grid grid-cols-2 gap-3 text-sm">
+                  <div><dt className="text-xs text-gray-500 uppercase">Code</dt><dd className="text-gray-900 font-mono">{supplier.supplier_code}</dd></div>
+                  <div><dt className="text-xs text-gray-500 uppercase">Contact Person</dt><dd className="text-gray-900">{supplier.contact_person || '—'}</dd></div>
+                  <div><dt className="text-xs text-gray-500 uppercase">Phone</dt><dd className="text-gray-900">{supplier.phone || '—'}</dd></div>
+                  <div><dt className="text-xs text-gray-500 uppercase">Email</dt><dd className="text-gray-900">{supplier.email || '—'}</dd></div>
+                  <div><dt className="text-xs text-gray-500 uppercase">City</dt><dd className="text-gray-900">{supplier.city || '—'}</dd></div>
+                  <div><dt className="text-xs text-gray-500 uppercase">Country</dt><dd className="text-gray-900">{supplier.country || '—'}</dd></div>
+                </dl>
               </div>
-              <div className="p-6">
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{supplier.note}</p>
+            </div>
+            {supplier.address && (
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                <div className="px-4 py-3 border-b border-gray-200"><h2 className="text-sm font-semibold text-gray-900">Address</h2></div>
+                <div className="p-4"><p className="text-sm text-gray-900">{supplier.address}</p></div>
               </div>
+            )}
+            {supplier.note && (
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                <div className="px-4 py-3 border-b border-gray-200"><h2 className="text-sm font-semibold text-gray-900">Notes</h2></div>
+                <div className="p-4"><p className="text-sm text-gray-600 whitespace-pre-wrap">{supplier.note}</p></div>
+              </div>
+            )}
+          </div>
+          <div className="space-y-4">
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="px-4 py-3 border-b border-gray-200"><h3 className="text-sm font-semibold text-gray-900">Audit</h3></div>
+              <div className="p-4 space-y-1 text-sm">
+                <div><span className="text-gray-500">Created: </span>{new Date(supplier.created_at).toLocaleDateString()}</div>
+                <div><span className="text-gray-500">Updated: </span>{new Date(supplier.updated_at).toLocaleDateString()}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'purchases' && (
+        <div>
+          {loadingTab ? <div className="py-8 text-center text-gray-500 text-sm">Loading...</div> : purchases.length === 0 ? (
+            <div className="py-8 text-center text-gray-500 text-sm">No purchases for this supplier.</div>
+          ) : (
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+              <table className="min-w-full text-sm">
+                <thead><tr className="bg-gray-50">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Reference</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">Total</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">Due</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">Status</th>
+                </tr></thead>
+                <tbody>{purchases.map((p, idx) => (
+                  <tr key={p.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50`}>
+                    <td className="px-4 py-2.5"><button onClick={() => navigate(`/purchases/${p.id}`)} className="text-[#007c89] hover:underline">{p.reference_no}</button></td>
+                    <td className="px-4 py-2.5 text-gray-700">{p.purchase_date}</td>
+                    <td className="px-4 py-2.5 text-right font-medium">{parseFloat(p.total_amount).toFixed(2)}</td>
+                    <td className="px-4 py-2.5 text-right text-red-600">{parseFloat(p.due_amount).toFixed(2)}</td>
+                    <td className="px-4 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded ${p.payment_status === 'paid' ? 'bg-green-100 text-green-700' : p.payment_status === 'partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{p.payment_status?.toUpperCase()}</span></td>
+                  </tr>
+                ))}</tbody>
+              </table>
             </div>
           )}
         </div>
+      )}
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Audit Info */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Audit Information</h2>
+      {activeTab === 'returns' && (
+        <div>
+          {loadingTab ? <div className="py-8 text-center text-gray-500 text-sm">Loading...</div> : returns.length === 0 ? (
+            <div className="py-8 text-center text-gray-500 text-sm">No returns for this supplier.</div>
+          ) : (
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+              <table className="min-w-full text-sm">
+                <thead><tr className="bg-gray-50">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Reference</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">PO Reference</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">Amount</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Reason</th>
+                </tr></thead>
+                <tbody>{returns.map((r, idx) => (
+                  <tr key={r.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50`}>
+                    <td className="px-4 py-2.5 font-medium">{r.reference_no}</td>
+                    <td className="px-4 py-2.5 text-gray-700">{r.return_date}</td>
+                    <td className="px-4 py-2.5 text-gray-700">{r.purchase?.reference_no || '—'}</td>
+                    <td className="px-4 py-2.5 text-right font-medium text-red-600">{parseFloat(r.total_amount).toFixed(2)}</td>
+                    <td className="px-4 py-2.5 text-gray-700">{r.reason || '—'}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
             </div>
-            <div className="p-6">
-              <dl className="space-y-2 text-sm">
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Created At</dt>
-                  <dd className="text-gray-700">{new Date(supplier.created_at).toLocaleString()}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Last Updated</dt>
-                  <dd className="text-gray-700">{new Date(supplier.updated_at).toLocaleString()}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
+          )}
         </div>
-      </div>
+      )}
+
+      {activeTab === 'payments' && (
+        <div className="py-8 text-center text-gray-500 text-sm">
+          Payment history will be shown here. Currently, payments are recorded on individual purchase invoices.
+        </div>
+      )}
     </div>
   );
 }

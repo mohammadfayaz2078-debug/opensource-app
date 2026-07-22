@@ -3,67 +3,52 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-<<<<<<< HEAD
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 use Exception;
-=======
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
->>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
-use Illuminate\Database\Eloquent\Builder;
 
 class Account extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
-<<<<<<< HEAD
-        'company_id',
-        'branch_id',
-        'name',
-        'balance',
-        'description',
-        'is_active',
-=======
         'company_id', 'branch_id', 'name', 'type',
-        'description', 'balance', 'is_active',
->>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
+        'description', 'is_active',
     ];
 
     protected $casts = [
-        'balance'   => 'decimal:2',
-        'is_active' => 'boolean',
+        'is_active'  => 'boolean',
         'company_id' => 'integer',
-        'branch_id' => 'integer',
+        'branch_id'  => 'integer',
     ];
 
-<<<<<<< HEAD
-    // ── Relationships ─────────────────────────────────────────────────────────
-
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function branch()
+    public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
     }
 
-    public function deposits()
+    public function deposits(): HasMany
     {
         return $this->hasMany(AccountDeposit::class);
     }
 
-    public function withdrawals()
+    public function withdrawals(): HasMany
     {
         return $this->hasMany(AccountWithdrawal::class);
     }
 
-    public function transactions()
+    public function transactions(): HasMany
     {
         return $this->hasMany(AccountTransaction::class)->latest();
     }
-
-    // ── Scopes ─────────────────────────────────────────────────────────────────
 
     public function scopeForCompany(Builder $query, ?int $companyId): Builder
     {
@@ -77,14 +62,6 @@ class Account extends Model
         return $branchId === null
             ? $query
             : $query->where('branch_id', $branchId);
-=======
-    public function company(): BelongsTo { return $this->belongsTo(Company::class); }
-    public function branch(): BelongsTo  { return $this->belongsTo(Branch::class); }
-
-    public function scopeForBranch(Builder $query, ?int $branchId): Builder
-    {
-        return $branchId ? $query->where('branch_id', $branchId) : $query;
->>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
     }
 
     public function scopeActive(Builder $query): Builder
@@ -92,14 +69,6 @@ class Account extends Model
         return $query->where('is_active', true);
     }
 
-<<<<<<< HEAD
-    // ── Methods ───────────────────────────────────────────────────────────────
-
-    /**
-     * Deposit money into the account.
-     */
-=======
->>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
     public function deposit(float $amount): void
     {
         $this->increment('balance', $amount);
@@ -114,8 +83,4 @@ class Account extends Model
     {
         return (float) $this->balance >= $amount;
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 7ca923c948be21731b981d5589e9f0a51853437e
