@@ -148,9 +148,6 @@ class BranchController extends Controller
                 'is_active' => $validated['is_active'] ?? true,
             ]);
 
-            // Seed default account types for the new branch
-            \Database\Seeders\AccountTypeSeeder::seedForBranch($branch->id);
-
             // Load the company relationship
             $branch->load('company');
 

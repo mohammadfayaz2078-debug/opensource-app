@@ -2,6 +2,23 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  Upload,
+  X,
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  User,
+  Store,
+  CheckCircle,
+  AlertCircle,
+  Image as ImageIcon
+} from 'lucide-react';
 
 const BranchCreate = () => {
   const navigate = useNavigate();
@@ -33,7 +50,6 @@ const BranchCreate = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -49,9 +65,9 @@ const BranchCreate = () => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        Swal.fire('Error', 'Please upload a valid image file (JPEG, PNG, JPG, GIF)', 'error');
+        Swal.fire('Error', 'Please upload a valid image file (JPEG, PNG, JPG, GIF, WEBP)', 'error');
         return;
       }
       
@@ -118,7 +134,9 @@ const BranchCreate = () => {
           title: 'Success!',
           text: response.data.message,
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
         });
         
         navigate('../branches');
@@ -127,6 +145,7 @@ const BranchCreate = () => {
       if (err.response?.status === 422) {
         const validationErrors = err.response.data.errors;
         setErrors(validationErrors);
+        Swal.fire('Error', 'Please check the form for errors.', 'error');
       } else {
         setError(err.response?.data?.message || 'Failed to create branch');
       }
@@ -136,335 +155,291 @@ const BranchCreate = () => {
   };
   
   return (
-    <div className="flex justify-center min-h-screen px-4 py-6 bg-gray-50">
-      <div className="w-full max-w-5xl bg-white rounded-lg shadow-sm">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">Create New Branch</h1>
-            <p className="text-sm text-gray-500 mt-1">Add a new branch to your organization</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('../branches')}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-800">New Branch</h1>
+                <p className="text-xs text-gray-400 mt-0.5">Add a new branch location</p>
+              </div>
+            </div>
           </div>
-          <Link
-            to="../branches"
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Link>
         </div>
-        
-        <form onSubmit={submit} className="p-6">
-          {/* Two Column Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Branch Name */}
+
+        <form onSubmit={submit}>
+          {/* Main Form Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+            {/* Basic Information */}
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Branch Name <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      name="branch_name"
+                      value={form.branch_name}
+                      onChange={handleInputChange}
+                      type="text"
+                      required
+                      placeholder="Enter branch name"
+                      className={`w-full pl-9 pr-3 py-1.5 text-sm bg-gray-50 border ${errors.branch_name ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
+                    />
+                  </div>
+                  {errors.branch_name && (
+                    <p className="text-xs text-red-500 mt-1">{errors.branch_name[0]}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Slogan
+                  </label>
+                  <input
+                    name="branch_slogan"
+                    value={form.branch_slogan}
+                    onChange={handleInputChange}
+                    type="text"
+                    placeholder="Branch slogan"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Location Information */}
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                <MapPin className="w-4 h-4 inline mr-1 text-gray-400" />
+                Location
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Province</label>
+                  <input
+                    name="branch_province"
+                    value={form.branch_province}
+                    onChange={handleInputChange}
+                    type="text"
+                    placeholder="Enter province"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">District</label>
+                  <input
+                    name="branch_district"
+                    value={form.branch_district}
+                    onChange={handleInputChange}
+                    type="text"
+                    placeholder="Enter district"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Village</label>
+                  <input
+                    name="branch_village"
+                    value={form.branch_village}
+                    onChange={handleInputChange}
+                    type="text"
+                    placeholder="Enter village"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Country</label>
+                  <input
+                    name="branch_country"
+                    value={form.branch_country}
+                    onChange={handleInputChange}
+                    type="text"
+                    placeholder="Enter country"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Street Address</label>
+                <textarea
+                  name="branch_street_address"
+                  value={form.branch_street_address}
+                  onChange={handleInputChange}
+                  rows="2"
+                  placeholder="Enter street address"
+                  className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Contact Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Phone className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
+                    Phone
+                  </label>
+                  <input
+                    name="branch_phone"
+                    value={form.branch_phone}
+                    onChange={handleInputChange}
+                    type="tel"
+                    placeholder="Enter phone number"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Mail className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
+                    Email
+                  </label>
+                  <input
+                    name="branch_email"
+                    value={form.branch_email}
+                    onChange={handleInputChange}
+                    type="email"
+                    placeholder="Enter email address"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Globe className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
+                    Website
+                  </label>
+                  <input
+                    name="branch_website"
+                    value={form.branch_website}
+                    onChange={handleInputChange}
+                    type="url"
+                    placeholder="https://example.com"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Logo Upload */}
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Branch Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="branch_name"
-                value={form.branch_name}
-                onChange={handleInputChange}
-                type="text"
-                required
-                placeholder="Enter branch name"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_name ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_name && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_name[0]}</p>
-              )}
-            </div>
-            
-            {/* Branch Slogan */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Branch Slogan
-              </label>
-              <input
-                name="branch_slogan"
-                value={form.branch_slogan}
-                onChange={handleInputChange}
-                type="text"
-                placeholder="Enter branch slogan"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_slogan ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_slogan && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_slogan[0]}</p>
-              )}
-            </div>
-            
-            {/* Province */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Province
-              </label>
-              <input
-                name="branch_province"
-                value={form.branch_province}
-                onChange={handleInputChange}
-                type="text"
-                placeholder="Enter province"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_province ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_province && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_province[0]}</p>
-              )}
-            </div>
-            
-            {/* District */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                District
-              </label>
-              <input
-                name="branch_district"
-                value={form.branch_district}
-                onChange={handleInputChange}
-                type="text"
-                placeholder="Enter district"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_district ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_district && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_district[0]}</p>
-              )}
-            </div>
-            
-            {/* Village */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Village
-              </label>
-              <input
-                name="branch_village"
-                value={form.branch_village}
-                onChange={handleInputChange}
-                type="text"
-                placeholder="Enter village"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_village ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_village && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_village[0]}</p>
-              )}
-            </div>
-            
-            {/* Country */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Country
-              </label>
-              <input
-                name="branch_country"
-                value={form.branch_country}
-                onChange={handleInputChange}
-                type="text"
-                placeholder="Enter country"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_country ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_country && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_country[0]}</p>
-              )}
-            </div>
-            
-            {/* Phone */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Phone
-              </label>
-              <input
-                name="branch_phone"
-                value={form.branch_phone}
-                onChange={handleInputChange}
-                type="tel"
-                placeholder="Enter phone number"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_phone ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_phone && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_phone[0]}</p>
-              )}
-            </div>
-            
-            {/* Email */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                name="branch_email"
-                value={form.branch_email}
-                onChange={handleInputChange}
-                type="email"
-                placeholder="Enter email address"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_email ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_email && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_email[0]}</p>
-              )}
-            </div>
-            
-            {/* Website */}
-            <div className="md:col-span-2">
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Website
-              </label>
-              <input
-                name="branch_website"
-                value={form.branch_website}
-                onChange={handleInputChange}
-                type="url"
-                placeholder="https://example.com"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_website ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_website && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_website[0]}</p>
-              )}
-            </div>
-            
-            {/* Street Address (Full Width) */}
-            <div className="md:col-span-2">
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Street Address
-              </label>
-              <textarea
-                name="branch_street_address"
-                value={form.branch_street_address}
-                onChange={handleInputChange}
-                rows="3"
-                placeholder="Enter street address"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                  errors.branch_street_address ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.branch_street_address && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_street_address[0]}</p>
-              )}
-            </div>
-            
-            {/* Logo Upload (Full Width) */}
-            <div className="md:col-span-2">
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Branch Logo
-              </label>
-              <div className="flex items-center space-x-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Branch Logo</h3>
+              <div className="flex items-center gap-4">
                 <div
-                  className="border-2 border-dashed border-gray-300 rounded-lg px-6 py-4 hover:border-[#007c89] transition cursor-pointer"
+                  className="flex-1 border-2 border-dashed border-gray-200 rounded-lg p-6 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group"
                   onClick={triggerFileInput}
                 >
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,image/jpg,image/gif"
+                    accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
                     className="hidden"
                     onChange={handleFileUpload}
                   />
                   <div className="text-center">
-                    <svg className="w-8 h-8 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-xs text-gray-500 mt-1">Click to upload logo</p>
-                    <p className="text-xs text-gray-400">Max size: 2MB</p>
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 group-hover:bg-blue-100 transition-colors">
+                      <Upload className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2 group-hover:text-blue-600 transition-colors">
+                      Click to upload logo
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF, WEBP • Max 2MB</p>
                   </div>
                 </div>
                 
                 {/* Logo Preview */}
                 {logoPreview && (
-                  <div className="relative">
-                    <img
-                      src={logoPreview}
-                      alt="Logo preview"
-                      className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                    />
+                  <div className="relative flex-shrink-0">
+                    <div className="w-24 h-24 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center">
+                      <img
+                        src={logoPreview}
+                        alt="Logo preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={removeLogo}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 transition-colors shadow-sm"
                     >
-                      ×
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 )}
               </div>
               {errors.branch_logo_url && (
-                <p className="mt-1 text-xs text-red-600">{errors.branch_logo_url[0]}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.branch_logo_url[0]}</p>
               )}
             </div>
-            
-            {/* Active Status (Full Width) */}
-            <div className="md:col-span-2">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Active Status
-                  </label>
-                  <p className="text-xs text-gray-500">Enable or disable this branch</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    name="is_active"
-                    type="checkbox"
-                    checked={form.is_active}
-                    onChange={handleInputChange}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#007c89] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#007c89]"></div>
-                </label>
+          </div>
+
+          {/* Status Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700">Active Status</h3>
+                <p className="text-xs text-gray-400">Enable or disable this branch</p>
               </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  name="is_active"
+                  type="checkbox"
+                  checked={form.is_active}
+                  onChange={handleInputChange}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
             </div>
           </div>
-          
-          {/* Submit Buttons */}
-          <div className="flex gap-3 pt-6 mt-6 border-t border-gray-200">
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {/* Form Actions */}
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={() => navigate('../branches')}
+              className="px-5 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-[#007c89] text-white px-4 py-2 rounded-md hover:bg-[#006d77] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
             >
-              {loading && (
-                <svg className="inline animate-spin w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Create Branch
+                </>
               )}
-              {loading ? 'Creating...' : 'Create Branch'}
             </button>
-            
-            <Link
-              to="../branches"
-              className="flex-1 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors text-center text-sm font-medium"
-            >
-              Cancel
-            </Link>
           </div>
-          
-          {/* Error Message */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center">
-                <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            </div>
-          )}
         </form>
       </div>
     </div>

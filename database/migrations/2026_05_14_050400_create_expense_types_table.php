@@ -10,19 +10,16 @@ return new class extends Migration
     {
         Schema::create('expense_types', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('branch_id');
-            $table->unsignedBigInteger('expense_category_id');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
+            $table->foreignId('parent_id')->nullable()->constrained('expense_types')->onDelete('cascade');
             $table->string('name', 100);
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
-            $table->softDeletes();
 
-            $table->foreign('branch_id')->references('id')->on('branches')->cascadeOnDelete();
-            $table->unique(['branch_id'], 'expense_types_branch_unique');
-            $table->index(['branch_id', 'expense_category_id'], 'et_branch_cat_idx');
-            $table->index(['branch_id', 'is_active'], 'et_branch_active_idx');
+            // Indexes
+            $table->index(['company_id', 'is_active']);
+            $table->index(['company_id', 'parent_id']);
         });
     }
 

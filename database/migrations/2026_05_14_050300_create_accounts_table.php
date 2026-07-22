@@ -14,6 +14,16 @@ return new class extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('company_id')
+                ->nullable()
+                ->constrained('companies')
+                ->onDelete('cascade');
+
+            $table->foreignId('branch_id')
+                ->nullable()
+                ->constrained('branches')
+                ->onDelete('cascade');
+
             $table->string('name')->unique();
 
             // Current balance (AFN)

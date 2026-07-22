@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 
 class Account extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
+        'company_id',
+        'branch_id',
         'name',
         'balance',
         'description',
@@ -21,7 +24,59 @@ class Account extends Model
     protected $casts = [
         'balance' => 'decimal:2',
         'is_active' => 'boolean',
+        'company_id' => 'integer',
+        'branch_id' => 'integer',
     ];
+
+    // ── Relationships ─────────────────────────────────────────────────────────
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function deposits()
+    {
+        return $this->hasMany(AccountDeposit::class);
+    }
+
+    public function withdrawals()
+    {
+        return $this->hasMany(AccountWithdrawal::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(AccountTransaction::class)->latest();
+    }
+
+    // ── Scopes ─────────────────────────────────────────────────────────────────
+
+    public function scopeForCompany(Builder $query, ?int $companyId): Builder
+    {
+        return $companyId === null
+            ? $query
+            : $query->where('company_id', $companyId);
+    }
+
+    public function scopeForBranch(Builder $query, ?int $branchId): Builder
+    {
+        return $branchId === null
+            ? $query
+            : $query->where('branch_id', $branchId);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    // ── Methods ───────────────────────────────────────────────────────────────
 
     /**
      * Deposit money into the account.
@@ -57,21 +112,5 @@ class Account extends Model
     public function hasEnoughBalance(float $amount): bool
     {
         return $this->balance >= $amount;
-    }
-
-
-    public function deposits()
-    {
-        return $this->hasMany(AccountDeposit::class);
-    }
-
-    public function withdrawals()
-    {
-        return $this->hasMany(AccountWithdrawal::class);
-    }
-
-    public function transactions()
-    {
-        return $this->hasMany(AccountTransaction::class)->latest();
     }
 }

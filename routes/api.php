@@ -73,6 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Expense Types
     Route::prefix('expense-types')->group(function () {
+        // Special routes first (before {id} parameter)
+        Route::get('/tree',                [ExpenseTypeController::class, 'tree']);
+        Route::get('/list',                [ExpenseTypeController::class, 'list']);
+        
+        // Then the CRUD routes
         Route::get('/',                    [ExpenseTypeController::class, 'index']);
         Route::post('/',                   [ExpenseTypeController::class, 'store']);
         Route::get('/{id}',                [ExpenseTypeController::class, 'show']);
@@ -110,7 +115,6 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::get('/{id}/balance',        [SupplierController::class, 'balance']);
         // Route::get('/{id}/payments',       [SupplierController::class, 'payments']);
     });
-
 
 
     // Income Categories
@@ -315,7 +319,14 @@ Route::prefix('company-admin')
         // ─── Impersonation (Login as Branch User) ──────────────
         Route::get('branches/{branchId}/users', [\App\Http\Controllers\API\ImpersonationController::class, 'branchUsers']);
         Route::post('impersonate/user/{userId}', [\App\Http\Controllers\API\ImpersonationController::class, 'startImpersonation']);
+
+        Route::prefix('seeder')->group(function () {
+            Route::post('/run', [\App\Http\Controllers\CompanyAdmin\SeederController::class, 'runSeeder']);
+            Route::get('/status', [\App\Http\Controllers\CompanyAdmin\SeederController::class, 'checkStatus']);
+            Route::post('/reset', [\App\Http\Controllers\CompanyAdmin\SeederController::class, 'resetAndSeed']);
+        });
 });
+
 
 // ─── Impersonation status & stop (accessible by impersonated user token) ──
 Route::middleware(['auth:sanctum', 'check.impersonation'])->group(function () {

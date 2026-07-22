@@ -5,41 +5,61 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\ExpenseType;
 use App\Helpers\AuthHelper;
+use App\Models\SuperAdmin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Exists;
 
 class ExpenseTypeController extends Controller
 {
+    /**
+     * Resolve company ID based on authenticated user
+     */
+    private function resolveCompanyId(Request $request): ?int
+    {
+        $user = Auth::user();
+
+        if ($user instanceof SuperAdmin) {
+            return $request->input('company_id') ? (int) $request->input('company_id') : null;
+        }
+
+        if (AuthHelper::isCompanyAdmin()) {
+            return AuthHelper::getCompanyId();
+        }
+
+        return AuthHelper::getCompanyId();
+    }
+
     /**
      * GET /api/expense-types
      */
     public function index(Request $request): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
 
-        $query = ExpenseType::forBranch($branchId)
-            ->with(['category'])
-            ->withCount('expenses');
+        if (!$companyId) {
+            return response()->json([
+                'data' => [],
+                'total' => 0,
+            ]);
+        }
 
-        if ($request->filled('category_id')) {
-            $query->forCategory((int) $request->category_id);
+        $query = ExpenseType::forCompany($companyId)->withCount('expenses');
+
+        if ($request->filled('parent_id')) {
+            $query->where('parent_id', $request->parent_id);
         }
 
         if ($request->filled('search')) {
-            $query->where(fn ($q) => $q
-                ->where('name', 'like', "%{$request->search}%")
-                ->orWhere('description', 'like', "%{$request->search}%")
-            );
+            $query->search($request->search);
         }
 
         if ($request->boolean('active_only', false)) {
             $query->active();
         }
 
-        $types = $query->with(['category'])->ordered()->get();
+        $types = $query->ordered()->get();
 
         return response()->json([
             'data'  => $types,
@@ -48,27 +68,101 @@ class ExpenseTypeController extends Controller
     }
 
     /**
+     * GET /api/expense-types/tree
+     * Get expense types as a hierarchical tree
+     */
+    public function tree(Request $request): JsonResponse
+    {
+        try {
+            $companyId = $this->resolveCompanyId($request);
+
+            if (!$companyId) {
+                return response()->json([
+                    'data' => [],
+                ]);
+            }
+
+            // Get all types for this company
+            $types = ExpenseType::forCompany($companyId)
+                ->ordered()
+                ->get();
+
+            // Build tree structure using recursive method
+            $tree = $this->buildTreeRecursive($types);
+
+            return response()->json([
+                'data' => $tree,
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'data' => [],
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Build hierarchical tree from flat collection (Recursive version)
+     */
+    private function buildTreeRecursive($types, $parentId = null)
+    {
+        $result = [];
+        
+        foreach ($types as $type) {
+            // If this type's parent matches the current parent ID
+            if ($type->parent_id === $parentId) {
+                // Convert to array
+                $typeData = $type->toArray();
+                
+                // Recursively get children
+                $typeData['children_recursive'] = $this->buildTreeRecursive($types, $type->id);
+                
+                $result[] = $typeData;
+            }
+        }
+        
+        // Sort the results by name
+        usort($result, function($a, $b) {
+            return strcmp($a['name'], $b['name']);
+        });
+        
+        return $result;
+    }
+
+    /**
      * POST /api/expense-types
      */
     public function store(Request $request): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
+
+        if (!$companyId) {
+            return response()->json([
+                'message' => 'Company not found.',
+            ], 422);
+        }
+
         $validated = $request->validate([
-            'expense_category_id' => ['required', 'integer', $this->existsWithBranch('expense_categories', 'id', $branchId)->whereNull('deleted_at')],
-            'name'                => ['required', 'string', 'max:100', Rule::unique('expense_types')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
+            'parent_id' => ['nullable', 'integer', function ($attribute, $value, $fail) use ($companyId) {
+                if ($value) {
+                    $exists = ExpenseType::where('id', $value)->where('company_id', $companyId)->exists();
+                    if (!$exists) {
+                        $fail('The selected parent type does not exist in this company.');
+                    }
                 }
-                $q->whereNull('deleted_at');
+            }],
+            'name' => ['required', 'string', 'max:100', Rule::unique('expense_types')->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
             })],
-            'description'         => 'nullable|string|max:500',
-            'is_active'           => 'boolean',
-            'sort_order'          => 'integer|min:0',
+            'description' => 'nullable|string|max:500',
+            'is_active' => 'boolean',
         ]);
-        $validated['branch_id'] = $branchId;
+
+        $validated['company_id'] = $companyId;
 
         $type = ExpenseType::create($validated);
-        $type->load(['category']);
+        $type->load('parent');
 
         return response()->json([
             'data'    => $type,
@@ -81,8 +175,17 @@ class ExpenseTypeController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
-        $type = ExpenseType::forBranch($branchId)->with(['category'])->findOrFail($id);
+        $companyId = $this->resolveCompanyId($request);
+
+        if (!$companyId) {
+            return response()->json([
+                'message' => 'Company not found.',
+            ], 404);
+        }
+
+        $type = ExpenseType::forCompany($companyId)
+            ->with(['parent', 'children'])
+            ->findOrFail($id);
 
         return response()->json(['data' => $type]);
     }
@@ -92,24 +195,37 @@ class ExpenseTypeController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
-        $typeId   = $request->route('id');
-        $type = ExpenseType::forBranch($branchId)->findOrFail($id);
+        $companyId = $this->resolveCompanyId($request);
+
+        if (!$companyId) {
+            return response()->json([
+                'message' => 'Company not found.',
+            ], 422);
+        }
+
+        $type = ExpenseType::forCompany($companyId)->findOrFail($id);
 
         $validated = $request->validate([
-            'name'                => ['sometimes', 'string', 'max:100', Rule::unique('expense_types')->where(function ($q) use ($branchId) {
-                if ($branchId !== null) {
-                    $q->where('branch_id', $branchId);
+            'parent_id' => ['nullable', 'integer', function ($attribute, $value, $fail) use ($companyId, $type) {
+                if ($value) {
+                    if ($value == $type->id) {
+                        $fail('A type cannot be its own parent.');
+                    }
+                    $exists = ExpenseType::where('id', $value)->where('company_id', $companyId)->exists();
+                    if (!$exists) {
+                        $fail('The selected parent type does not exist in this company.');
+                    }
                 }
-                $q->whereNull('deleted_at');
-            })->ignore($typeId)],
-            'description'         => 'nullable|string|max:500',
-            'is_active'           => 'boolean',
-            'sort_order'          => 'integer|min:0',
+            }],
+            'name' => ['sometimes', 'string', 'max:100', Rule::unique('expense_types')->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            })->ignore($type->id)],
+            'description' => 'nullable|string|max:500',
+            'is_active' => 'boolean',
         ]);
 
         $type->update($validated);
-        $type->refresh()->load(['category']);
+        $type->refresh()->load('parent');
 
         return response()->json([
             'data'    => $type,
@@ -122,8 +238,22 @@ class ExpenseTypeController extends Controller
      */
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
-        $type = ExpenseType::forBranch($branchId)->findOrFail($id);
+        $companyId = $this->resolveCompanyId($request);
+
+        if (!$companyId) {
+            return response()->json([
+                'message' => 'Company not found.',
+            ], 404);
+        }
+
+        $type = ExpenseType::forCompany($companyId)->findOrFail($id);
+
+        // Check for child types
+        if ($type->children()->exists()) {
+            return response()->json([
+                'message' => 'Cannot delete: this type has child types. Delete children first.',
+            ], 422);
+        }
 
         if ($type->expenses()->exists()) {
             return response()->json([
@@ -141,9 +271,16 @@ class ExpenseTypeController extends Controller
      */
     public function toggleActive(Request $request, int $id): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
-        $type = ExpenseType::forBranch($branchId)->findOrFail($id);
-        $type->update(['is_active' => ! $type->is_active]);
+        $companyId = $this->resolveCompanyId($request);
+
+        if (!$companyId) {
+            return response()->json([
+                'message' => 'Company not found.',
+            ], 404);
+        }
+
+        $type = ExpenseType::forCompany($companyId)->findOrFail($id);
+        $type->update(['is_active' => !$type->is_active]);
 
         return response()->json([
             'data'    => $type,
@@ -151,24 +288,30 @@ class ExpenseTypeController extends Controller
         ]);
     }
 
-    private function resolveBranchId(Request $request): ?int
-    {
-        $user = Auth::user();
-        if (AuthHelper::isCompanyAdmin() && $request->filled('branch_id')) {
-            return (int) $request->branch_id;
-        }
-        return $user->branch_id ? (int) $user->branch_id : null;
-    }
-
     /**
-     * Build an exists rule with optional branch scoping.
+     * GET /api/expense-types/list
+     * Get expense types as a flat list for dropdowns
      */
-    private function existsWithBranch(string $table, string $column, ?int $branchId): Exists
+    public function list(Request $request): JsonResponse
     {
-        $rule = Rule::exists($table, $column);
-        if ($branchId !== null) {
-            $rule->where('branch_id', $branchId);
+        $companyId = $this->resolveCompanyId($request);
+
+        if (!$companyId) {
+            return response()->json([
+                'data' => [],
+            ]);
         }
-        return $rule;
+
+        $query = ExpenseType::forCompany($companyId)->active()->ordered();
+
+        if ($request->filled('parent_id')) {
+            $query->where('parent_id', $request->parent_id);
+        }
+
+        $types = $query->get(['id', 'name', 'parent_id']);
+
+        return response()->json([
+            'data' => $types,
+        ]);
     }
 }

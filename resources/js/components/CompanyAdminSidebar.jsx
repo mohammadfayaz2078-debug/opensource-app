@@ -77,6 +77,19 @@ const CompanyAdminSidebar = ({
         { name: 'Roles', to: '/company-admin/roles', icon: 'shield', translation_key: 'roles' },
         { name: 'Users', to: '/company-admin/users', icon: 'users', translation_key: 'users' },
       ]
+    },
+    {
+      title: 'Settings',
+      icon: 'settings',
+      translation_key: 'settings',
+      children: [
+        { 
+          name: 'Database Seeder', 
+          to: '/company-admin/seeder', 
+          icon: 'database', 
+          translation_key: 'Seed Data' 
+        },
+      ]
     }
   ];
 

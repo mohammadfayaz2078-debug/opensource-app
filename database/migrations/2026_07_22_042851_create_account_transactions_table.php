@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('account_transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('account_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['deposit', 'withdrawal']);
+            $table->string('type', 50);
             $table->decimal('amount', 15, 2);
             $table->decimal('balance_after', 15, 2);
             $table->string('description')->nullable();

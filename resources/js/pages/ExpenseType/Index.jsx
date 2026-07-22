@@ -1,65 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
+import {
+  Search,
+  Plus,
+  Edit2,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+  X,
+  Save,
+  Loader2,
+  FolderTree,
+  List,
+  LayoutGrid,
+  Maximize2,
+  Minimize2,
+  Circle,
+  Tag,
+  Wallet,
+  CreditCard,
+  MoreVertical
+} from 'lucide-react';
 
 const ExpenseTypeIndex = () => {
   const [types, setTypes] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [errors, setErrors] = useState({});
+  const [expanded, setExpanded] = useState({});
+  const [viewMode, setViewMode] = useState('tree');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
   const [form, setForm] = useState({
-    expense_category_id: '',
+    parent_id: '',
     name: '',
     description: '',
     is_active: true,
-    sort_order: 0,
   });
 
   const fetchTypes = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/expense-types');
-      setTypes(res.data?.data?.data || res.data?.data || []);
+      const res = await api.get('/expense-types/tree');
+      setTypes(res.data?.data || []);
     } catch (err) {
       console.error('Failed to fetch types:', err);
+      try {
+        const fallbackRes = await api.get('/expense-types');
+        setTypes(fallbackRes.data?.data || []);
+      } catch (fallbackErr) {
+        console.error('Fallback also failed:', fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get('/expense-categories');
-      setCategories(res.data?.data?.data || res.data?.data || []);
-    } catch (err) {
-      console.error('Failed to fetch categories:', err);
-    }
-  };
-
   useEffect(() => {
-    fetchCategories();
+    fetchTypes();
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => fetchTypes(), 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  // ─── Modal Handlers ─────────────────────────────────────────
 
   const openCreateModal = () => {
     setIsEditing(false);
     setSelectedType(null);
     setForm({
-      expense_category_id: '',
+      parent_id: '',
       name: '',
       description: '',
       is_active: true,
-      sort_order: 0,
     });
     setErrors({});
     setIsModalOpen(true);
@@ -69,11 +83,10 @@ const ExpenseTypeIndex = () => {
     setIsEditing(true);
     setSelectedType(type);
     setForm({
-      expense_category_id: type.expense_category_id || '',
+      parent_id: type.parent_id || '',
       name: type.name || '',
       description: type.description || '',
       is_active: type.is_active ?? true,
-      sort_order: type.sort_order || 0,
     });
     setErrors({});
     setIsModalOpen(true);
@@ -98,9 +111,10 @@ const ExpenseTypeIndex = () => {
     e.preventDefault();
     setSaving(true);
     setErrors({});
+
     try {
       const payload = { ...form };
-      if (payload.sort_order) payload.sort_order = parseInt(payload.sort_order);
+      if (!payload.parent_id) delete payload.parent_id;
       if (!payload.description) delete payload.description;
 
       let res;
@@ -112,10 +126,12 @@ const ExpenseTypeIndex = () => {
 
       Swal.fire({
         icon: 'success',
-        title: isEditing ? 'Updated' : 'Created',
+        title: isEditing ? 'Updated!' : 'Created!',
         text: res.data?.message || 'Success',
-        timer: 2000,
+        timer: 1500,
         showConfirmButton: false,
+        toast: true,
+        position: 'top-end',
       });
       closeModal();
       fetchTypes();
@@ -131,20 +147,32 @@ const ExpenseTypeIndex = () => {
   };
 
   const handleDelete = async (type) => {
+    const hasChildren = type.children_recursive && type.children_recursive.length > 0;
+    
     const result = await Swal.fire({
       title: 'Delete Expense Type?',
-      html: `Delete <strong>${type.name}</strong>?`,
+      html: hasChildren 
+        ? `This will delete "<strong>${type.name}</strong>" and all its child types.`
+        : `Delete "<strong>${type.name}</strong>"?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#dc2626',
+      confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete!',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
     });
 
     if (result.isConfirmed) {
       try {
-        const res = await api.delete(`/expense-types/${type.id}`);
-        Swal.fire({ icon: 'success', title: 'Deleted!', text: res.data?.message, timer: 2000, showConfirmButton: false });
+        await api.delete(`/expense-types/${type.id}`);
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          timer: 1500,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+        });
         fetchTypes();
       } catch (err) {
         Swal.fire('Error', err.response?.data?.message || 'Failed to delete', 'error');
@@ -152,166 +180,400 @@ const ExpenseTypeIndex = () => {
     }
   };
 
+  const toggleExpand = (id) => {
+    setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const expandAll = () => {
+    const allIds = {};
+    const walk = (nodes) => {
+      nodes.forEach(n => {
+        if (n.children_recursive && n.children_recursive.length > 0) {
+          allIds[n.id] = true;
+          walk(n.children_recursive);
+        }
+      });
+    };
+    walk(types);
+    setExpanded(allIds);
+  };
+
+  const collapseAll = () => {
+    setExpanded({});
+  };
+
+  // ─── Recursive Tree Row Component ──────────────────────────
+  
+  const TypeTreeRow = ({ type, level = 0 }) => {
+    const hasChildren = type.children_recursive && type.children_recursive.length > 0;
+    const isExpanded = expanded[type.id];
+    const indent = level * 24;
+
+    return (
+      <React.Fragment key={type.id}>
+        <tr className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${!type.is_active ? 'opacity-50' : ''}`}>
+          <td className="px-3 py-2.5">
+            <div className="flex items-center" style={{ paddingLeft: `${indent}px` }}>
+              {hasChildren ? (
+                <button
+                  onClick={() => toggleExpand(type.id)}
+                  className="mr-1.5 p-0.5 rounded hover:bg-gray-200 transition-colors focus:outline-none flex-shrink-0"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                  )}
+                </button>
+              ) : (
+                <span className="w-5 flex-shrink-0" />
+              )}
+              
+              <div className="flex items-center gap-2 min-w-0">
+                <Circle className={`w-2 h-2 flex-shrink-0 ${type.is_active ? 'fill-green-500 text-green-500' : 'fill-gray-300 text-gray-300'}`} />
+                <span className="text-sm font-medium text-gray-800 truncate">{type.name}</span>
+                {!type.is_active && (
+                  <span className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full flex-shrink-0">
+                    Inactive
+                  </span>
+                )}
+                {hasChildren && (
+                  <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-full flex-shrink-0">
+                    {type.children_recursive.length}
+                  </span>
+                )}
+              </div>
+            </div>
+            {type.description && (
+              <div className="text-xs text-gray-400 mt-0.5 ml-7 truncate">{type.description}</div>
+            )}
+          </td>
+          <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">
+            {type.id}
+          </td>
+          <td className="px-3 py-2.5 text-right">
+            <div className="flex items-center justify-end gap-1">
+              <button 
+                onClick={() => openEditModal(type)} 
+                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors" 
+                title="Edit"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+              <button 
+                onClick={() => handleDelete(type)} 
+                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-600 transition-colors" 
+                title="Delete"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </td>
+        </tr>
+        {hasChildren && isExpanded && type.children_recursive.map((child) => (
+          <TypeTreeRow key={child.id} type={child} level={level + 1} />
+        ))}
+      </React.Fragment>
+    );
+  };
+
+  // ─── Get Parent Options ─────────────────────────────────────
+
+  const getParentOptions = (typesList, excludeId = null, level = 0) => {
+    let options = [];
+    const prefix = '— '.repeat(level);
+    
+    for (const type of typesList) {
+      if (type.id !== excludeId) {
+        options.push({ 
+          id: type.id, 
+          name: `${prefix}${type.name}`,
+        });
+        if (type.children_recursive && type.children_recursive.length > 0) {
+          options = [...options, ...getParentOptions(type.children_recursive, excludeId, level + 1)];
+        }
+      }
+    }
+    return options;
+  };
+
+  const parentOptions = getParentOptions(types, selectedType?.id);
+
+  // ─── Filter Types ───────────────────────────────────────────
+
+  const filteredTypes = types.filter(type => {
+    if (!searchQuery) return true;
+    const search = searchQuery.toLowerCase();
+    const matchName = type.name.toLowerCase().includes(search);
+    const matchDesc = type.description?.toLowerCase().includes(search) || false;
+    return matchName || matchDesc;
+  });
+
   return (
-    <div className="relative bg-gradient-to-br from-emerald-50/40 via-white to-sky-50/40 rounded-xl p-6 -m-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-1">
-          <h1 className="text-xl font-semibold text-gray-900">Expense Types</h1>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{types.length} types</span>
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* Compact Header */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-blue-600" />
+                Expense Types
+              </h1>
+              <p className="text-xs text-gray-400 mt-0.5">Manage expense categories</p>
+            </div>
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center px-3.5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              New Type
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Toolbar */}
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
-            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
-          />
-        </div>
-        <button onClick={openCreateModal} className="inline-flex items-center px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">
-          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
-          New
-        </button>
-      </div>
-
-      {/* Loading */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-700 text-sm">Loading...</span>
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && (
-        <div className="rounded-lg border border-gray-200 shadow-md overflow-hidden">
-          {types.length === 0 ? (
-            <div className="py-16 text-center">
-              <svg className="w-10 h-10 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <p className="text-sm text-gray-700">No expense types found.</p>
+        {/* Toolbar */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex-1 min-w-[200px] relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search types..."
+                className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
-          ) : (
+            
+            <div className="flex items-center gap-1.5">
+              {/* View Mode Toggle */}
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setViewMode('tree')}
+                  className={`p-1.5 ${viewMode === 'tree' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+                  title="Tree View"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+                  title="List View"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Expand/Collapse */}
+              {viewMode === 'tree' && types.length > 0 && (
+                <div className="flex items-center gap-0.5 border-l border-gray-200 pl-2">
+                  <button 
+                    onClick={expandAll} 
+                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                    title="Expand All"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
+                    onClick={collapseAll} 
+                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                    title="Collapse All"
+                  >
+                    <Minimize2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        {loading ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full">
+              <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</th>
-                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Active</th>
-                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  <tr className="bg-gray-50/80 border-b border-gray-100">
+                    <th className="px-3 py-2.5 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-3 py-2.5 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-3 py-2.5 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {types.map((type, idx) => (
-                    <tr key={type.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50 transition-colors`}>
-                      <td className="px-4 py-2.5 whitespace-nowrap">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{type.name}</p>
-                          {type.description && <p className="text-xs text-gray-700 truncate max-w-[200px]">{type.description}</p>}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">{type.category?.name || '—'}</td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${type.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                          {type.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-0.5">
-                          <button onClick={() => openEditModal(type)} className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600" title="Edit">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button onClick={() => handleDelete(type)} className="p-1 rounded hover:bg-red-50 text-gray-700 hover:text-red-600" title="Delete">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                  {filteredTypes.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="px-3 py-12 text-center">
+                        <div className="flex flex-col items-center">
+                          <FolderTree className="w-10 h-10 text-gray-300 mb-2" />
+                          <p className="text-sm text-gray-400">No expense types found</p>
+                          <button
+                            onClick={openCreateModal}
+                            className="mt-3 px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            Create your first type
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    viewMode === 'tree' ? (
+                      filteredTypes.map((type) => (
+                        <TypeTreeRow key={type.id} type={type} level={0} />
+                      ))
+                    ) : (
+                      // Flat List View
+                      filteredTypes.map((type) => (
+                        <tr key={type.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${!type.is_active ? 'opacity-50' : ''}`}>
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <Circle className={`w-2 h-2 flex-shrink-0 ${type.is_active ? 'fill-green-500 text-green-500' : 'fill-gray-300 text-gray-300'}`} />
+                              <span className="text-sm font-medium text-gray-800">{type.name}</span>
+                              {!type.is_active && (
+                                <span className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">Inactive</span>
+                              )}
+                            </div>
+                            {type.description && (
+                              <div className="text-xs text-gray-400 mt-0.5 ml-6">{type.description}</div>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-xs text-gray-400">{type.id}</td>
+                          <td className="px-3 py-2.5 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button 
+                                onClick={() => openEditModal(type)} 
+                                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors" 
+                                title="Edit"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(type)} 
+                                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-600 transition-colors" 
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/40" onClick={closeModal}></div>
-          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 z-10 max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">{isEditing ? 'Edit Expense Type' : 'Create Expense Type'}</h2>
-              <button onClick={closeModal} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" onClick={closeModal} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto z-10 animate-fadeIn">
+            <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-gray-800">
+                {isEditing ? 'Edit Expense Type' : 'New Expense Type'}
+              </h2>
+              <button 
+                onClick={closeModal} 
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="px-6 py-5 space-y-4">
+            
+            <form onSubmit={handleSubmit} className="p-5">
+              <div className="space-y-3.5">
+                {/* Parent Category */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category <span className="text-red-500">*</span></label>
-                  <select name="expense_category_id" value={form.expense_category_id} onChange={handleInputChange}
-                    className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.expense_category_id ? 'border-red-500' : 'border-gray-300'}`} required>
-                    <option value="">Select Category</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Parent Category</label>
+                  <select 
+                    name="parent_id" 
+                    value={form.parent_id} 
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">No Parent (Root)</option>
+                    {parentOptions.map(opt => (
+                      <option key={opt.id} value={opt.id}>{opt.name}</option>
+                    ))}
                   </select>
-                  {errors.expense_category_id && <p className="text-xs text-red-500 mt-1">{errors.expense_category_id[0]}</p>}
                 </div>
 
+                {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
-                  <input type="text" name="name" value={form.name} onChange={handleInputChange}
-                    className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.name ? 'border-red-500' : 'border-gray-300'}`} required />
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Name <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    name="name" 
+                    value={form.name} 
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-1.5 text-sm bg-gray-50 border ${errors.name ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`} 
+                    required 
+                  />
                   {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name[0]}</p>}
                 </div>
 
+                {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea name="description" value={form.description} onChange={handleInputChange} rows="2"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                  <textarea 
+                    name="description" 
+                    value={form.description} 
+                    onChange={handleInputChange} 
+                    rows="2"
+                    className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none" 
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
-                  <input type="number" name="sort_order" value={form.sort_order} onChange={handleInputChange} min="0"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleInputChange}
-                      className="h-4 w-4 rounded border-gray-300 text-[#007c89] focus:ring-[#007c89]" />
-                    <span className="text-sm text-gray-700">Active</span>
-                  </label>
+                {/* Active Status */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input 
+                    type="checkbox" 
+                    name="is_active" 
+                    checked={form.is_active} 
+                    onChange={handleInputChange}
+                    className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                  />
+                  <label className="text-xs text-gray-600 cursor-pointer">Active</label>
                 </div>
               </div>
-              <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
-                <button type="button" onClick={closeModal} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-                <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] disabled:opacity-50 inline-flex items-center">
+
+              <div className="flex gap-2 mt-5 pt-4 border-t border-gray-100">
+                <button 
+                  type="button" 
+                  onClick={closeModal} 
+                  className="flex-1 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={saving} 
+                  className="flex-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center"
+                >
                   {saving ? (
-                    <><div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>Saving...</>
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      Saving...
+                    </>
                   ) : (
-                    isEditing ? 'Update' : 'Create'
+                    <>
+                      <Save className="w-3.5 h-3.5 mr-1.5" />
+                      {isEditing ? 'Update' : 'Create'}
+                    </>
                   )}
                 </button>
               </div>

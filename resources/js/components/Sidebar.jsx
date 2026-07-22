@@ -107,7 +107,7 @@ const Sidebar = ({
       'sidebar_income_categories': 'Income Categories',
       'sidebar_other_incomes': 'Other Incomes',
       'sidebar_expense_categories': 'Categories',
-      'sidebar_expense_types': 'Types',
+      'sidebar_expense_types': 'Expense Types',
       'sidebar_salespersons': 'Salespersons',
       'management': 'Management',
       'Administration': 'Administration',
@@ -195,8 +195,7 @@ const links = [
     icon: 'shopping',
     translation_key: 'Expenses',
     children: [
-      { name: 'Categories', to: '/expense-categories', translation_key: 'sidebar_expense_categories' },
-      { name: 'Types', to: '/expense-types', translation_key: 'sidebar_expense_types' },
+      { name: 'Expense Types', to: '/expense-types', translation_key: 'sidebar_expense_types' },
       { name: 'Expenses', to: '/expenses', translation_key: 'sidebar_expenses' }
     ]
   },

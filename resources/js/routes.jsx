@@ -1,6 +1,7 @@
 // routes.js
 import { Navigate } from 'react-router-dom';
 
+import Seeder from './pages/CompanyAdmin/Seeder';
 // Auth Pages
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -38,6 +39,7 @@ import StockTransactions from './pages/Stock/Transactions';
 // Expense Pages
 import ExpenseIndex from './pages/Expense/Index';
 import ExpenseCreate from './pages/Expense/Create';
+import ExpenseEdit from './pages/Expense/Edit';
 import ExpenseCategoryIndex from './pages/ExpenseCategory/Index';
 import ExpenseTypeIndex from './pages/ExpenseType/Index';
 
@@ -194,6 +196,8 @@ const routes = [
       { path: 'roles', element: <RoleIndex /> },
       { path: 'roles/create', element: <RoleCreate /> },
       { path: 'roles/:id/edit', element: <RoleEdit /> },
+
+      { path: 'seeder', element: <Seeder /> },
     ]
   },
   
@@ -248,6 +252,7 @@ const routes = [
       // Expenses
       { path: 'expenses', element: <ExpenseIndex /> },
       { path: 'expenses/create', element: <ExpenseCreate /> },
+      { path: 'expenses/:id/edit', element: <ExpenseEdit /> },
       { path: 'expense-categories', element: <ExpenseCategoryIndex /> },
       { path: 'expense-types', element: <ExpenseTypeIndex /> },
 
