@@ -22,7 +22,9 @@ use App\Http\Controllers\UnitCategoryController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountDepositController;
+use App\Http\Controllers\AccountWithdrawalController;
 
 // Replace login route
 Route::post('/login', [SuperAdminAuthController::class, 'login']);
@@ -228,6 +230,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}',             [CustomerController::class, 'destroy']);
         Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus']);
     });
+
+
+
+    //=============================
+
+    Route::apiResource('accounts', AccountController::class);
+
+    Route::get('account-deposits', [AccountDepositController::class, 'index']);
+    Route::post('account-deposits', [AccountDepositController::class, 'store']);
+    Route::get('account-deposits/{accountDeposit}', [AccountDepositController::class, 'show']);
+
+    Route::get('account-withdrawals', [AccountWithdrawalController::class, 'index']);
+    Route::post('account-withdrawals', [AccountWithdrawalController::class, 'store']);
+    Route::get('account-withdrawals/{accountWithdrawal}', [AccountWithdrawalController::class, 'show']);
+
+    Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions']);
+
 });
 
 
