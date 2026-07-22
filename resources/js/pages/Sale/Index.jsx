@@ -34,6 +34,10 @@ export default function SaleIndex() {
   useEffect(() => { const t = setTimeout(() => fetchSales(), 300); return () => clearTimeout(t); }, [searchQuery, statusFilter]);
 
   const openPayModal = (sale) => {
+    // Don't allow payment for returned or cancelled sales
+    if (sale.status === 'returned' || sale.status === 'cancelled') {
+      return;
+    }
     setSelectedSale(sale);
     const unpaid = parseFloat(sale.total_amount) - parseFloat(sale.paid_amount);
     setPayAmount(unpaid > 0 ? String(unpaid) : '');
@@ -59,7 +63,12 @@ export default function SaleIndex() {
   };
 
   const statusBadge = (status) => {
-    const c = { draft: 'bg-gray-100 text-gray-700', confirmed: 'bg-blue-100 text-blue-700', cancelled: 'bg-orange-100 text-orange-700' };
+    const c = { 
+      draft: 'bg-gray-100 text-gray-700', 
+      confirmed: 'bg-blue-100 text-blue-700', 
+      cancelled: 'bg-orange-100 text-orange-700',
+      returned: 'bg-purple-100 text-purple-700'
+    };
     return <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${c[status] || c.draft}`}>{status?.toUpperCase()}</span>;
   };
 
@@ -69,6 +78,16 @@ export default function SaleIndex() {
   };
 
   const unpaid = selectedSale ? parseFloat(selectedSale.total_amount) - parseFloat(selectedSale.paid_amount) : 0;
+
+  // Helper to check if actions are allowed
+  const canTakeAction = (sale) => {
+    return sale.status !== 'cancelled' && sale.status !== 'returned';
+  };
+
+  // Helper to check if payment is allowed
+  const canPay = (sale) => {
+    return canTakeAction(sale) && sale.payment_status !== 'paid';
+  };
 
   return (
     <div className="relative bg-gradient-to-br from-emerald-50/40 via-white to-sky-50/40 rounded-xl p-6 -m-6">
@@ -90,8 +109,11 @@ export default function SaleIndex() {
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
           </div>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]">
-            <option value="">All</option>
+            <option value="">All Statuses</option>
+            <option value="draft">Draft</option>
+            <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
+            <option value="returned">Returned</option>
           </select>
         </div>
         <button onClick={() => navigate('/sales/create')} className="inline-flex items-center px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">
@@ -120,33 +142,74 @@ export default function SaleIndex() {
                 </tr>
               </thead>
               <tbody>
-                {sales.map((s, idx) => (
-                  <tr key={s.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50 transition-colors`}>
-                    <td className="px-4 py-2.5 whitespace-nowrap">
-                      <button onClick={() => navigate(`/sales/${s.id}`)} className="text-sm font-medium text-gray-900 hover:text-[#007c89]">{s.reference_no}</button>
-                    </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">{s.document_date?.split('T')[0]}</td>
-                    <td className="px-4 py-2.5 text-sm text-gray-700">{s.customer?.full_name || '—'}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-right">{parseFloat(s.total_amount).toFixed(2)}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-center">{statusBadge(s.status)}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-center">{paymentBadge(s.payment_status)}</td>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => navigate(`/sales/${s.id}`)} className="p-1.5 rounded hover:bg-blue-50 text-gray-700 hover:text-[#007c89]" title="View">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        </button>
-                        {s.payment_status !== 'paid' && (
-                          <button onClick={() => openPayModal(s)} className="px-2 py-0.5 rounded text-[11px] font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors" title="Pay">Pay</button>
-                        )}
-                        {s.payment_status !== 'paid' && (
-                          <button onClick={() => navigate(`/sales/${s.id}/edit`)} className="p-1.5 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600" title="Edit">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                {sales.map((s, idx) => {
+                  const canAct = canTakeAction(s);
+                  return (
+                    <tr key={s.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50 transition-colors`}>
+                      <td className="px-4 py-2.5 whitespace-nowrap">
+                        <button onClick={() => navigate(`/sales/${s.id}`)} className="text-sm font-medium text-gray-900 hover:text-[#007c89]">{s.reference_no}</button>
+                      </td>
+                      <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">{s.document_date?.split('T')[0]}</td>
+                      <td className="px-4 py-2.5 text-sm text-gray-700">{s.customer?.full_name || '—'}</td>
+                      <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-right">{parseFloat(s.total_amount).toFixed(2)}</td>
+                      <td className="px-4 py-2.5 whitespace-nowrap text-center">{statusBadge(s.status)}</td>
+                      <td className="px-4 py-2.5 whitespace-nowrap text-center">{paymentBadge(s.payment_status)}</td>
+                      <td className="px-4 py-2.5 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {/* View - Always allowed */}
+                          <button 
+                            onClick={() => navigate(`/sales/${s.id}`)} 
+                            className="p-1.5 rounded hover:bg-blue-50 text-gray-700 hover:text-[#007c89]" 
+                            title="View"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+
+                          {/* Pay - Only if not cancelled/returned and not fully paid */}
+                          {canPay(s) && (
+                            <button 
+                              onClick={() => openPayModal(s)} 
+                              className="px-2 py-0.5 rounded text-[11px] font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors" 
+                              title="Pay"
+                            >
+                              Pay
+                            </button>
+                          )}
+
+                          {/* Edit - Only if not cancelled/returned */}
+                          {canAct && s.payment_status !== 'paid' && (
+                            <button 
+                              onClick={() => navigate(`/sales/${s.id}/edit`)} 
+                              className="p-1.5 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600" 
+                              title="Edit"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          )}
+
+                          {/* Returned badge - Show when status is returned */}
+                          {s.status === 'returned' && (
+                            <span className="text-[10px] font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+                              Returned
+                            </span>
+                          )}
+
+                          {/* Cancelled badge - Show when status is cancelled */}
+                          {s.status === 'cancelled' && (
+                            <span className="text-[10px] font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                              Cancelled
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

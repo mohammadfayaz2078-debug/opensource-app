@@ -298,7 +298,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/',                   [SaleReturnController::class, 'store']);
         Route::get('/{id}',                [SaleReturnController::class, 'show']);
         Route::delete('/{id}',             [SaleReturnController::class, 'destroy']);
+
+        Route::get('/refundable/{saleId}', [SaleReturnController::class, 'getRefundableItems']);
     });
+
+    
 
     // ── Stock Module ─────────────────────────────────────────────────────────
 

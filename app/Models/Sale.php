@@ -15,6 +15,7 @@ class Sale extends Model
     const STATUS_DRAFT     = 'draft';
     const STATUS_CONFIRMED = 'confirmed';
     const STATUS_CANCELLED = 'cancelled';
+    const STATUS_RETURNED  = 'returned';
 
     const PAYMENT_STATUS_UNPAID  = 'unpaid';
     const PAYMENT_STATUS_PARTIAL = 'partial';
@@ -73,6 +74,7 @@ class Sale extends Model
 
     public function canBeEdited(): bool      { return $this->status === self::STATUS_DRAFT; }
     public function canBeCancelled(): bool   { return $this->status !== self::STATUS_CANCELLED; }
+    public function canBeReturned(): bool    { return $this->status === self::STATUS_CONFIRMED && $this->payment_status !== self::PAYMENT_STATUS_UNPAID; }
 
     public function recalculate(): void
     {
@@ -113,5 +115,29 @@ class Sale extends Model
             ->value('reference_no');
         $seq = $last ? (int) substr($last, -5) + 1 : 1;
         return "{$prefix}" . str_pad($seq, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Check if the sale has any returned items
+     */
+    public function hasReturns(): bool
+    {
+        return $this->items()->where('refund_status', '!=', 'none')->exists();
+    }
+
+    /**
+     * Get total refunded amount across all items
+     */
+    public function getTotalRefundedAmount(): float
+    {
+        return (float) $this->items()->sum('refunded_amount');
+    }
+
+
+    // In Sale.php model
+    public function isFullyRefunded(): bool
+    {
+        return $this->items()->where('refund_status', '!=', 'full')->doesntExist() 
+            && $this->items()->count() > 0;
     }
 }

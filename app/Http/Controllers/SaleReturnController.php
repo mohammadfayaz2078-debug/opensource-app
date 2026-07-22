@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\AuthHelper;
+use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\SaleReturn;
 use App\Models\SaleReturnItem;
 use App\Services\StockService;
@@ -68,7 +70,7 @@ class SaleReturnController extends Controller
             'reason'              => 'nullable|string',
             'notes'               => 'nullable|string',
             'items'               => 'required|array|min:1',
-            'items.*.sale_item_id'=> 'nullable|exists:sale_items,id',
+            'items.*.sale_item_id'=> 'required|exists:sale_items,id',
             'items.*.product_id'  => 'nullable|exists:products,id',
             'items.*.unit_id'     => 'nullable|exists:units,id',
             'items.*.quantity'    => 'required|numeric|min:0.01',
@@ -81,10 +83,11 @@ class SaleReturnController extends Controller
         $validated['created_by']   = Auth::id();
         $validated['reference_no'] = SaleReturn::generateReferenceNo($branchId);
 
-        $return = DB::transaction(function () use ($validated) {
+        $return = DB::transaction(function () use ($validated, $companyId, $branchId) {
             $items = $validated['items'];
             unset($validated['items']);
 
+            // Calculate total amount
             $totalAmount = 0;
             foreach ($items as &$item) {
                 $item['total'] = round($item['quantity'] * $item['unit_price'], 2);
@@ -95,14 +98,53 @@ class SaleReturnController extends Controller
             $validated['total_amount'] = $totalAmount;
             $return = SaleReturn::create($validated);
 
-            foreach ($items as $item) {
-                $return->items()->create($item);
+            // Create return items and update sale items
+            foreach ($items as $itemData) {
+                // Create return item
+                $returnItem = $return->items()->create($itemData);
+
+                // Update the original sale item
+                $saleItem = SaleItem::find($itemData['sale_item_id']);
+                if ($saleItem) {
+                    // Update refunded quantity and amount
+                    $saleItem->refunded_quantity += $itemData['quantity'];
+                    $saleItem->refunded_amount += $itemData['total'];
+                    
+                    // Update refund status
+                    $deliveredQty = (float) $saleItem->quantity; // Using quantity as delivered quantity
+                    $refundedQty = (float) $saleItem->refunded_quantity;
+                    
+                    if ($refundedQty <= 0) {
+                        $saleItem->refund_status = 'none';
+                    } elseif ($refundedQty >= $deliveredQty) {
+                        $saleItem->refund_status = 'full';
+                    } else {
+                        $saleItem->refund_status = 'partial';
+                    }
+                    
+                    $saleItem->save();
+                }
             }
 
-            return $return;
-        });
+            // Update the sale
+            $sale = Sale::find($validated['sale_id']);
+            if ($sale) {
+                // Recalculate sale totals
+                $sale->recalculate();
+                $sale->updatePaymentStatus();
 
-        DB::transaction(function () use ($return, $companyId, $branchId) {
+                // Check if all items are fully refunded
+                $allItemsFullyRefunded = $sale->items()
+                    ->where('refund_status', '!=', 'full')
+                    ->doesntExist();
+
+                if ($allItemsFullyRefunded && $sale->items()->count() > 0) {
+                    $sale->status = Sale::STATUS_RETURNED;
+                    $sale->save();
+                }
+            }
+
+            // Update stock
             foreach ($return->items as $item) {
                 if ($item->product_id) {
                     StockService::record(
@@ -119,13 +161,15 @@ class SaleReturnController extends Controller
                     );
                 }
             }
+
+            return $return;
         });
 
         $return->load(['sale', 'customer', 'items.product', 'items.unit', 'creator']);
 
         return response()->json([
             'data'    => $return,
-            'message' => 'Sale return created. Stock updated.',
+            'message' => 'Sale return created. Stock and sale records updated.',
         ], 201);
     }
 
@@ -146,10 +190,92 @@ class SaleReturnController extends Controller
         $return    = SaleReturn::where('branch_id', $branchId)->findOrFail($id);
 
         DB::transaction(function () use ($return, $companyId, $branchId) {
+            // Reverse stock movements
             StockService::reverse('SaleReturn', $return->id, 'Return cancelled');
+
+            // Revert sale item refund data
+            foreach ($return->items as $returnItem) {
+                if ($returnItem->sale_item_id) {
+                    $saleItem = SaleItem::find($returnItem->sale_item_id);
+                    if ($saleItem) {
+                        // Subtract refunded quantities and amounts
+                        $saleItem->refunded_quantity -= $returnItem->quantity;
+                        $saleItem->refunded_amount -= $returnItem->total;
+                        
+                        // Update refund status
+                        $deliveredQty = (float) $saleItem->quantity;
+                        $refundedQty = (float) $saleItem->refunded_quantity;
+                        
+                        if ($refundedQty <= 0) {
+                            $saleItem->refund_status = 'none';
+                        } elseif ($refundedQty >= $deliveredQty) {
+                            $saleItem->refund_status = 'full';
+                        } else {
+                            $saleItem->refund_status = 'partial';
+                        }
+                        
+                        $saleItem->save();
+                    }
+                }
+            }
+
+            // Update sale
+            $sale = Sale::find($return->sale_id);
+            if ($sale) {
+                $sale->recalculate();
+                $sale->updatePaymentStatus();
+                
+                // If sale was marked as returned, revert to confirmed
+                if ($sale->status === Sale::STATUS_RETURNED) {
+                    $sale->status = Sale::STATUS_CONFIRMED;
+                    $sale->save();
+                }
+            }
+
+            // Delete the return
             $return->delete();
         });
 
-        return response()->json(['message' => 'Sale return deleted. Stock reversed.']);
+        return response()->json(['message' => 'Sale return deleted. Stock and sale records reverted.']);
+    }
+
+    /**
+     * Get refundable items from a sale
+     */
+    public function getRefundableItems(Request $request, int $saleId): JsonResponse
+    {
+        $branchId = $this->resolveBranchId($request);
+        
+        $sale = Sale::where('branch_id', $branchId)
+            ->with(['items.product', 'items.unit'])
+            ->findOrFail($saleId);
+
+        // Filter items that can be refunded
+        $refundableItems = $sale->items->filter(function ($item) {
+            $refundableQty = (float) $item->quantity - (float) $item->refunded_quantity;
+            return $refundableQty > 0;
+        })->map(function ($item) {
+            $refundableQty = (float) $item->quantity - (float) $item->refunded_quantity;
+            
+            return [
+                'sale_item_id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product->name ?? 'Unknown Product',
+                'unit_id' => $item->unit_id,
+                'unit_name' => $item->unit->name ?? 'N/A',
+                'original_quantity' => $item->quantity,
+                'refunded_quantity' => $item->refunded_quantity,
+                'refundable_quantity' => $refundableQty,
+                'unit_price' => $item->unit_price,
+                'total' => $item->total,
+                'refund_status' => $item->refund_status,
+            ];
+        });
+
+        return response()->json([
+            'sale_id' => $saleId,
+            'sale_reference' => $sale->reference_no,
+            'refundable_items' => $refundableItems->values()
+        ]);
     }
 }

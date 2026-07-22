@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../plugins/axios';
 
 export default function SaleReturnCreate() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sales, setSales] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchingItems, setFetchingItems] = useState(false);
   const [errors, setErrors] = useState({});
   const [productSearch, setProductSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [isSaleLocked, setIsSaleLocked] = useState(false);
   const dropdownRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -21,15 +25,67 @@ export default function SaleReturnCreate() {
 
   const [items, setItems] = useState([]);
 
+  // Check URL for sale_id parameter
   useEffect(() => {
-    Promise.all([
-      api.get('/sales/list/options'),
-      api.get('/products/list/options'),
-    ]).then(([sRes, pRes]) => {
+    const params = new URLSearchParams(location.search);
+    const saleId = params.get('sale_id');
+    if (saleId) {
+      setForm(prev => ({ ...prev, sale_id: saleId }));
+      setIsSaleLocked(true);
+    }
+  }, [location]);
+
+  useEffect(() => {
+    api.get('/sales/list/options').then((sRes) => {
       setSales(sRes.data?.data || []);
-      setProducts(pRes.data?.data || []);
     }).catch(() => {});
   }, []);
+
+  // Fetch products when needed
+  useEffect(() => {
+    if (products.length === 0) {
+      api.get('/products/list/options').then((pRes) => {
+        setProducts(pRes.data?.data || []);
+      }).catch(() => {});
+    }
+  }, []);
+
+  // Fetch sale items when sale is selected
+  useEffect(() => {
+    if (form.sale_id) {
+      fetchSaleItems(form.sale_id);
+    } else {
+      setItems([]);
+      setSelectedSale(null);
+    }
+  }, [form.sale_id]);
+
+  const fetchSaleItems = async (saleId) => {
+    setFetchingItems(true);
+    try {
+      const res = await api.get(`/sale-returns/refundable/${saleId}`);
+      const data = res.data;
+      setSelectedSale(data);
+      
+      // Map refundable items to return items
+      const returnItems = (data.refundable_items || []).map(item => ({
+        sale_item_id: item.sale_item_id,
+        product_id: item.product_id,
+        name: item.product_name,
+        quantity: item.refundable_quantity,
+        unit_price: item.unit_price,
+        max_quantity: item.refundable_quantity,
+        original_quantity: item.original_quantity,
+        refunded_quantity: item.refunded_quantity,
+      }));
+      setItems(returnItems);
+    } catch (err) {
+      console.error('Error fetching sale items:', err);
+      setErrors({ sale_id: 'Could not load sale items' });
+    } finally {
+      setFetchingItems(false);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -49,19 +105,44 @@ export default function SaleReturnCreate() {
   }, [productSearch, products]);
 
   const addProduct = (product) => {
-    if (items.some(it => it.product_id === product.id)) return;
+    if (items.some(it => it.product_id === product.id)) {
+      // Product already added, update quantity instead
+      setItems(prev => prev.map(item => 
+        item.product_id === product.id 
+          ? { ...item, quantity: Math.min(item.quantity + 1, item.max_quantity || item.quantity + 1) }
+          : item
+      ));
+      setProductSearch('');
+      setShowDropdown(false);
+      return;
+    }
+    
     setItems(prev => [...prev, {
+      sale_item_id: null,
       product_id: product.id,
       name: product.name,
       quantity: 1,
       unit_price: product.sale_price || product.purchase_price || 0,
+      max_quantity: 999999,
+      original_quantity: 0,
+      refunded_quantity: 0,
     }]);
     setProductSearch('');
     setShowDropdown(false);
   };
 
   const updateItemField = (index, field, value) => {
-    setItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    setItems(prev => prev.map((item, i) => {
+      if (i === index) {
+        const newValue = parseFloat(value) || 0;
+        const maxQty = item.max_quantity || 999999;
+        if (field === 'quantity') {
+          return { ...item, [field]: Math.min(newValue, maxQty) };
+        }
+        return { ...item, [field]: newValue };
+      }
+      return item;
+    }));
   };
 
   const removeItem = (index) => {
@@ -71,16 +152,28 @@ export default function SaleReturnCreate() {
 
   const calcItemTotal = (item) => (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0);
   const subtotal = items.reduce((s, i) => s + calcItemTotal(i), 0);
+  const totalRefundable = selectedSale?.refundable_items?.reduce((sum, item) => sum + (item.refundable_quantity || 0), 0) || 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (items.length === 0) { setErrors({ general: 'Please add at least one item.' }); return; }
+    
+    // Validate quantities
+    const invalidItems = items.filter(item => 
+      item.quantity <= 0 || (item.max_quantity && item.quantity > item.max_quantity)
+    );
+    if (invalidItems.length > 0) {
+      setErrors({ general: 'Some items have invalid quantities. Please check max limits.' });
+      return;
+    }
+    
     setLoading(true);
     setErrors({});
     try {
       await api.post('/sale-returns', {
         ...form,
         items: items.map(i => ({
+          sale_item_id: i.sale_item_id,
           product_id: i.product_id,
           quantity: parseFloat(i.quantity),
           unit_price: parseFloat(i.unit_price),
@@ -89,7 +182,7 @@ export default function SaleReturnCreate() {
       navigate('/sale-returns');
     } catch (err) {
       if (err.response?.status === 422) setErrors(err.response.data.errors || {});
-      else setErrors({ general: err.response?.data?.message || 'Failed' });
+      else setErrors({ general: err.response?.data?.message || 'Failed to create return' });
     } finally { setLoading(false); }
   };
 
@@ -117,11 +210,30 @@ export default function SaleReturnCreate() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Invoice *</label>
-                <select name="sale_id" value={form.sale_id} onChange={e => setForm({ ...form, sale_id: e.target.value })}
-                  className={inputClassErr('sale_id')} required>
+                <select 
+                  name="sale_id" 
+                  value={form.sale_id} 
+                  onChange={e => setForm({ ...form, sale_id: e.target.value })}
+                  className={inputClassErr('sale_id')} 
+                  required
+                  disabled={isSaleLocked}
+                >
                   <option value="">Select Invoice</option>
-                  {sales.map(s => <option key={s.id} value={s.id}>{s.reference_no} - {parseFloat(s.total_amount).toFixed(2)}</option>)}
+                  {sales.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.reference_no} - {parseFloat(s.total_amount).toFixed(2)}
+                    </option>
+                  ))}
                 </select>
+                {isSaleLocked && (
+                  <p className="mt-1 text-xs text-gray-400 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Invoice is locked (from sale details)
+                  </p>
+                )}
+                {errors.sale_id && <p className="mt-1 text-xs text-red-500">{errors.sale_id}</p>}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Return Date *</label>
@@ -146,63 +258,107 @@ export default function SaleReturnCreate() {
             <span className="text-xs text-gray-500">{items.length} item{items.length !== 1 ? 's' : ''} added</span>
           </div>
 
+          {/* Selected Sale Info */}
+          {selectedSale && (
+            <div className="px-4 py-2 bg-blue-50/50 border-b border-gray-200 flex items-center justify-between text-sm flex-wrap gap-2">
+              <span className="text-gray-700">
+                Invoice: <span className="font-medium">{selectedSale.sale_reference}</span>
+              </span>
+              <span className="text-gray-700">
+                Refundable Items: <span className="font-medium">{totalRefundable}</span>
+              </span>
+              {isSaleLocked && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-medium">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  From Sale
+                </span>
+              )}
+            </div>
+          )}
+
+          {fetchingItems && (
+            <div className="p-4 text-center">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-[#007c89] border-t-transparent"></div>
+              <span className="ml-2 text-sm text-gray-600">Loading sale items...</span>
+            </div>
+          )}
+
           {/* Product Search */}
-          <div className="p-4 border-b border-gray-200 bg-gray-50/50">
-            <div className="max-w-sm">
-              <label className="block text-xs text-gray-500 mb-0.5">Select Product</label>
-              <div className="relative" ref={dropdownRef}>
-                <input type="text" value={productSearch}
-                  onChange={e => { setProductSearch(e.target.value); setShowDropdown(true); }}
-                  onFocus={() => setShowDropdown(true)}
-                  placeholder="Search products..."
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
-                {showDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {filteredProducts.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-gray-400">No products found</div>
-                    ) : (
-                      filteredProducts.map(p => (
-                        <button key={p.id} type="button" onClick={() => addProduct(p)}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-[#007c89]/10 flex justify-between items-center">
-                          <span className="text-gray-900">{p.name}</span>
-                          <span className="text-gray-400 text-xs ml-2">{parseFloat(p.sale_price || 0).toFixed(2)}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
+          {!fetchingItems && (
+            <div className="p-4 border-b border-gray-200 bg-gray-50/50">
+              <div className="max-w-sm">
+                <label className="block text-xs text-gray-500 mb-0.5">Select Product</label>
+                <div className="relative" ref={dropdownRef}>
+                  <input type="text" value={productSearch}
+                    onChange={e => { setProductSearch(e.target.value); setShowDropdown(true); }}
+                    onFocus={() => setShowDropdown(true)}
+                    placeholder="Search products..."
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
+                  {showDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {filteredProducts.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-gray-400">No products found</div>
+                      ) : (
+                        filteredProducts.map(p => (
+                          <button key={p.id} type="button" onClick={() => addProduct(p)}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-[#007c89]/10 flex justify-between items-center">
+                            <span className="text-gray-900">{p.name}</span>
+                            <span className="text-gray-400 text-xs ml-2">{parseFloat(p.sale_price || 0).toFixed(2)}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Items Table */}
           <div className="p-4">
-            {items.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">No items added yet. Search and select a product above.</p>
-            ) : (
+            {items.length === 0 && !fetchingItems ? (
+              <p className="text-sm text-gray-400 text-center py-4">
+                {form.sale_id ? 'No refundable items found for this sale.' : 'Select an invoice first to load items.'}
+              </p>
+            ) : items.length > 0 && !fetchingItems ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase">
                       <th className="text-left py-2 px-3 font-medium w-8">#</th>
                       <th className="text-left py-2 px-3 font-medium">Product</th>
-                      <th className="text-right py-2 px-3 font-medium w-20">Qty</th>
-                      <th className="text-right py-2 px-3 font-medium w-24">Price</th>
-                      <th className="text-right py-2 px-3 font-medium w-20">Total</th>
+                      <th className="text-right py-2 px-3 font-medium w-32">Qty</th>
+                      <th className="text-right py-2 px-3 font-medium w-28">Price</th>
+                      <th className="text-right py-2 px-3 font-medium w-24">Total</th>
                       <th className="text-center py-2 px-3 font-medium w-12"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((item, idx) => {
                       const total = calcItemTotal(item);
+                      const maxQty = item.max_quantity || 999999;
                       return (
                         <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
                           <td className="py-2 px-3 text-gray-500 text-center">{idx + 1}</td>
-                          <td className="py-2 px-3 font-medium text-gray-900">{item.name}</td>
+                          <td className="py-2 px-3">
+                            <div>
+                              <div className="font-medium text-gray-900">{item.name}</div>
+                              {item.max_quantity && (
+                                <div className="text-xs text-gray-400">
+                                  Max: {item.max_quantity}
+                                </div>
+                              )}
+                            </div>
+                          </td>
                           <td className="py-2 px-3">
                             <input type="number" min="0.01" step="any" value={item.quantity}
                               onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded text-right" />
+                            {item.quantity > maxQty && (
+                              <div className="text-xs text-red-500">Exceeds max</div>
+                            )}
                           </td>
                           <td className="py-2 px-3">
                             <input type="number" min="0" step="any" value={item.unit_price}
@@ -213,7 +369,9 @@ export default function SaleReturnCreate() {
                           <td className="py-2 px-3 text-center">
                             <button type="button" onClick={() => removeItem(idx)}
                               className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
                             </button>
                           </td>
                         </tr>
@@ -222,7 +380,7 @@ export default function SaleReturnCreate() {
                   </tbody>
                 </table>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -242,8 +400,8 @@ export default function SaleReturnCreate() {
                 <div className="flex justify-between"><span className="text-gray-600">Items</span><span>{items.length}</span></div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2"><span>Total</span><span>{subtotal.toFixed(2)}</span></div>
               </div>
-              <button type="submit" disabled={loading}
-                className="w-full mt-4 px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77] disabled:opacity-50">
+              <button type="submit" disabled={loading || fetchingItems || items.length === 0}
+                className="w-full mt-4 px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77] disabled:opacity-50 disabled:cursor-not-allowed">
                 {loading ? 'Creating...' : 'Create Return'}
               </button>
             </div>
