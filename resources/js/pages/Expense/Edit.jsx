@@ -187,7 +187,7 @@ const ExpenseEdit = () => {
               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                 expense.account ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
               }`}>
-                {expense.account?.name || 'No Account'}
+                {expense.account?.name || 'No Wallet'}
               </span>
             </div>
           </div>
@@ -219,11 +219,11 @@ const ExpenseEdit = () => {
                 )}
               </div>
 
-              {/* Account */}
+              {/* Wallet */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   <Building2 className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
-                  Account <span className="text-red-500">*</span>
+                  Wallet <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="account_id"
@@ -231,7 +231,7 @@ const ExpenseEdit = () => {
                   onChange={handleChange}
                   className={`w-full px-3 py-1.5 text-sm bg-gray-50 border ${errors.account_id ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
                 >
-                  <option value="">Select Account</option>
+                  <option value="">Select Wallet</option>
                   {accounts.map(a => (
                     <option key={a.id} value={a.id}>
                       {a.name} (AFN {parseFloat(a.balance).toFixed(2)})
@@ -343,7 +343,7 @@ const ExpenseEdit = () => {
                   </p>
                 </div>
                 <div>
-                  <span className="text-gray-400">Account</span>
+                  <span className="text-gray-400">Wallet</span>
                   <p className="font-medium text-gray-700">
                     {expense.account?.name || 'N/A'}
                   </p>

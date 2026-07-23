@@ -155,7 +155,7 @@ export default function OtherIncomeIndex() {
             onChange={e => setFilters(prev => ({ ...prev, account_id: e.target.value }))}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="">All Accounts</option>
+            <option value="">All Wallets</option>
             {accounts.map(acc => (
               <option key={acc.id} value={acc.id}>{acc.name}</option>
             ))}
@@ -214,7 +214,7 @@ export default function OtherIncomeIndex() {
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Income #</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Account</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Wallet</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Description</th>
                     <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Created By</th>

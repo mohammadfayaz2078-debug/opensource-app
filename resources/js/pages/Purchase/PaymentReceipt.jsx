@@ -137,7 +137,7 @@ export default function PaymentReceipt() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">{account?.name || '—'}</p>
-                  <p className="text-xs text-gray-400 capitalize">{account?.type || '—'} account</p>
+                  {/* <p className="text-xs text-gray-400 capitalize">{account?.type || '—'} account</p> */}
                 </div>
               </div>
             </div>

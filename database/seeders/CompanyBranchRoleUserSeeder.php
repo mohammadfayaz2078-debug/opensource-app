@@ -69,75 +69,7 @@ class CompanyBranchRoleUserSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        // ─── 4. Create Viewer Role ──────────────────────────────────────────
-        $viewerRoleId = DB::table('roles')->insertGetId([
-            'branch_id' => $branchId,
-            'role_name' => 'viewer',
-            'permissions' => json_encode([
-                'dashboard' => ['view' => true],
-                'accounts' => ['view' => true],
-                'expenses' => ['view' => true],
-                'transactions' => ['view' => true],
-                'users' => ['view' => false],
-                'settings' => ['view' => false],
-                'reports' => ['view' => true],
-            ]),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
 
-        DB::table('users')->insert([
-            'company_id' => $companyId,
-            'branch_id' => $branchId,
-            'role_id' => $viewerRoleId,
-            'first_name' => 'Viewer',
-            'last_name' => 'User',
-            'email' => 'viewer@gmail.com',
-            'password' => Hash::make('admin@123'),
-            'phone' => '+93 700 000 002',
-            'status' => true,
-            'language' => 'en',
-            'email_verified_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // ─── 5. Create Super Admin User ─────────────────────────────────────
-        DB::table('users')->insert([
-            'company_id' => $companyId,
-            'branch_id' => null,
-            'role_id' => null,
-            'first_name' => 'Super',
-            'last_name' => 'Admin',
-            'email' => 'superadmin@gmail.com',
-            'password' => Hash::make('admin@123'),
-            'phone' => '+93 700 000 003',
-            'status' => true,
-            'language' => 'en',
-            'email_verified_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // ─── 6. Create Admin Role ────────────────────────────────────────────
-        $adminRoleId = DB::table('roles')->insertGetId([
-            'branch_id' => null, // Global role
-            'role_name' => 'admin',
-            'permissions' => json_encode([
-                'dashboard' => ['view' => true],
-                'accounts' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => true],
-                'expenses' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => true],
-                'transactions' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => true],
-                'users' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => true],
-                'roles' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => true],
-                'settings' => ['view' => true, 'edit' => true],
-                'reports' => ['view' => true, 'create' => true, 'export' => true],
-                'companies' => ['view' => true, 'edit' => true],
-                'branches' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => true],
-            ]),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
 
         // ─── 7. Create Accounts ──────────────────────────────────────────────
         DB::table('accounts')->insert([

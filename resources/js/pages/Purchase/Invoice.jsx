@@ -99,7 +99,7 @@ export default function PurchaseInvoice() {
                   )}
                   {purchase.account && (
                     <div className="flex justify-between text-sm py-0.5">
-                      <span className="text-gray-500">Account</span>
+                      <span className="text-gray-500">Wallet</span>
                       <span>{purchase.account.name}</span>
                     </div>
                   )}

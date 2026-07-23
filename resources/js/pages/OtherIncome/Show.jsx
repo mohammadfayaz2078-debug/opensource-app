@@ -164,9 +164,9 @@ export default function OtherIncomeShow() {
           </p>
         </div>
         <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-4 border border-purple-200">
-          <p className="text-xs font-medium text-purple-700 uppercase tracking-wider">Account</p>
+          <p className="text-xs font-medium text-purple-700 uppercase tracking-wider">Wallet</p>
           <p className="text-lg font-semibold text-purple-800 mt-1">
-            {income.account?.name || 'No Account'}
+            {income.account?.name || 'No Wallet'}
           </p>
         </div>
       </div>
@@ -246,7 +246,7 @@ export default function OtherIncomeShow() {
                 </dd>
               </div>
               <div className="border-t border-gray-100 pt-4">
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Account</dt>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Wallet</dt>
                 <dd className="mt-1 text-sm text-gray-900">
                   {income.account ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">

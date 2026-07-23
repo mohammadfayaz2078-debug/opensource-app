@@ -17,6 +17,7 @@ const Register = () => {
   
   // Options state
   const [roles, setRoles] = useState([]);
+  const [filteredRoles, setFilteredRoles] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   
@@ -37,10 +38,30 @@ const Register = () => {
   
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    // If branch changes, reset role selection
+    if (name === 'branch_id') {
+      setForm(prev => ({
+        ...prev,
+        [name]: value,
+        role_id: '' // Reset role when branch changes
+      }));
+      
+      // Clear role error if exists
+      if (errors.role_id) {
+        setErrors(prev => ({
+          ...prev,
+          role_id: null
+        }));
+      }
+    } else {
+      setForm(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
+    
+    // Clear field error
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -62,6 +83,32 @@ const Register = () => {
     }));
   };
   
+  // Filter roles based on selected branch
+  const filterRolesByBranch = (branchId) => {
+    if (!branchId) {
+      setFilteredRoles([]);
+      return;
+    }
+    
+    // Filter roles based on branch_id
+    // A role can be:
+    // 1. Assigned to a specific branch (branch_id matches)
+    // 2. Global role (branch_id is null)
+    const filtered = roles.filter(role => 
+      role.branch_id === parseInt(branchId) || role.branch_id === null
+    );
+    
+    setFilteredRoles(filtered);
+    
+    // Reset role selection if current role is not in filtered list
+    if (form.role_id) {
+      const roleExists = filtered.some(role => role.id === parseInt(form.role_id));
+      if (!roleExists) {
+        setForm(prev => ({ ...prev, role_id: '' }));
+      }
+    }
+  };
+  
   // Fetch roles separately
   const fetchRoles = async () => {
     try {
@@ -81,6 +128,13 @@ const Register = () => {
       }
       
       setRoles(rolesData);
+      
+      // If branch is already selected (branch user), filter roles
+      if (form.branch_id) {
+        filterRolesByBranch(form.branch_id);
+      } else {
+        setFilteredRoles(rolesData);
+      }
     } catch (err) {
       console.error('Failed to fetch roles:', err);
       Swal.fire('Error', 'Failed to load roles', 'error');
@@ -125,6 +179,18 @@ const Register = () => {
     }
   };
   
+  // Filter roles when branch changes
+  useEffect(() => {
+    if (form.branch_id && roles.length > 0) {
+      filterRolesByBranch(form.branch_id);
+    } else if (!form.branch_id) {
+      setFilteredRoles([]);
+      if (form.role_id) {
+        setForm(prev => ({ ...prev, role_id: '' }));
+      }
+    }
+  }, [form.branch_id, roles]);
+  
   const submit = async (e) => {
     e.preventDefault();
     
@@ -160,8 +226,47 @@ const Register = () => {
     } catch (err) {
       console.error('Error creating user:', err);
       if (err.response?.status === 422) {
-        setErrors(err.response.data.errors || {});
-        Swal.fire('Validation Error', 'Please check the form for errors', 'error');
+        const validationErrors = err.response.data.errors;
+        setErrors(validationErrors);
+        
+        // Check if there's a branch capacity error
+        if (validationErrors.branch_id) {
+          const errorMessage = validationErrors.branch_id[0];
+          const branchCapacity = err.response.data.branch_capacity;
+          
+          // Show a more detailed alert for capacity errors
+          if (branchCapacity) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Branch User Limit Reached',
+              html: `
+                <div class="text-left">
+                  <p class="mb-2">${errorMessage}</p>
+                  <div class="bg-gray-50 p-3 rounded-lg">
+                    <p><strong>Current Users:</strong> ${branchCapacity.current_users}</p>
+                    <p><strong>Maximum Allowed:</strong> ${branchCapacity.max_allowed}</p>
+                    <p><strong>Available Slots:</strong> ${branchCapacity.remaining_slots}</p>
+                    <p class="mt-2 text-red-600">${branchCapacity.is_full ? '⚠️ Branch is at full capacity!' : '⚠️ No slots available!'}</p>
+                  </div>
+                </div>
+              `,
+              confirmButtonColor: '#007c89',
+              confirmButtonText: 'OK'
+            });
+          } else {
+            Swal.fire('Error', errorMessage, 'error');
+          }
+        } else {
+          // Generic validation error
+          const errorMessages = Object.values(validationErrors).flat();
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            html: errorMessages.map(msg => `<p class="text-left">• ${msg}</p>`).join(''),
+            confirmButtonColor: '#007c89',
+            confirmButtonText: 'OK'
+          });
+        }
       } else {
         const message = err.response?.data?.message || 'Failed to create user';
         setError(message);
@@ -343,34 +448,9 @@ const Register = () => {
               </div>
             </div>
             
-            {/* Role and Branch Row */}
+            {/* Branch and Role Row - Branch First, then Role */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Role <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="role_id"
-                  value={form.role_id}
-                  onChange={handleInputChange}
-                  required
-                  disabled={loadingOptions}
-                  className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
-                    errors.role_id ? 'border-red-500' : ''
-                  }`}
-                >
-                  <option value="" disabled>Select a role</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.role_name}
-                    </option>
-                  ))}
-                </select>
-                {errors.role_id && (
-                  <p className="mt-1 text-xs text-red-600">{errors.role_id[0]}</p>
-                )}
-              </div>
-              
+              {/* Branch Selection - First */}
               {!isBranchUser ? (
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -405,6 +485,40 @@ const Register = () => {
                   </p>
                 </div>
               )}
+              
+              {/* Role Selection - Second (filtered by branch) */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">
+                  Role <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="role_id"
+                  value={form.role_id}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loadingOptions || (!isBranchUser && !form.branch_id)}
+                  className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
+                    errors.role_id ? 'border-red-500' : ''
+                  } ${(!isBranchUser && !form.branch_id) ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                >
+                  <option value="" disabled>
+                    {!isBranchUser && !form.branch_id ? 'Select a branch first' : 'Select a role'}
+                  </option>
+                  {filteredRoles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.role_name} {role.branch_id ? '(Branch Specific)' : '(Global)'}
+                    </option>
+                  ))}
+                </select>
+                {errors.role_id && (
+                  <p className="mt-1 text-xs text-red-600">{errors.role_id[0]}</p>
+                )}
+                {!isBranchUser && form.branch_id && filteredRoles.length === 0 && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    No roles available for this branch. Please select a different branch.
+                  </p>
+                )}
+              </div>
             </div>
             
             {/* Status Toggle */}

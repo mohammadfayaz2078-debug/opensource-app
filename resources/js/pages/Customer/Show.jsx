@@ -88,7 +88,6 @@ export default function CustomerShow() {
     catch (err) { alert(err.response?.data?.message || 'Failed'); }
   };
 
-<<<<<<< HEAD
   const handleConvertToCustomer = async () => {
     if (!confirm('Convert this lead to a customer?\n\nPending orders will be converted to invoices.')) return;
     try {
@@ -98,7 +97,9 @@ export default function CustomerShow() {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to convert lead.');
     }
-=======
+
+  };
+
   const openPayModal = (invoice) => {
     // Don't allow payment for returned or cancelled sales
     if (invoice.status === 'returned' || invoice.status === 'cancelled') {
@@ -111,7 +112,6 @@ export default function CustomerShow() {
   const handlePaymentSuccess = () => {
     // Refresh invoices after payment
     fetchTabData('invoices');
->>>>>>> fc062ef9846ee7d99db5b4de421e9a4ecd99308c
   };
 
   const tabs = [
@@ -595,7 +595,7 @@ export default function CustomerShow() {
                   <thead>
                     <tr className="bg-gray-50">
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Account</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Wallet</th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Invoice</th>
                       <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">Amount</th>
                       <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">Receipt</th>

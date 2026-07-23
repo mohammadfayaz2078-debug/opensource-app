@@ -142,7 +142,7 @@ export default function AccountTransactions() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-1">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Account Transactions</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Wallet Transactions</h1>
             <p className="text-sm text-gray-500 mt-0.5">View all financial transactions across accounts</p>
           </div>
           <button
@@ -152,7 +152,7 @@ export default function AccountTransactions() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            Manage Accounts
+            Manage Wallets
           </button>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function AccountTransactions() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by description or account..."
+            placeholder="Search by description or wallet..."
             className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
@@ -229,7 +229,7 @@ export default function AccountTransactions() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Wallet</th>
                   <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                   <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                   <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Balance After</th>

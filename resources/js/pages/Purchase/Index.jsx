@@ -313,10 +313,10 @@ export default function PurchaseIndex() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Account *</label>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Wallet *</label>
                 <select value={payAccountId} onChange={e => setPayAccountId(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]">
-                  <option value="">Select account</option>
+                  <option value="">Select Wallet</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>

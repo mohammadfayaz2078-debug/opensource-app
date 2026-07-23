@@ -27,10 +27,14 @@ class Branch extends Model
         'branch_email',
         'branch_website',
         'is_active',
+        'allowed_user_count',
+        'allowed_product_publish_count',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'allowed_user_count' => 'integer',
+        'allowed_product_publish_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -49,6 +53,31 @@ class Branch extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * Get the products for the branch
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+
+    /**
+     * Get the count of public products
+     */
+    public function getPublicProductsCountAttribute(): int
+    {
+        return $this->publicProducts()->count();
+    }
+
+    /**
+     * Get the count of all products
+     */
+    public function getProductsCountAttribute(): int
+    {
+        return $this->products()->count();
     }
 
     /**
@@ -137,5 +166,90 @@ class Branch extends Model
         ]);
         
         return implode("\n", $parts);
+    }
+
+    /**
+     * Check if user limit has been reached
+     */
+    public function isUserLimitReached(): bool
+    {
+        $userCount = $this->users()->count();
+        return $userCount >= $this->allowed_user_count;
+    }
+
+    /**
+     * Get remaining user slots
+     */
+    public function getRemainingUserSlotsAttribute(): int
+    {
+        $userCount = $this->users()->count();
+        return max(0, $this->allowed_user_count - $userCount);
+    }
+
+    /**
+     * Check if branch has reached its user limit
+     */
+    public function hasReachedUserLimit(): bool
+    {
+        return $this->isUserLimitReached();
+    }
+
+    /**
+     * Get remaining product publish slots (only for public products)
+     */
+    public function getRemainingProductSlotsAttribute(): int
+    {
+        $publicProductCount = $this->publicProducts()->count();
+        return max(0, $this->allowed_product_publish_count - $publicProductCount);
+    }
+
+    /**
+     * Check if product publish limit has been reached (only for public products)
+     */
+    public function isProductLimitReached(): bool
+    {
+        $publicProductCount = $this->publicProducts()->count();
+        return $publicProductCount >= $this->allowed_product_publish_count;
+    }
+
+    /**
+     * Get total product count (all products)
+     */
+    public function getTotalProductsCountAttribute(): int
+    {
+        return $this->products()->count();
+    }
+
+    /**
+     * Get public product count
+     */
+    public function getPublicProductCountAttribute(): int
+    {
+        return $this->publicProducts()->count();
+    }
+
+    /**
+     * Get private product count
+     */
+    public function getPrivateProductCountAttribute(): int
+    {
+        return $this->products()->where('is_public', false)->count();
+    }
+
+
+        /**
+     * Get public products for the branch (where is_public = true)
+     */
+    public function publicProducts(): HasMany
+    {
+        return $this->hasMany(Product::class)->where('is_public', true);
+    }
+
+    /**
+     * Get private products for the branch (where is_public = false)
+     */
+    public function privateProducts(): HasMany
+    {
+        return $this->hasMany(Product::class)->where('is_public', false);
     }
 }

@@ -88,7 +88,7 @@ export default function OtherIncomeCreate() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Account <span className="text-red-500">*</span>
+                    Wallet <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="account_id"
@@ -97,7 +97,7 @@ export default function OtherIncomeCreate() {
                     className={inputClass('account_id')}
                     required
                   >
-                    <option value="">Select account</option>
+                    <option value="">Select Wallet</option>
                     {accounts.map(acc => (
                       <option key={acc.id} value={acc.id}>
                         {acc.name} - Balance: {parseFloat(acc.balance || 0).toFixed(2)}

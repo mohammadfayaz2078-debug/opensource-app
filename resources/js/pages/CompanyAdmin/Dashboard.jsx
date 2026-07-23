@@ -1,271 +1,655 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
-import Swal from 'sweetalert2';
-import BranchUsersModal from '../../components/BranchUsersModal';
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Package,
+  ShoppingCart,
+  Truck,
+  Wallet,
+  BarChart3,
+  Activity,
+  Clock,
+  Filter,
+  RefreshCw,
+  Loader2,
+  Building2,
+  UserPlus,
+  Store,
+  ChevronDown,
+  Calendar,
+  X,
+  ArrowUpRight,
+  ArrowDownRight
+} from 'lucide-react';
 
-const CompanyAdminDashboard = () => {
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Area,
+  ComposedChart
+} from 'recharts';
+
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+
+const CompanyDashboard = () => {
   const navigate = useNavigate();
-  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, users: 0 });
-  const [impersonating, setImpersonating] = useState(null);
-  const [selectedBranch, setSelectedBranch] = useState(null);
-  const [usersModalOpen, setUsersModalOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [data, setData] = useState(null);
+  const [branches, setBranches] = useState([]); // ✅ Define branches state
+  const [filters, setFilters] = useState({
+    branch_id: '',
+    from_date: '',
+    to_date: '',
+    period_type: 'monthly',
+  });
+  const [showFilters, setShowFilters] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  // Fetch branches separately
+  useEffect(() => {
+    fetchBranches();
+  }, []);
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [filters]);
+
+  const fetchBranches = async () => {
+    try {
+      const res = await api.get('/branches?per_page=100');
+      // Check if response has data property
+      const branchesData = res.data?.data?.data || res.data?.data || [];
+      setBranches(branchesData);
+      console.log('Branches fetched:', branchesData);
+    } catch (err) {
+      console.error('Failed to fetch branches:', err);
+      // If the branches endpoint fails, try to get from dashboard
+      if (data?.branches) {
+        setBranches(data.branches);
+      }
+    }
+  };
 
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/company-admin/dashboard');
-      if (res.data?.success) {
-        setBranches(res.data.branches || []);
-        setStats({
-          total: res.data.stats?.total_branches || 0,
-          active: res.data.stats?.active_branches || 0,
-          inactive: res.data.stats?.inactive_branches || 0,
-          users: res.data.stats?.total_users || 0,
-        });
+      const params = { ...filters };
+      if (!params.from_date) delete params.from_date;
+      if (!params.to_date) delete params.to_date;
+      
+      const res = await api.get('/company-admin/dashboard', { params });
+      console.log('Dashboard Response:', res.data);
+      console.log('Branches:', res.data?.branches);
+      
+      setData(res.data);
+      
+      // If branches are returned in dashboard response, use them
+      if (res.data?.branches && res.data.branches.length > 0) {
+        setBranches(res.data.branches);
       }
     } catch (err) {
       console.error('Failed to fetch dashboard:', err);
+      console.error('Error response:', err.response?.data);
     } finally {
       setLoading(false);
     }
   };
 
-  const openBranchUsers = (branch) => {
-    if (!branch.is_active) {
-      Swal.fire('Warning', 'Cannot login to an inactive branch.', 'warning');
-      return;
-    }
-    setSelectedBranch(branch);
-    setUsersModalOpen(true);
+  const refresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchDashboard(), fetchBranches()]);
+    setRefreshing(false);
   };
 
-  const closeBranchUsersModal = () => {
-    setUsersModalOpen(false);
-    setSelectedBranch(null);
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      branch_id: '',
+      from_date: '',
+      to_date: '',
+      period_type: 'monthly',
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'AFN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount || 0);
+  };
+
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('en-US').format(num || 0);
   };
 
   const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString();
+    if (!date) return 'All Time';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
+  const getStatusColor = (value) => {
+    if (value > 0) return 'text-green-600';
+    if (value < 0) return 'text-red-600';
+    return 'text-gray-500';
+  };
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'sale':
+        return <ShoppingCart className="w-4 h-4 text-blue-500" />;
+      case 'purchase':
+        return <Truck className="w-4 h-4 text-purple-500" />;
+      case 'customer':
+        return <Users className="w-4 h-4 text-emerald-500" />;
+      default:
+        return <Activity className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const getActivityColor = (type) => {
+    switch (type) {
+      case 'sale':
+        return 'bg-blue-50 border-blue-200';
+      case 'purchase':
+        return 'bg-purple-50 border-purple-200';
+      case 'customer':
+        return 'bg-emerald-50 border-emerald-200';
+      default:
+        return 'bg-gray-50 border-gray-200';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading company dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const summary = data?.summary || {};
+  const branchStats = data?.branch_stats || [];
+  const salesData = data?.sales_data || {};
+  const financialChart = data?.financial_chart || { labels: [], revenue: [], expenses: [], profit: [] };
+  const topProducts = data?.top_products || [];
+  const topBranches = data?.top_branches || [];
+  const recentActivity = data?.recent_activity || [];
+  const userStats = data?.user_stats || {};
+  const inventoryStats = data?.inventory_stats || {};
+  const selectedBranch = data?.selected_branch;
+
+  // Chart data
+  const chartData = financialChart.labels.map((label, index) => ({
+    name: label,
+    revenue: financialChart.revenue[index] || 0,
+    expenses: financialChart.expenses[index] || 0,
+    profit: financialChart.profit[index] || 0,
+  }));
+
+  // Payment breakdown for pie chart
+  const paymentData = salesData.payment_breakdown?.map(item => ({
+    name: item.status.toUpperCase(),
+    value: item.count,
+  })) || [];
+
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Welcome, {user.manager_name || user.company_name || 'Company Admin'}
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Company Management — manage all branches from here
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Branches</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
-            </div>
-            <div className="bg-blue-100 rounded-full p-3">
-              <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
+    <div className="min-h-screen bg-gray-50 p-3 md:p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-emerald-500" />
+              Company Dashboard
+            </h1>
+            <p className="text-xs text-gray-500">{data?.company?.company_name || 'Company Overview'}</p>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">{stats.active}</p>
-            </div>
-            <div className="bg-green-100 rounded-full p-3">
-              <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Inactive</p>
-              <p className="text-3xl font-bold text-gray-400 mt-1">{stats.inactive}</p>
-            </div>
-            <div className="bg-gray-100 rounded-full p-3">
-              <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Users</p>
-              <p className="text-3xl font-bold text-purple-600 mt-1">{stats.users}</p>
-            </div>
-            <div className="bg-purple-100 rounded-full p-3">
-              <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Branches List */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800">All Branches</h2>
-          <Link
-            to="/company-admin/branches/create"
-            className="inline-flex items-center px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77] transition-colors"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-            </svg>
-            New Branch
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-            <span className="ml-3 text-gray-500">Loading branches...</span>
-          </div>
-        ) : branches.length === 0 ? (
-          <div className="text-center py-16">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-            <p className="mt-3 text-gray-500">No branches yet</p>
-            <Link
-              to="/company-admin/branches/create"
-              className="mt-3 inline-flex items-center px-4 py-2 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77]"
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Create your first branch
-            </Link>
+              <Filter className="w-4 h-4" />
+              {showFilters ? 'Hide Filters' : 'Filters'}
+            </button>
+            <button
+              onClick={refresh}
+              disabled={refreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
           </div>
-        ) : (
+        </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Branch</label>
+                <select
+                  value={filters.branch_id}
+                  onChange={(e) => handleFilterChange('branch_id', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="">All Branches</option>
+                  {branches.map(branch => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.branch_name}
+                      {branch.branch_province && ` (${branch.branch_province})`}
+                    </option>
+                  ))}
+                </select>
+                {branches.length === 0 && (
+                  <p className="text-[10px] text-gray-400 mt-1">No branches available</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">From</label>
+                <input
+                  type="date"
+                  value={filters.from_date}
+                  onChange={(e) => handleFilterChange('from_date', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">To</label>
+                <input
+                  type="date"
+                  value={filters.to_date}
+                  onChange={(e) => handleFilterChange('to_date', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Period Type</label>
+                <select
+                  value={filters.period_type}
+                  onChange={(e) => handleFilterChange('period_type', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end mt-3 pt-3 border-t border-gray-100">
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+              >
+                <X className="w-4 h-4" />
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Selected Branch Info */}
+        {selectedBranch && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4">
+            <div className="flex items-center gap-3">
+              <Store className="w-5 h-5 text-emerald-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">{selectedBranch.branch_name}</p>
+                <p className="text-xs text-gray-600">{selectedBranch.branch_province}, {selectedBranch.branch_district}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Revenue</p>
+                <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.sales?.total)}</p>
+              </div>
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">{formatNumber(summary.sales?.count || 0)} orders</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Expenses</p>
+                <p className="text-lg font-bold text-red-600">{formatCurrency(summary.expenses?.total)}</p>
+              </div>
+              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                <Wallet className="w-4 h-4 text-red-600" />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">{formatNumber(summary.expenses?.count || 0)} transactions</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Net Profit</p>
+                <p className={`text-lg font-bold ${getStatusColor(summary.net_profit)}`}>
+                  {formatCurrency(summary.net_profit)}
+                </p>
+              </div>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                summary.net_profit > 0 ? 'bg-emerald-100' : 
+                summary.net_profit < 0 ? 'bg-red-100' : 'bg-gray-100'
+              }`}>
+                {summary.net_profit > 0 ? (
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                ) : summary.net_profit < 0 ? (
+                  <TrendingDown className="w-4 h-4 text-red-600" />
+                ) : (
+                  <Activity className="w-4 h-4 text-gray-600" />
+                )}
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">After all expenses</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Customers</p>
+                <p className="text-lg font-bold text-gray-900">{formatNumber(summary.customers)}</p>
+              </div>
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-purple-600" />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">{formatNumber(summary.suppliers || 0)} suppliers</p>
+          </div>
+        </div>
+
+        {/* Branch Stats */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-emerald-500" />
+            Branch Performance
+          </h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Branch</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Sales</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Orders</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Purchases</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Expenses</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Profit</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">Customers</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {branches.map((branch) => (
-                  <tr key={branch.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0 bg-[#007c89]/10 rounded-lg flex items-center justify-center">
-                          {branch.branch_logo_url ? (
-                            <img src={`/storage/${branch.branch_logo_url}`} alt="" className="h-8 w-8 object-cover rounded" />
-                          ) : (
-                            <span className="text-[#007c89] font-bold text-sm">
-                              {(branch.branch_name || '?').charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{branch.branch_name}</div>
-                          {branch.branch_slogan && (
-                            <div className="text-xs text-gray-500">{branch.branch_slogan}</div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{branch.branch_province || '-'}</div>
-                      <div className="text-xs text-gray-500">
-                        {[branch.branch_district, branch.branch_village].filter(Boolean).join(', ') || '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{branch.branch_phone || '-'}</div>
-                      <div className="text-xs text-gray-500">{branch.branch_email || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {branch.users_count || 0}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        branch.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                      }`}>
-                        {branch.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {formatDate(branch.created_at)}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Login - Show Branch Users */}
-                        <button
-                          onClick={() => openBranchUsers(branch)}
-                          disabled={!branch.is_active}
-                          className="inline-flex items-center px-3 py-1.5 bg-[#007c89] text-white text-xs font-medium rounded-md hover:bg-[#006d77] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="View users and login as a branch user"
-                        >
-                          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                          </svg>
-                          Login
-                        </button>
-                        {/* Edit */}
-                        <button
-                          onClick={() => navigate(`/company-admin/branches/${branch.id}/edit`)}
-                          className="p-1.5 text-gray-400 hover:text-amber-600 transition-colors"
-                          title="Edit"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
+              <tbody>
+                {branchStats.length > 0 ? (
+                  branchStats.map((branch, index) => (
+                    <tr key={branch.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                      <td className="px-3 py-2">
+                        <div className="font-medium text-gray-900">{branch.name}</div>
+                        <div className="text-[10px] text-gray-400">{branch.location}</div>
+                      </td>
+                      <td className="px-3 py-2 text-right font-medium text-gray-900">{formatCurrency(branch.sales)}</td>
+                      <td className="px-3 py-2 text-right text-gray-600">{formatNumber(branch.sales_count)}</td>
+                      <td className="px-3 py-2 text-right text-gray-600">{formatCurrency(branch.purchases)}</td>
+                      <td className="px-3 py-2 text-right text-gray-600">{formatCurrency(branch.expenses)}</td>
+                      <td className={`px-3 py-2 text-right font-medium ${getStatusColor(branch.profit)}`}>
+                        {formatCurrency(branch.profit)}
+                      </td>
+                      <td className="px-3 py-2 text-center text-gray-600">{formatNumber(branch.customers)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="px-3 py-4 text-center text-gray-400">No branch data available</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Branch Users Modal */}
-      <BranchUsersModal
-        branch={selectedBranch}
-        isOpen={usersModalOpen}
-        onClose={closeBranchUsersModal}
-      />
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          {/* Financial Chart */}
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Financial Overview</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(value)}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend />
+                  <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="#93C5FD" fillOpacity={0.3} />
+                  <Area type="monotone" dataKey="expenses" stroke="#EF4444" fill="#FCA5A5" fillOpacity={0.3} />
+                  <Line type="monotone" dataKey="profit" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Payment Breakdown */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Sales Payment Status</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={paymentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={70}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {paymentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Top Products & Branches */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Package className="w-4 h-4 text-blue-500" />
+              Top Products
+            </h2>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {topProducts.length > 0 ? (
+                topProducts.map((product, index) => (
+                  <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+                        <p className="text-xs text-gray-500">{formatNumber(product.quantity)} units</p>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(product.revenue)}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-400 py-4 text-sm">No product data available</p>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-purple-500" />
+              Top Branches
+            </h2>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {topBranches.length > 0 ? (
+                topBranches.map((branch, index) => (
+                  <div key={branch.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">{branch.name}</p>
+                        <p className="text-xs text-gray-500">{branch.order_count} orders</p>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(branch.revenue)}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-400 py-4 text-sm">No branch data available</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* User & Inventory Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Users className="w-4 h-4 text-emerald-500" />
+              User Statistics
+            </h2>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="text-center p-2 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-500">Total</p>
+                <p className="text-lg font-bold text-gray-900">{formatNumber(userStats.total)}</p>
+              </div>
+              <div className="text-center p-2 bg-green-50 rounded-lg">
+                <p className="text-xs text-gray-500">Active</p>
+                <p className="text-lg font-bold text-green-600">{formatNumber(userStats.active)}</p>
+              </div>
+              <div className="text-center p-2 bg-red-50 rounded-lg">
+                <p className="text-xs text-gray-500">Inactive</p>
+                <p className="text-lg font-bold text-red-600">{formatNumber(userStats.inactive)}</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              {userStats.by_role?.map((role, index) => (
+                <div key={index} className="flex justify-between items-center px-2 py-1 bg-gray-50 rounded">
+                  <span className="text-sm text-gray-700">{role.role}</span>
+                  <span className="text-sm font-medium text-gray-900">{formatNumber(role.count)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Package className="w-4 h-4 text-orange-500" />
+              Inventory Overview
+            </h2>
+            <div className="text-center p-3 bg-gray-50 rounded-lg mb-3">
+              <p className="text-xs text-gray-500">Total Products</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(inventoryStats.total)}</p>
+            </div>
+            <div className="space-y-1">
+              {inventoryStats.by_category?.map((category, index) => (
+                <div key={index} className="flex justify-between items-center px-2 py-1 bg-gray-50 rounded">
+                  <span className="text-sm text-gray-700">{category.category}</span>
+                  <span className="text-sm font-medium text-gray-900">{formatNumber(category.count)}</span>
+                </div>
+              ))}
+              {(!inventoryStats.by_category || inventoryStats.by_category.length === 0) && (
+                <p className="text-center text-gray-400 py-2 text-sm">No categories data</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-gray-500" />
+            Recent Activity
+          </h2>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => (
+                <div key={index} className={`flex items-center justify-between p-2 rounded-lg border ${getActivityColor(activity.type)}`}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    {getActivityIcon(activity.type)}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {activity.type === 'sale' && `Invoice ${activity.reference}`}
+                        {activity.type === 'purchase' && `Bill ${activity.reference}`}
+                        {activity.type === 'customer' && `New Customer: ${activity.name}`}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {activity.customer || activity.supplier || activity.code || ''}
+                        {activity.branch && ` • ${activity.branch}`}
+                        {' '}• {activity.time_ago || 'Just now'}
+                      </p>
+                    </div>
+                  </div>
+                  {activity.amount && (
+                    <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(activity.amount)}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-400 py-4 text-sm">No recent activity</p>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-4 text-center text-[10px] text-gray-400">
+          {data?.company?.company_name || 'Company'} Dashboard • 
+          {filters.from_date || filters.to_date ? (
+            ` Showing: ${formatDate(filters.from_date)} - ${formatDate(filters.to_date)}`
+          ) : (
+            ' Showing: All Time'
+          )}
+          {selectedBranch && ` • Branch: ${selectedBranch.branch_name}`}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default CompanyAdminDashboard;
-
+export default CompanyDashboard;

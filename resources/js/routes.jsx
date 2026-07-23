@@ -42,14 +42,12 @@ import SaleReturnEdit from './pages/SaleReturn/Edit';
 import StockBalances from './pages/Stock/Balances';
 import StockTransactions from './pages/Stock/Transactions';
 
-<<<<<<< HEAD
+
 // Publication Pages
 import PublicationIndex from './pages/Publication/ProductAnalytics';
-=======
 import SaleReport from './pages/Report/SaleReport';
 import PurchaseReport from './pages/Report/PurchaseReport';
 import ProfitLossReport from './pages/Report/ProfitLossReport';
->>>>>>> fc062ef9846ee7d99db5b4de421e9a4ecd99308c
 
 // Account Pages
 import AccountIndex from './pages/Account/Index';
@@ -118,8 +116,8 @@ import RoleCreate from './pages/Role/Create';
 import RoleEdit from './pages/Role/Edit';
 
 
-// Company Admin Pages
-import CompanyAdminDashboard from './pages/CompanyAdmin/Dashboard';
+
+import CompanyDashboardIndex from './pages/CompanyAdmin/Dashboard';
 import CompanyAdminProfile from './pages/CompanyAdmin/Profile';
 
 // User Pages
@@ -206,7 +204,9 @@ const routes = [
     ),
     children: [
       { index: true, element: <Navigate to="/company-admin/dashboard" replace /> },
-      { path: 'dashboard', element: <CompanyAdminDashboard /> },
+
+      { path: 'dashboard', element: <CompanyDashboardIndex /> },
+
       { path: 'profile', element: <CompanyAdminProfile /> },
       
       // Branch management within company admin
@@ -348,15 +348,12 @@ const routes = [
       { path: 'stock/balances', element: <StockBalances /> },
       { path: 'stock/transactions', element: <StockTransactions /> },
 
-<<<<<<< HEAD
       // Publications
       { path: 'publications', element: <PublicationIndex /> },
-=======
 
       { path: 'sales-report', element: <SaleReport /> },
       { path: 'purchase-report', element: <PurchaseReport /> },
       { path: 'profit-loss-report', element: <ProfitLossReport /> },
->>>>>>> fc062ef9846ee7d99db5b4de421e9a4ecd99308c
     ]
   },
   

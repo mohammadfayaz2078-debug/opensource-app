@@ -202,12 +202,12 @@ const AccountShow = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Account not found</p>
+          <p className="text-gray-600">Wallet not found</p>
           <button
             onClick={() => navigate('/accounts')}
             className="mt-2 text-blue-600 hover:underline"
           >
-            Go back to accounts
+            Go back to wallets
           </button>
         </div>
       </div>
@@ -225,7 +225,7 @@ const AccountShow = () => {
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back to Accounts
+          Back to Wallets
         </button>
 
         {/* Account Header */}

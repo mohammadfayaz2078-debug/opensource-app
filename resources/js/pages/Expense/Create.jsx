@@ -297,7 +297,7 @@ const ExpenseCreate = () => {
       }
 
       if (!masterFields.account_id) {
-        allErrors['account_id'] = 'Account is required';
+        allErrors['account_id'] = 'Wallet is required';
         hasError = true;
       }
 
@@ -416,10 +416,10 @@ const ExpenseCreate = () => {
                   options={accounts}
                   value={masterFields.account_id}
                   onChange={(value) => handleMasterFieldChange('account_id', value)}
-                  label="Account"
+                  label="Wallet"
                   required={true}
                   error={errors.account_id}
-                  placeholder="Search account..."
+                  placeholder="Search wallet..."
                   displayKey="name"
                   valueKey="id"
                   renderOption={(option) => (

@@ -120,7 +120,7 @@ export default function OtherIncomeEdit() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Account <span className="text-red-500">*</span>
+                      Wallet <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="account_id"
@@ -129,7 +129,7 @@ export default function OtherIncomeEdit() {
                       className={inputClass('account_id')}
                       required
                     >
-                      <option value="">Select account</option>
+                      <option value="">Select Wallet</option>
                       {accounts.map(acc => (
                         <option key={acc.id} value={acc.id}>
                           {acc.name} - Balance: {parseFloat(acc.balance || 0).toFixed(2)}
