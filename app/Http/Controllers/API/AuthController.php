@@ -21,87 +21,184 @@ class AuthController extends Controller
     /**
      * Register a new user
      */
-    public function register(Request $request)
-    {
-        Gate::authorize('perm', ['users', 'create']);
+/**
+ * Register a new user
+ */
+public function register(Request $request)
+{
+    Gate::authorize('perm', ['users', 'create']);
 
-        try {
-            $authUser = $request->user();
+    try {
+        $authUser = $request->user();
 
-            $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:8|confirmed',
-                'phone' => 'nullable|string|max:20',
-                'role_id' => 'required|exists:roles,id',
-                'branch_id' => 'nullable|exists:branches,id',
-                'company_id' => 'nullable|exists:companies,id',
-                'language' => 'sometimes|in:en,fa,ps',
-                'status' => 'sometimes|boolean',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'phone' => 'nullable|string|max:20',
+            'role_id' => 'required|exists:roles,id',
+            'branch_id' => 'nullable|exists:branches,id',
+            'company_id' => 'nullable|exists:companies,id',
+            'language' => 'sometimes|in:en,fa,ps',
+            'status' => 'sometimes|boolean',
+        ]);
 
-            if ($validator->fails()) {
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Determine company_id and branch_id based on authenticated user
+        $companyId = null;
+        $branchId = null;
+        $branch = null;
+
+        if (AuthHelper::isBranchUser()) {
+            // Regular user - force their own company and branch
+            $companyId = AuthHelper::getCompanyId();
+            $branchId = AuthHelper::getBranchId();
+            
+            // Get the branch to check user limit
+            $branch = Branch::find($branchId);
+        } elseif (AuthHelper::isCompanyAdmin()) {
+            // Company admin - force their own company
+            $companyId = AuthHelper::getCompanyId();
+            $branchId = $request->branch_id; // Can select branch within their company
+            
+            // Verify branch belongs to this company
+            if ($branchId) {
+                $branch = Branch::where('id', $branchId)->where('company_id', $companyId)->first();
+                if (!$branch) {
+                    return response()->json([
+                        'message' => 'Invalid branch for this company',
+                        'errors' => [
+                            'branch_id' => ['Invalid branch for this company']
+                        ]
+                    ], 422);
+                }
+            }
+        } else {
+            // Super Admin - can set from request
+            $companyId = $request->company_id;
+            $branchId = $request->branch_id;
+            
+            if ($branchId) {
+                $branch = Branch::find($branchId);
+            }
+        }
+
+        // If branch_id is required but not provided, return error
+        if (!$branchId && !AuthHelper::isBranchUser()) {
+            return response()->json([
+                'message' => 'Branch selection is required',
+                'errors' => [
+                    'branch_id' => ['Branch selection is required']
+                ]
+            ], 422);
+        }
+
+        // Check if branch exists and validate user limit
+        if ($branch) {
+            // Check if branch is active
+            if (!$branch->is_active) {
                 return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'message' => 'Cannot register user to an inactive branch',
+                    'errors' => [
+                        'branch_id' => ['This branch is inactive. Please activate the branch first.']
+                    ]
                 ], 422);
             }
 
-            // Determine company_id and branch_id based on authenticated user
-            $companyId = null;
-            $branchId = null;
+            // Get current user count for this branch
+            $currentUserCount = User::where('branch_id', $branch->id)->count();
+            $allowedUserCount = $branch->allowed_user_count ?? 1;
 
-            if (AuthHelper::isBranchUser()) {
-                // Regular user - force their own company and branch
-                $companyId = AuthHelper::getCompanyId();
-                $branchId = AuthHelper::getBranchId();
-            } elseif (AuthHelper::isCompanyAdmin()) {
-                // Company admin - force their own company
-                $companyId = AuthHelper::getCompanyId();
-                $branchId = $request->branch_id; // Can select branch within their company
-                
-                // Verify branch belongs to this company
-                if ($branchId) {
-                    $branch = Branch::where('id', $branchId)->where('company_id', $companyId)->first();
-                    if (!$branch) {
-                        return response()->json([
-                            'message' => 'Invalid branch for this company'
-                        ], 422);
-                    }
-                }
-            } else {
-                // Super Admin - can set from request
-                $companyId = $request->company_id;
-                $branchId = $request->branch_id;
+            // Check if user limit has been reached
+            if ($currentUserCount >= $allowedUserCount) {
+                return response()->json([
+                    'message' => 'User limit reached for this branch',
+                    'errors' => [
+                        'branch_id' => [
+                            sprintf(
+                                'User limit reached for this branch. Maximum allowed: %d users. Current: %d users. No slots available.',
+                                $allowedUserCount,
+                                $currentUserCount
+                            )
+                        ]
+                    ],
+                    'branch_capacity' => [
+                        'current_users' => $currentUserCount,
+                        'max_allowed' => $allowedUserCount,
+                        'remaining_slots' => 0,
+                        'is_full' => true
+                    ]
+                ], 422);
             }
 
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'phone' => $request->phone,
-                'role_id' => $request->role_id,
-                'company_id' => $companyId,
-                'branch_id' => $branchId,
-                'language' => $request->language ?? 'en',
-                'status' => $request->status ?? true,
-            ]);
-
-            return response()->json([
-                'message' => 'User registered successfully',
-                'user' => $user->load(['role', 'company', 'branch'])
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Registration failed',
-                'error' => $e->getMessage()
-            ], 500);
+            // Check if there are remaining slots (warning, but not error)
+            $remainingSlots = $allowedUserCount - $currentUserCount;
+            if ($remainingSlots <= 0) {
+                return response()->json([
+                    'message' => 'No available user slots in this branch',
+                    'errors' => [
+                        'branch_id' => [
+                            sprintf(
+                                'No available user slots. Maximum capacity: %d users. Current: %d users.',
+                                $allowedUserCount,
+                                $currentUserCount
+                            )
+                        ]
+                    ],
+                    'branch_capacity' => [
+                        'current_users' => $currentUserCount,
+                        'max_allowed' => $allowedUserCount,
+                        'remaining_slots' => 0,
+                        'is_full' => true
+                    ]
+                ], 422);
+            }
         }
-    }
 
+        // Create the user
+        $user = User::create([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'phone' => $request->phone,
+            'role_id' => $request->role_id,
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+            'language' => $request->language ?? 'en',
+            'status' => $request->status ?? true,
+        ]);
+
+        // Get updated user count after registration
+        $updatedUserCount = User::where('branch_id', $branchId)->count();
+        $remainingSlotsAfter = ($branch->allowed_user_count ?? 1) - $updatedUserCount;
+
+        return response()->json([
+            'message' => 'User registered successfully',
+            'user' => $user->load(['role', 'company', 'branch']),
+            'branch_capacity' => [
+                'branch_name' => $branch ? $branch->branch_name : null,
+                'current_users' => $updatedUserCount,
+                'max_allowed' => $branch ? $branch->allowed_user_count : 1,
+                'remaining_slots' => max(0, $remainingSlotsAfter),
+                'is_full' => $remainingSlotsAfter <= 0
+            ]
+        ], 201);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Registration failed',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
     /**
      * Logout user
      */
@@ -226,114 +323,191 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Update user
-     */
-    public function updateUser(Request $request, $id)
-    {
-        Gate::authorize('perm', ['users', 'edit']);
+/**
+ * Update user
+ */
+public function updateUser(Request $request, $id)
+{
+    Gate::authorize('perm', ['users', 'edit']);
 
-        $authUser = $request->user();
-        $user = User::find($id);
+    $authUser = $request->user();
+    $user = User::find($id);
 
-        if (!$user) {
-            return response()->json([
-                'message' => 'User not found'
-            ], 404);
-        }
-
-        // Check if user has access to update this user
-        if (AuthHelper::isCompanyAdmin()) {
-            $companyId = AuthHelper::getCompanyId();
-            if ($user->company_id !== $companyId) {
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
-        } elseif (AuthHelper::isBranchUser()) {
-            $branchId = AuthHelper::getBranchId();
-            if ($user->branch_id !== $branchId) {
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
-        }
-
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'phone' => 'nullable|string|max:20',
-            'role_id' => 'required|exists:roles,id',
-            'branch_id' => 'nullable|exists:branches,id',
-            'company_id' => 'nullable|exists:companies,id',
-            'language' => 'sometimes|in:en,fa,ps',
-            'status' => 'sometimes|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // Determine company_id and branch_id based on authenticated user
-        $companyId = $user->company_id;
-        $branchId = $user->branch_id;
-
-        if (AuthHelper::isCompanyAdmin()) {
-            // Company admin - force their own company
-            $companyId = AuthHelper::getCompanyId();
-            $branchId = $request->branch_id;
-            
-            // Verify branch belongs to their company
-            if ($branchId) {
-                $branch = Branch::where('id', $branchId)->where('company_id', $companyId)->first();
-                if (!$branch) {
-                    return response()->json([
-                        'message' => 'Invalid branch for this company'
-                    ], 422);
-                }
-            }
-        } elseif (AuthHelper::isBranchUser()) {
-            // Branch user - force their own company and branch
-            $companyId = AuthHelper::getCompanyId();
-            $branchId = AuthHelper::getBranchId();
-        } else {
-            // Super Admin - can set from request
-            if ($request->has('company_id')) {
-                $companyId = $request->company_id;
-            }
-            if ($request->has('branch_id')) {
-                $branchId = $request->branch_id;
-            }
-        }
-
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name;
-        $user->email = $request->email;
-        $user->phone = $request->phone;
-        $user->role_id = $request->role_id;
-        $user->company_id = $companyId;
-        $user->branch_id = $branchId;
-        
-        if ($request->has('language')) {
-            $user->language = $request->language;
-        }
-        
-        if ($request->has('status')) {
-            $user->status = $request->status;
-        }
-
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        $user->save();
-
+    if (!$user) {
         return response()->json([
-            'message' => 'User updated successfully',
-            'user' => $user->load(['role', 'company', 'branch'])
-        ]);
+            'message' => 'User not found'
+        ], 404);
     }
+
+    // Check if user has access to update this user
+    if (AuthHelper::isCompanyAdmin()) {
+        $companyId = AuthHelper::getCompanyId();
+        if ($user->company_id !== $companyId) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+    } elseif (AuthHelper::isBranchUser()) {
+        $branchId = AuthHelper::getBranchId();
+        if ($user->branch_id !== $branchId) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+    }
+
+    $validator = Validator::make($request->all(), [
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+        'password' => 'nullable|string|min:8|confirmed',
+        'phone' => 'nullable|string|max:20',
+        'role_id' => 'required|exists:roles,id',
+        'branch_id' => 'nullable|exists:branches,id',
+        'company_id' => 'nullable|exists:companies,id',
+        'language' => 'sometimes|in:en,fa,ps',
+        'status' => 'sometimes|boolean',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    // Determine company_id and branch_id based on authenticated user
+    $companyId = $user->company_id;
+    $branchId = $user->branch_id;
+    $newBranch = null;
+
+    if (AuthHelper::isCompanyAdmin()) {
+        // Company admin - force their own company
+        $companyId = AuthHelper::getCompanyId();
+        $branchId = $request->branch_id;
+        
+        // Verify branch belongs to their company
+        if ($branchId) {
+            $newBranch = Branch::where('id', $branchId)->where('company_id', $companyId)->first();
+            if (!$newBranch) {
+                return response()->json([
+                    'message' => 'Invalid branch for this company',
+                    'errors' => [
+                        'branch_id' => ['Invalid branch for this company']
+                    ]
+                ], 422);
+            }
+        }
+    } elseif (AuthHelper::isBranchUser()) {
+        // Branch user - force their own company and branch
+        $companyId = AuthHelper::getCompanyId();
+        $branchId = AuthHelper::getBranchId();
+    } else {
+        // Super Admin - can set from request
+        if ($request->has('company_id')) {
+            $companyId = $request->company_id;
+        }
+        if ($request->has('branch_id')) {
+            $branchId = $request->branch_id;
+            if ($branchId) {
+                $newBranch = Branch::find($branchId);
+            }
+        }
+    }
+
+    // If branch is being changed, check capacity of the new branch
+    if ($branchId && $branchId !== $user->branch_id) {
+        $branch = $newBranch ?? Branch::find($branchId);
+        
+        if ($branch) {
+            // Check if branch is active
+            if (!$branch->is_active) {
+                return response()->json([
+                    'message' => 'Cannot move user to an inactive branch',
+                    'errors' => [
+                        'branch_id' => ['This branch is inactive. Please activate the branch first.']
+                    ]
+                ], 422);
+            }
+
+            // Get current user count for this branch (excluding the user being moved)
+            $currentUserCount = User::where('branch_id', $branch->id)
+                ->where('id', '!=', $user->id)
+                ->count();
+            
+            $allowedUserCount = $branch->allowed_user_count ?? 1;
+
+            // Check if user limit has been reached
+            if ($currentUserCount >= $allowedUserCount) {
+                return response()->json([
+                    'message' => 'User limit reached for the target branch',
+                    'errors' => [
+                        'branch_id' => [
+                            sprintf(
+                                'User limit reached for the target branch. Maximum allowed: %d users. Current: %d users. No slots available.',
+                                $allowedUserCount,
+                                $currentUserCount
+                            )
+                        ]
+                    ],
+                    'branch_capacity' => [
+                        'current_users' => $currentUserCount,
+                        'max_allowed' => $allowedUserCount,
+                        'remaining_slots' => 0,
+                        'is_full' => true
+                    ]
+                ], 422);
+            }
+
+            // Check if there are remaining slots
+            $remainingSlots = $allowedUserCount - $currentUserCount;
+            if ($remainingSlots <= 0) {
+                return response()->json([
+                    'message' => 'No available user slots in the target branch',
+                    'errors' => [
+                        'branch_id' => [
+                            sprintf(
+                                'No available user slots. Maximum capacity: %d users. Current: %d users.',
+                                $allowedUserCount,
+                                $currentUserCount
+                            )
+                        ]
+                    ],
+                    'branch_capacity' => [
+                        'current_users' => $currentUserCount,
+                        'max_allowed' => $allowedUserCount,
+                        'remaining_slots' => 0,
+                        'is_full' => true
+                    ]
+                ], 422);
+            }
+        }
+    }
+
+    // Update user
+    $user->first_name = $request->first_name;
+    $user->last_name = $request->last_name;
+    $user->email = $request->email;
+    $user->phone = $request->phone;
+    $user->role_id = $request->role_id;
+    $user->company_id = $companyId;
+    $user->branch_id = $branchId;
+    
+    if ($request->has('language')) {
+        $user->language = $request->language;
+    }
+    
+    if ($request->has('status')) {
+        $user->status = $request->status;
+    }
+
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    $user->save();
+
+    return response()->json([
+        'message' => 'User updated successfully',
+        'user' => $user->load(['role', 'company', 'branch'])
+    ]);
+}
 
     /**
      * Delete user
@@ -376,20 +550,17 @@ class AuthController extends Controller
                 ]);
             });
         } catch (\PDOException $e) {
-            \Log::error('User delete PDOException: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Database error: Cannot delete user due to related records.',
                 'error' => $e->getMessage(),
                 'code' => $e->getCode()
             ], 422);
         } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('User delete QueryException: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Cannot delete this user because they have related records in the system.',
                 'error' => $e->getMessage()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('User delete Exception: ' . $e->getMessage() . ' | ' . $e->getTraceAsString());
             return response()->json([
                 'message' => 'Failed to delete user',
                 'error' => $e->getMessage()

@@ -118,8 +118,8 @@ import RoleCreate from './pages/Role/Create';
 import RoleEdit from './pages/Role/Edit';
 
 
-// Company Admin Pages
-import CompanyAdminDashboard from './pages/CompanyAdmin/Dashboard';
+
+import CompanyDashboardIndex from './pages/CompanyAdmin/Dashboard';
 import CompanyAdminProfile from './pages/CompanyAdmin/Profile';
 
 // User Pages
@@ -206,7 +206,9 @@ const routes = [
     ),
     children: [
       { index: true, element: <Navigate to="/company-admin/dashboard" replace /> },
-      { path: 'dashboard', element: <CompanyAdminDashboard /> },
+
+      { path: 'dashboard', element: <CompanyDashboardIndex /> },
+
       { path: 'profile', element: <CompanyAdminProfile /> },
       
       // Branch management within company admin

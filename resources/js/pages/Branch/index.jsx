@@ -24,8 +24,22 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  MoreVertical
+  MoreVertical,
+  Package,
+  UserPlus,
+  AlertTriangle,
+  Image
 } from 'lucide-react';
+
+// API Configuration - Hardcoded for now
+const API_URL = 'http://localhost:8000';
+
+// Helper function to get image URL
+const getImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${API_URL}/storage/${path}`;
+};
 
 const BranchIndex = () => {
   const navigate = useNavigate();
@@ -145,6 +159,7 @@ const BranchIndex = () => {
       setProvinces(provincesData);
     } catch (err) {
       console.error('Failed to fetch provinces:', err);
+      // Don't show error to user, just use empty array
     }
   };
 
@@ -343,151 +358,244 @@ const BranchIndex = () => {
           /* Branches Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {branches && branches.length > 0 ? (
-              branches.map((branch) => (
-                <div
-                  key={branch.id}
-                  className={`bg-white rounded-xl shadow-sm border ${
-                    branch.is_active ? 'border-gray-100' : 'border-gray-200 bg-gray-50/50'
-                  } hover:shadow-md transition-all group`}
-                >
-                  <div className="p-4">
-                    {/* Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
-                          style={{ backgroundColor: getRandomColor(branch.id) }}
-                        >
-                          {getInitials(branch.branch_name)}
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-                            {branch.branch_name}
-                          </h3>
-                          {branch.branch_slogan && (
-                            <p className="text-xs text-gray-400 truncate max-w-[180px]">
-                              {branch.branch_slogan}
-                            </p>
+              branches.map((branch) => {
+                // Calculate capacity usage
+                const userCount = branch.users_count || 0;
+                const userCapacity = branch.allowed_user_count || 1;
+                const productCount = branch.public_products_count || 0;
+                const productCapacity = branch.allowed_product_publish_count || 10;
+                const userUsagePercent = Math.min((userCount / userCapacity) * 100, 100);
+                const productUsagePercent = Math.min((productCount / productCapacity) * 100, 100);
+                const isUserFull = userCount >= userCapacity;
+                const isProductFull = productCount >= productCapacity;
+                
+                // Get logo URL - Using the helper function
+                const logoUrl = getImageUrl(branch.branch_logo_url);
+                
+                return (
+                  <div
+                    key={branch.id}
+                    className={`bg-white rounded-xl shadow-sm border ${
+                      branch.is_active ? 'border-gray-100' : 'border-gray-200 bg-gray-50/50'
+                    } hover:shadow-md transition-all group`}
+                  >
+                    <div className="p-4">
+                      {/* Header with Logo */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          {/* Logo or Initials */}
+                          {logoUrl ? (
+                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 bg-white">
+                              <img 
+                                src={logoUrl} 
+                                alt={branch.branch_name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Fallback to initials on image error
+                                  const parent = e.target.parentElement;
+                                  const initials = getInitials(branch.branch_name);
+                                  const color = getRandomColor(branch.id);
+                                  parent.innerHTML = `
+                                    <div class="w-full h-full flex items-center justify-center text-white font-semibold text-sm" 
+                                         style="background-color: ${color}">
+                                      ${initials}
+                                    </div>
+                                  `;
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div 
+                              className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
+                              style={{ backgroundColor: getRandomColor(branch.id) }}
+                            >
+                              {getInitials(branch.branch_name)}
+                            </div>
                           )}
+                          <div>
+                            <h3 className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                              {branch.branch_name}
+                            </h3>
+                            {branch.branch_slogan && (
+                              <p className="text-xs text-gray-400 truncate max-w-[180px]">
+                                {branch.branch_slogan}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0 ${
-                        branch.is_active 
-                          ? 'bg-green-50 text-green-600 border border-green-200' 
-                          : 'bg-gray-100 text-gray-500 border border-gray-200'
-                      }`}>
-                        {branch.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-
-                    {/* Location */}
-                    <div className="flex items-start gap-2 text-xs text-gray-500 mb-1.5">
-                      <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-gray-400" />
-                      <span>
-                        {branch.branch_province || 'No province'}
-                        {branch.branch_district && `, ${branch.branch_district}`}
-                        {branch.branch_village && `, ${branch.branch_village}`}
-                      </span>
-                    </div>
-
-                    {/* Contact Info */}
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {branch.branch_phone && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <Phone className="w-3 h-3 text-gray-400" />
-                          <span>{branch.branch_phone}</span>
-                        </div>
-                      )}
-                      {branch.branch_email && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <Mail className="w-3 h-3 text-gray-400" />
-                          <span className="truncate max-w-[120px]">{branch.branch_email}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-xs font-medium text-gray-600">
-                          {branch.users_count || 0} Users
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0 ${
+                          branch.is_active 
+                            ? 'bg-green-50 text-green-600 border border-green-200' 
+                            : 'bg-gray-100 text-gray-500 border border-gray-200'
+                        }`}>
+                          {branch.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-xs text-gray-400">
-                          {formatDate(branch.created_at)}
+
+                      {/* Location */}
+                      <div className="flex items-start gap-2 text-xs text-gray-500 mb-1.5">
+                        <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-gray-400" />
+                        <span>
+                          {branch.branch_province || 'No province'}
+                          {branch.branch_district && `, ${branch.branch_district}`}
+                          {branch.branch_village && `, ${branch.branch_village}`}
                         </span>
                       </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 mt-3 pt-3 border-t border-gray-100">
-                      {isCompanyAdmin && (
-                        <button
-                          onClick={() => openBranchUsers(branch)}
-                          disabled={!branch.is_active}
-                          className={`flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                            !branch.is_active
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                          }`}
-                          title={!branch.is_active ? 'Branch is inactive' : 'View users'}
-                        >
-                          <Users className="w-3.5 h-3.5 mr-1.5" />
-                          Users
-                        </button>
-                      )}
-                      <button
-                        onClick={() => viewBranch(branch.id)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5 mr-1.5" />
-                        View
-                      </button>
-                      <button
-                        onClick={() => editBranch(branch.id)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
-                      >
-                        <Edit2 className="w-3.5 h-3.5 mr-1.5" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => deleteBranch(branch.id, branch.branch_name)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                        Delete
-                      </button>
-                    </div>
-
-                    {/* Status Toggle */}
-                    <div className="mt-2">
-                      <button
-                        onClick={() => toggleStatus(branch.id, branch.is_active)}
-                        className={`w-full inline-flex items-center justify-center px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
-                          branch.is_active
-                            ? 'text-green-600 bg-green-50 hover:bg-green-100'
-                            : 'text-gray-500 bg-gray-100 hover:bg-gray-200'
-                        }`}
-                      >
-                        {branch.is_active ? (
-                          <>
-                            <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                            Click to Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                            Click to Activate
-                          </>
+                      {/* Contact Info */}
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {branch.branch_phone && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Phone className="w-3 h-3 text-gray-400" />
+                            <span>{branch.branch_phone}</span>
+                          </div>
                         )}
-                      </button>
+                        {branch.branch_email && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Mail className="w-3 h-3 text-gray-400" />
+                            <span className="truncate max-w-[120px]">{branch.branch_email}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Capacity Stats */}
+                      <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                        {/* Users Capacity */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5 text-gray-400" />
+                              <span className="text-xs font-medium text-gray-600">
+                                Users
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-xs font-medium ${isUserFull ? 'text-red-600' : 'text-gray-600'}`}>
+                                {userCount}
+                              </span>
+                              <span className="text-xs text-gray-400">/</span>
+                              <span className="text-xs text-gray-500">{userCapacity}</span>
+                              {isUserFull && (
+                                <AlertTriangle className="w-3 h-3 text-red-500 ml-1" />
+                              )}
+                            </div>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all ${
+                                isUserFull ? 'bg-red-500' : userUsagePercent > 80 ? 'bg-yellow-500' : 'bg-blue-500'
+                              }`}
+                              style={{ width: `${userUsagePercent}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Products Capacity */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <Package className="w-3.5 h-3.5 text-gray-400" />
+                              <span className="text-xs font-medium text-gray-600">
+                                Products
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-xs font-medium ${isProductFull ? 'text-red-600' : 'text-gray-600'}`}>
+                                {productCount}
+                              </span>
+                              <span className="text-xs text-gray-400">/</span>
+                              <span className="text-xs text-gray-500">{productCapacity}</span>
+                              {isProductFull && (
+                                <AlertTriangle className="w-3 h-3 text-red-500 ml-1" />
+                              )}
+                            </div>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all ${
+                                isProductFull ? 'bg-red-500' : productUsagePercent > 80 ? 'bg-yellow-500' : 'bg-green-500'
+                              }`}
+                              style={{ width: `${productUsagePercent}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Created Date */}
+                        <div className="flex items-center gap-1.5 pt-1">
+                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="text-xs text-gray-400">
+                            Created: {formatDate(branch.created_at)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 mt-3 pt-3 border-t border-gray-100">
+                        {isCompanyAdmin && (
+                          <button
+                            onClick={() => openBranchUsers(branch)}
+                            disabled={!branch.is_active}
+                            className={`flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                              !branch.is_active
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                            }`}
+                            title={!branch.is_active ? 'Branch is inactive' : 'View users'}
+                          >
+                            <Users className="w-3.5 h-3.5 mr-1.5" />
+                            Users
+                          </button>
+                        )}
+                        <button
+                          onClick={() => viewBranch(branch.id)}
+                          className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5 mr-1.5" />
+                          View
+                        </button>
+                        <button
+                          onClick={() => editBranch(branch.id)}
+                          className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteBranch(branch.id, branch.branch_name)}
+                          className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                          Delete
+                        </button>
+                      </div>
+
+                      {/* Status Toggle */}
+                      <div className="mt-2">
+                        <button
+                          onClick={() => toggleStatus(branch.id, branch.is_active)}
+                          className={`w-full inline-flex items-center justify-center px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+                            branch.is_active
+                              ? 'text-green-600 bg-green-50 hover:bg-green-100'
+                              : 'text-gray-500 bg-gray-100 hover:bg-gray-200'
+                          }`}
+                        >
+                          {branch.is_active ? (
+                            <>
+                              <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                              Click to Deactivate
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                              Click to Activate
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               /* Empty State */
               <div className="col-span-full bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">

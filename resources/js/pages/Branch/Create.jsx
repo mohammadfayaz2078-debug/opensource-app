@@ -17,7 +17,9 @@ import {
   Store,
   CheckCircle,
   AlertCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Users,
+  Package
 } from 'lucide-react';
 
 const BranchCreate = () => {
@@ -39,7 +41,9 @@ const BranchCreate = () => {
     branch_email: '',
     branch_website: '',
     logo: null,
-    is_active: true
+    is_active: true,
+    allowed_user_count: 1,
+    allowed_product_publish_count: 10
   });
   
   const [errors, setErrors] = useState({});
@@ -121,6 +125,8 @@ const BranchCreate = () => {
       if (form.branch_website) formData.append('branch_website', form.branch_website);
       if (form.logo) formData.append('branch_logo_url', form.logo);
       formData.append('is_active', form.is_active ? 1 : 0);
+      formData.append('allowed_user_count', form.allowed_user_count);
+      formData.append('allowed_product_publish_count', form.allowed_product_publish_count);
       
       const response = await api.post('/branches', formData, {
         headers: {
@@ -329,6 +335,57 @@ const BranchCreate = () => {
                     placeholder="https://example.com"
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Capacity Settings - New Section */}
+            <div className="mb-4 border-t border-gray-100 pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                <Users className="w-4 h-4 inline mr-1 text-gray-400" />
+                Capacity Settings
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Users className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
+                    Allowed Users
+                  </label>
+                  <input
+                    name="allowed_user_count"
+                    value={form.allowed_user_count}
+                    onChange={handleInputChange}
+                    type="number"
+                    min="0"
+                    max="999"
+                    placeholder="Max users allowed"
+                    className={`w-full px-3 py-1.5 text-sm bg-gray-50 border ${errors.allowed_user_count ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Maximum number of users allowed for this branch (Default: 1)</p>
+                  {errors.allowed_user_count && (
+                    <p className="text-xs text-red-500 mt-1">{errors.allowed_user_count[0]}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Package className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
+                    Allowed Product Publish
+                  </label>
+                  <input
+                    name="allowed_product_publish_count"
+                    value={form.allowed_product_publish_count}
+                    onChange={handleInputChange}
+                    type="number"
+                    min="0"
+                    max="99999"
+                    placeholder="Max products allowed"
+                    className={`w-full px-3 py-1.5 text-sm bg-gray-50 border ${errors.allowed_product_publish_count ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Maximum number of products that can be published (Default: 10)</p>
+                  {errors.allowed_product_publish_count && (
+                    <p className="text-xs text-red-500 mt-1">{errors.allowed_product_publish_count[0]}</p>
+                  )}
                 </div>
               </div>
             </div>

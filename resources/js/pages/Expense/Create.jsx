@@ -78,7 +78,7 @@ export default function ExpenseCreate() {
       }
 
       if (!masterFields.account_id) {
-        allErrors['account_id'] = 'Account is required';
+        allErrors['account_id'] = 'Wallet is required';
         hasError = true;
       }
 
@@ -202,7 +202,7 @@ export default function ExpenseCreate() {
                   onChange={(e) => { setMasterFields(prev => ({ ...prev, account_id: e.target.value })); if (errors.account_id) setErrors(prev => { const n = {...prev}; delete n.account_id; return n; }); }}
                   className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.account_id ? 'border-red-400' : 'border-gray-300'}`}
                 >
-                  <option value="">Select Account</option>
+                  <option value="">Select Wallet</option>
                   {accounts.map(a => (
                     <option key={a.id} value={a.id}>
                       {a.name} ({parseFloat(a.balance).toFixed(2)} AFN)

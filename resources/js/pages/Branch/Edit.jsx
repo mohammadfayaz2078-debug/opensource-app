@@ -16,7 +16,9 @@ import {
   User,
   Building2,
   AlertCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Users,
+  Package
 } from 'lucide-react';
 
 const BranchEdit = () => {
@@ -28,6 +30,8 @@ const BranchEdit = () => {
   const [error, setError] = useState('');
   const [logoPreview, setLogoPreview] = useState('');
   const [existingLogo, setExistingLogo] = useState('');
+  const [currentUserCount, setCurrentUserCount] = useState(0);
+  const [currentProductCount, setCurrentProductCount] = useState(0);
   
   const [form, setForm] = useState({
     branch_name: '',
@@ -41,7 +45,9 @@ const BranchEdit = () => {
     branch_email: '',
     branch_website: '',
     logo: null,
-    is_active: true
+    is_active: true,
+    allowed_user_count: 1,
+    allowed_product_publish_count: 10
   });
   
   const [errors, setErrors] = useState({});
@@ -108,6 +114,11 @@ const BranchEdit = () => {
       const response = await api.get(`/branches/${id}`);
       const branch = response.data.data || response.data.branch;
       
+      // Get current user and product counts from statistics
+      const stats = response.data.statistics || {};
+      setCurrentUserCount(stats.user_count || 0);
+      setCurrentProductCount(stats.public_product_count || 0);
+      
       setForm({
         branch_name: branch.branch_name || '',
         branch_slogan: branch.branch_slogan || '',
@@ -120,7 +131,9 @@ const BranchEdit = () => {
         branch_email: branch.branch_email || '',
         branch_website: branch.branch_website || '',
         logo: null,
-        is_active: branch.is_active === 1 || branch.is_active === true
+        is_active: branch.is_active === 1 || branch.is_active === true,
+        allowed_user_count: branch.allowed_user_count || 1,
+        allowed_product_publish_count: branch.allowed_product_publish_count || 10
       });
       
       if (branch.branch_logo_url) {
@@ -155,6 +168,8 @@ const BranchEdit = () => {
       if (form.branch_website) formData.append('branch_website', form.branch_website);
       if (form.logo) formData.append('branch_logo_url', form.logo);
       formData.append('is_active', form.is_active ? 1 : 0);
+      formData.append('allowed_user_count', form.allowed_user_count);
+      formData.append('allowed_product_publish_count', form.allowed_product_publish_count);
       formData.append('_method', 'PUT');
       
       const response = await api.post(`/branches/${id}`, formData, {
@@ -179,10 +194,65 @@ const BranchEdit = () => {
     } catch (err) {
       if (err.response?.status === 422) {
         const validationErrors = err.response.data.errors;
+        
+        // Set errors for form fields
         setErrors(validationErrors);
-        Swal.fire('Error', 'Please check the form for errors.', 'error');
+        
+        // Check if there's a capacity error
+        if (validationErrors.allowed_user_count) {
+          const errorMessage = validationErrors.allowed_user_count[0];
+          
+          Swal.fire({
+            icon: 'error',
+            title: 'Cannot Reduce User Limit',
+            html: `
+              <div class="text-left">
+                <p class="mb-2">${errorMessage}</p>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                  <p><strong>Current Users:</strong> ${currentUserCount}</p>
+                  <p><strong>Current Limit:</strong> ${form.allowed_user_count}</p>
+                  <p><strong>New Limit Attempted:</strong> ${form.allowed_user_count}</p>
+                  <p class="mt-2 text-red-600">⚠️ Cannot reduce limit below current user count!</p>
+                </div>
+              </div>
+            `,
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'OK'
+          });
+        } else if (validationErrors.allowed_product_publish_count) {
+          const errorMessage = validationErrors.allowed_product_publish_count[0];
+          
+          Swal.fire({
+            icon: 'error',
+            title: 'Cannot Reduce Product Limit',
+            html: `
+              <div class="text-left">
+                <p class="mb-2">${errorMessage}</p>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                  <p><strong>Current Products:</strong> ${currentProductCount}</p>
+                  <p><strong>Current Limit:</strong> ${form.allowed_product_publish_count}</p>
+                  <p><strong>New Limit Attempted:</strong> ${form.allowed_product_publish_count}</p>
+                  <p class="mt-2 text-red-600">⚠️ Cannot reduce limit below current product count!</p>
+                </div>
+              </div>
+            `,
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'OK'
+          });
+        } else {
+          // Generic validation error
+          const errorMessages = Object.values(validationErrors).flat();
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            html: errorMessages.map(msg => `<p class="text-left">• ${msg}</p>`).join(''),
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'OK'
+          });
+        }
       } else {
         setError(err.response?.data?.message || 'Failed to update branch');
+        Swal.fire('Error', err.response?.data?.message || 'Failed to update branch', 'error');
       }
     } finally {
       setLoading(false);
@@ -228,6 +298,60 @@ const BranchEdit = () => {
               }`}>
                 {form.is_active ? 'Active' : 'Inactive'}
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Current Usage Summary */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Current Usage</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500">Current Users</p>
+                  <p className="text-lg font-semibold text-gray-900">{currentUserCount}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Limit</p>
+                  <p className="text-lg font-semibold text-gray-900">{form.allowed_user_count}</p>
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full ${
+                      currentUserCount >= form.allowed_user_count ? 'bg-red-500' : 
+                      currentUserCount > form.allowed_user_count * 0.8 ? 'bg-yellow-500' : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${Math.min((currentUserCount / form.allowed_user_count) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-green-50 rounded-lg p-3 border border-green-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500">Current Products</p>
+                  <p className="text-lg font-semibold text-gray-900">{currentProductCount}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Limit</p>
+                  <p className="text-lg font-semibold text-gray-900">{form.allowed_product_publish_count}</p>
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full ${
+                      currentProductCount >= form.allowed_product_publish_count ? 'bg-red-500' : 
+                      currentProductCount > form.allowed_product_publish_count * 0.8 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min((currentProductCount / form.allowed_product_publish_count) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -384,6 +508,61 @@ const BranchEdit = () => {
                     placeholder="https://example.com"
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Capacity Settings */}
+            <div className="mb-4 border-t border-gray-100 pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                <Users className="w-4 h-4 inline mr-1 text-gray-400" />
+                Capacity Settings
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Users className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
+                    Allowed Users
+                  </label>
+                  <input
+                    name="allowed_user_count"
+                    value={form.allowed_user_count}
+                    onChange={handleInputChange}
+                    type="number"
+                    min="0"
+                    max="999"
+                    placeholder="Max users allowed"
+                    className={`w-full px-3 py-1.5 text-sm bg-gray-50 border ${errors.allowed_user_count ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Current users: {currentUserCount} • Cannot be less than current users
+                  </p>
+                  {errors.allowed_user_count && (
+                    <p className="text-xs text-red-500 mt-1">{errors.allowed_user_count[0]}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Package className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
+                    Allowed Product Publish
+                  </label>
+                  <input
+                    name="allowed_product_publish_count"
+                    value={form.allowed_product_publish_count}
+                    onChange={handleInputChange}
+                    type="number"
+                    min="0"
+                    max="99999"
+                    placeholder="Max products allowed"
+                    className={`w-full px-3 py-1.5 text-sm bg-gray-50 border ${errors.allowed_product_publish_count ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Current products: {currentProductCount} • Cannot be less than current products
+                  </p>
+                  {errors.allowed_product_publish_count && (
+                    <p className="text-xs text-red-500 mt-1">{errors.allowed_product_publish_count[0]}</p>
+                  )}
                 </div>
               </div>
             </div>

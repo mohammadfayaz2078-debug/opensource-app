@@ -99,10 +99,10 @@ export default function AccountIndex() {
     <div className="relative bg-gradient-to-br from-emerald-50/40 via-white to-sky-50/40 rounded-xl p-6 -m-6">
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">Accounts / Wallets</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Wallets</h1>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{total} accounts</span>
-            <button onClick={openCreateModal} className="px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">+ New Account</button>
+            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{total} wallets</span>
+            <button onClick={openCreateModal} className="px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">+ New Wallet</button>
           </div>
         </div>
       </div>
@@ -215,7 +215,7 @@ export default function AccountIndex() {
           <div className="fixed inset-0 bg-black/40" onClick={closeModal}></div>
           <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-10">
             <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">{isEditing ? 'Edit Account' : 'New Account'}</h2>
+              <h2 className="text-base font-semibold text-gray-900">{isEditing ? 'Edit Wallet' : 'New Wallet'}</h2>
               <button onClick={closeModal} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
@@ -224,7 +224,7 @@ export default function AccountIndex() {
               <div className="px-5 py-4 space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Name *</label>
-                  <input type="text" name="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputClass('name')} required placeholder="e.g., Main Cash, Bank Account" />
+                  <input type="text" name="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputClass('name')} required placeholder="e.g., Main Cash, Bank Wallet" />
                   {errors.name && <p className="text-xs text-red-500 mt-0.5">{errors.name[0]}</p>}
                 </div>
                 <div>

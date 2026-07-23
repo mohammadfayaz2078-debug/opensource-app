@@ -16,84 +16,79 @@ use App\Helpers\AuthHelper;
 
 class BranchController extends Controller
 {
-    /**
-     * Display a listing of branches
-     */
-    public function index(Request $request)
-    {
-        Gate::authorize('perm', ['branches', 'view']);
+/**
+ * Display a listing of branches
+ */
+public function index(Request $request)
+{
+    Gate::authorize('perm', ['branches', 'view']);
 
-        $perPage = $request->per_page ?? 10;
-        $query = Branch::with('company');
+    $perPage = $request->per_page ?? 10;
+    $query = Branch::with('company')
+        ->withCount([
+            'users',
+            'publicProducts'
+        ]);
 
-        // Apply branch filtering based on authenticated user type
-        if (AuthHelper::isCompanyAdmin()) {
-            // Company admin: show all branches of their company
-            $companyId = AuthHelper::getCompanyId();
-            $query->where('company_id', $companyId);
-            
-            Log::info('Company admin fetching branches', ['company_id' => $companyId]);
-        } 
-        elseif (AuthHelper::isBranchUser()) {
-            // Branch user: show only their specific branch
-            $branchId = AuthHelper::getBranchId();
-            $query->where('id', $branchId);
-            
-            Log::info('Branch user fetching their branch', ['branch_id' => $branchId]);
-        }
-
-        // Search filter
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('branch_name', 'like', "%$search%")
-                  ->orWhere('branch_slogan', 'like', "%$search%")
-                  ->orWhere('branch_province', 'like', "%$search%")
-                  ->orWhere('branch_district', 'like', "%$search%")
-                  ->orWhere('branch_village', 'like', "%$search%")
-                  ->orWhere('branch_street_address', 'like', "%$search%")
-                  ->orWhere('branch_phone', 'like', "%$search%")
-                  ->orWhere('branch_email', 'like', "%$search%");
-            });
-        }
-
-        // Company filter (only for company admin? No, keep as is)
-        if ($request->filled('company_id')) {
-            $query->where('company_id', $request->company_id);
-        }
-
-        // Province filter
-        if ($request->filled('branch_province')) {
-            $query->where('branch_province', $request->branch_province);
-        }
-
-        // District filter
-        if ($request->filled('branch_district')) {
-            $query->where('branch_district', $request->branch_district);
-        }
-
-        // Status filter
-        if ($request->filled('is_active')) {
-            $isActive = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN);
-            $query->where('is_active', $isActive);
-        }
-
-        $branches = $query->latest()->paginate($perPage);
-
-        Log::info(['branches' => $branches]);
-        
-        // Add additional info for debugging
-        $response = [
-            'data' => $branches,
-            'user_info' => [
-                'type' => AuthHelper::getUserType(),
-                'company_id' => AuthHelper::getCompanyId(),
-                'branch_id' => AuthHelper::getBranchId(),
-            ]
-        ];
-        
-        return response()->json($response);
+    // Apply branch filtering based on authenticated user type
+    if (AuthHelper::isCompanyAdmin()) {
+        $companyId = AuthHelper::getCompanyId();
+        $query->where('company_id', $companyId);
+        Log::info('Company admin fetching branches', ['company_id' => $companyId]);
+    } 
+    elseif (AuthHelper::isBranchUser()) {
+        $branchId = AuthHelper::getBranchId();
+        $query->where('id', $branchId);
+        Log::info('Branch user fetching their branch', ['branch_id' => $branchId]);
     }
+
+    // Search filter
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('branch_name', 'like', "%$search%")
+              ->orWhere('branch_slogan', 'like', "%$search%")
+              ->orWhere('branch_province', 'like', "%$search%")
+              ->orWhere('branch_district', 'like', "%$search%")
+              ->orWhere('branch_village', 'like', "%$search%")
+              ->orWhere('branch_street_address', 'like', "%$search%")
+              ->orWhere('branch_phone', 'like', "%$search%")
+              ->orWhere('branch_email', 'like', "%$search%");
+        });
+    }
+
+    // Company filter
+    if ($request->filled('company_id')) {
+        $query->where('company_id', $request->company_id);
+    }
+
+    // Province filter
+    if ($request->filled('branch_province')) {
+        $query->where('branch_province', $request->branch_province);
+    }
+
+    // District filter
+    if ($request->filled('branch_district')) {
+        $query->where('branch_district', $request->branch_district);
+    }
+
+    // Status filter
+    if ($request->filled('is_active')) {
+        $isActive = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN);
+        $query->where('is_active', $isActive);
+    }
+
+    $branches = $query->latest()->paginate($perPage);
+
+    return response()->json([
+        'data' => $branches,
+        'user_info' => [
+            'type' => AuthHelper::getUserType(),
+            'company_id' => AuthHelper::getCompanyId(),
+            'branch_id' => AuthHelper::getBranchId(),
+        ]
+    ]);
+}
 
     /**
      * Store a newly created branch
@@ -105,7 +100,7 @@ class BranchController extends Controller
         $rules = [
             'branch_name' => 'required|string|max:255',
             'branch_slogan' => 'nullable|string|max:500',
-            'branch_logo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Changed to file validation
+            'branch_logo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'branch_street_address' => 'nullable|string',
             'branch_village' => 'nullable|string|max:255',
             'branch_district' => 'nullable|string|max:255',
@@ -115,6 +110,8 @@ class BranchController extends Controller
             'branch_email' => 'nullable|email|max:255',
             'branch_website' => 'nullable|url|max:500',
             'is_active' => 'boolean',
+            'allowed_user_count' => 'nullable|integer|min:0|max:999',
+            'allowed_product_publish_count' => 'nullable|integer|min:0|max:99999',
         ];
 
         $validated = $request->validate($rules);
@@ -131,12 +128,12 @@ class BranchController extends Controller
                 $logoPath = $logo->storeAs('branch-logos', $filename, 'public');
             }
             
-            // Create branch
+            // Create branch with new fields
             $branch = Branch::create([
                 'company_id' => $company->id,
                 'branch_name' => $validated['branch_name'],
                 'branch_slogan' => $validated['branch_slogan'] ?? null,
-                'branch_logo_url' => $logoPath, // Store the path instead of URL
+                'branch_logo_url' => $logoPath,
                 'branch_street_address' => $validated['branch_street_address'] ?? null,
                 'branch_village' => $validated['branch_village'] ?? null,
                 'branch_district' => $validated['branch_district'] ?? null,
@@ -146,6 +143,8 @@ class BranchController extends Controller
                 'branch_email' => $validated['branch_email'] ?? null,
                 'branch_website' => $validated['branch_website'] ?? null,
                 'is_active' => $validated['is_active'] ?? true,
+                'allowed_user_count' => $validated['allowed_user_count'] ?? 1,
+                'allowed_product_publish_count' => $validated['allowed_product_publish_count'] ?? 10,
             ]);
 
             // Load the company relationship
@@ -157,53 +156,85 @@ class BranchController extends Controller
             ], 201);
         });
     }
+
     /**
      * Display the specified branch
      */
-    public function show(Branch $branch)
-    {
-        Gate::authorize('perm', ['branches', 'view']);
+public function show(Branch $branch)
+{
+    Gate::authorize('perm', ['branches', 'view']);
 
-        $branch->load(['company', 'users']);
+    $branch->load(['company', 'users']);
+    $branch->loadCount(['products', 'publicProducts']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $branch,
-            'full_address' => $branch->full_address,
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $branch,
+        'full_address' => $branch->full_address,
+        'statistics' => [
+            'user_count' => $branch->users()->count(),
+            'total_product_count' => $branch->products_count ?? 0,
+            'public_product_count' => $branch->public_products_count ?? 0,
+            'private_product_count' => ($branch->products_count ?? 0) - ($branch->public_products_count ?? 0),
+            'allowed_user_count' => $branch->allowed_user_count,
+            'allowed_product_publish_count' => $branch->allowed_product_publish_count,
+            'remaining_user_slots' => max(0, $branch->allowed_user_count - $branch->users()->count()),
+            'remaining_product_slots' => max(0, $branch->allowed_product_publish_count - ($branch->public_products_count ?? 0)),
+            'user_limit_reached' => $branch->users()->count() >= $branch->allowed_user_count,
+            'product_limit_reached' => ($branch->public_products_count ?? 0) >= $branch->allowed_product_publish_count,
+        ]
+    ]);
+}
 
     /**
      * Update the specified branch
      */
-    public function update(Request $request, Branch $branch)
-    {
-        Gate::authorize('perm', ['branches', 'edit']);
+public function update(Request $request, $id)
+{
+    Gate::authorize('perm', ['branches', 'edit']);
 
-        $validated = $request->validate([
-            'branch_name' => 'sometimes|required|string|max:255',
-            'branch_slogan' => 'nullable|string|max:500',
-            'branch_logo_url' => 'nullable|url|max:500',
-            'branch_street_address' => 'nullable|string',
-            'branch_village' => 'nullable|string|max:255',
-            'branch_district' => 'nullable|string|max:255',
-            'branch_province' => 'nullable|string|max:255',
-            'branch_country' => 'nullable|string|max:100',
-            'branch_phone' => 'nullable|string|max:50',
-            'branch_email' => 'nullable|email|max:255',
-            'branch_website' => 'nullable|url|max:500',
-            'is_active' => 'boolean',
-        ]);
+    $branch = Branch::findOrFail($id);
 
-        $branch->update($validated);
-        $branch->load('company');
+    $rules = [
+        'branch_name' => 'required|string|max:255',
+        'branch_slogan' => 'nullable|string|max:255',
+        'branch_street_address' => 'nullable|string',
+        'branch_village' => 'nullable|string|max:255',
+        'branch_district' => 'nullable|string|max:255',
+        'branch_province' => 'nullable|string|max:255',
+        'branch_country' => 'nullable|string|max:255',
+        'branch_phone' => 'nullable|string|max:20',
+        'branch_email' => 'nullable|email|max:255',
+        'branch_website' => 'nullable|url|max:255',
+        'is_active' => 'boolean',
+        'allowed_user_count' => 'nullable|integer|min:0',
+        'allowed_product_publish_count' => 'nullable|integer|min:0',
+    ];
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Branch updated successfully',
-            'data' => $branch
-        ]);
+    // Only validate logo as URL if it's a string (not a file)
+    if ($request->has('branch_logo_url') && is_string($request->branch_logo_url)) {
+        $rules['branch_logo_url'] = 'nullable|url|max:255';
+    } else if ($request->hasFile('branch_logo_url')) {
+        $rules['branch_logo_url'] = 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
     }
+
+    $validated = $request->validate($rules);
+
+    // Handle file upload for logo
+    if ($request->hasFile('branch_logo_url')) {
+        $file = $request->file('branch_logo_url');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('branch_logos', $filename, 'public');
+        $validated['branch_logo_url'] = $path;
+    }
+
+    $branch->update($validated);
+
+    return response()->json([
+        'data' => $branch,
+        'message' => 'Branch updated successfully.'
+    ]);
+}
 
     /**
      * Remove the specified branch
@@ -289,7 +320,7 @@ class BranchController extends Controller
 
         $branches = $company->branches()
             ->where('is_active', true)
-            ->get(['id', 'branch_name', 'branch_province', 'branch_district']);
+            ->get(['id', 'branch_name', 'branch_province', 'branch_district', 'allowed_user_count', 'allowed_product_publish_count']);
 
         return response()->json([
             'success' => true,
@@ -327,6 +358,8 @@ class BranchController extends Controller
             'total_branches' => Branch::count(),
             'active_branches' => Branch::where('is_active', true)->count(),
             'inactive_branches' => Branch::where('is_active', false)->count(),
+            'total_user_slots' => Branch::sum('allowed_user_count'),
+            'total_product_slots' => Branch::sum('allowed_product_publish_count'),
             'branches_by_province' => Branch::select('branch_province', DB::raw('count(*) as total'))
                 ->whereNotNull('branch_province')
                 ->groupBy('branch_province')
@@ -338,7 +371,15 @@ class BranchController extends Controller
             'recent_branches' => Branch::with('company')
                 ->latest()
                 ->limit(5)
-                ->get()
+                ->get(),
+            'user_capacity_stats' => [
+                'branches_at_capacity' => Branch::whereRaw('(SELECT COUNT(*) FROM users WHERE users.branch_id = branches.id) >= allowed_user_count')->count(),
+                'branches_with_available_slots' => Branch::whereRaw('(SELECT COUNT(*) FROM users WHERE users.branch_id = branches.id) < allowed_user_count')->count(),
+            ],
+            'product_capacity_stats' => [
+                'branches_at_capacity' => Branch::whereRaw('(SELECT COUNT(*) FROM products WHERE products.branch_id = branches.id) >= allowed_product_publish_count')->count(),
+                'branches_with_available_slots' => Branch::whereRaw('(SELECT COUNT(*) FROM products WHERE products.branch_id = branches.id) < allowed_product_publish_count')->count(),
+            ]
         ];
 
         return response()->json([
@@ -359,15 +400,19 @@ class BranchController extends Controller
         $filename = 'branches_export_' . date('Y-m-d_His') . '.csv';
         $handle = fopen('php://temp', 'w+');
 
-        // Add headers
+        // Add headers with new fields
         fputcsv($handle, [
             'ID', 'Company Name', 'Branch Name', 'Slogan', 'Street Address',
             'Village', 'District', 'Province', 'Country', 'Phone', 'Email',
-            'Website', 'Status', 'Created At'
+            'Website', 'Status', 'Allowed Users', 'Allowed Products',
+            'Current Users', 'Current Products', 'Created At'
         ]);
 
         // Add data
         foreach ($branches as $branch) {
+            $userCount = $branch->users()->count();
+            $productCount = $branch->products()->count() ?? 0;
+            
             fputcsv($handle, [
                 $branch->id,
                 $branch->company->company_name ?? 'N/A',
@@ -382,6 +427,10 @@ class BranchController extends Controller
                 $branch->branch_email,
                 $branch->branch_website,
                 $branch->is_active ? 'Active' : 'Inactive',
+                $branch->allowed_user_count,
+                $branch->allowed_product_publish_count,
+                $userCount,
+                $productCount,
                 $branch->created_at
             ]);
         }
@@ -395,8 +444,99 @@ class BranchController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
+    /**
+     * Update branch limits (user count and product publish count)
+     */
+    public function updateLimits(Request $request, Branch $branch)
+    {
+        Gate::authorize('perm', ['branches', 'edit']);
 
+        $validated = $request->validate([
+            'allowed_user_count' => 'required|integer|min:0|max:999',
+            'allowed_product_publish_count' => 'required|integer|min:0|max:99999',
+        ]);
 
+        // Validate that the new limits don't conflict with existing data
+        $currentUserCount = $branch->users()->count();
+        if ($validated['allowed_user_count'] < $currentUserCount) {
+            return response()->json([
+                'success' => false,
+                'message' => "Cannot reduce user limit below current user count ({$currentUserCount}). Please remove users first."
+            ], 422);
+        }
+
+        $currentProductCount = $branch->products()->count() ?? 0;
+        if ($validated['allowed_product_publish_count'] < $currentProductCount) {
+            return response()->json([
+                'success' => false,
+                'message' => "Cannot reduce product publish limit below current product count ({$currentProductCount}). Please unpublish or remove products first."
+            ], 422);
+        }
+
+        $branch->update([
+            'allowed_user_count' => $validated['allowed_user_count'],
+            'allowed_product_publish_count' => $validated['allowed_product_publish_count'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Branch limits updated successfully',
+            'data' => [
+                'id' => $branch->id,
+                'branch_name' => $branch->branch_name,
+                'allowed_user_count' => $branch->allowed_user_count,
+                'allowed_product_publish_count' => $branch->allowed_product_publish_count,
+                'current_user_count' => $currentUserCount,
+                'current_product_count' => $currentProductCount,
+            ]
+        ]);
+    }
+
+    /**
+     * Get branches with available user slots
+     */
+    public function getAvailableForUsers(Request $request)
+    {
+        Gate::authorize('perm', ['branches', 'view']);
+
+        $query = Branch::where('is_active', true)
+            ->whereRaw('(SELECT COUNT(*) FROM users WHERE users.branch_id = branches.id) < branches.allowed_user_count');
+
+        // Optional company filter
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $branches = $query->get(['id', 'branch_name', 'allowed_user_count']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $branches
+        ]);
+    }
+
+    /**
+     * Get branches with available product slots
+     */
+    public function getAvailableForProducts(Request $request)
+    {
+        Gate::authorize('perm', ['branches', 'view']);
+
+        $query = Branch::where('is_active', true)
+            ->whereRaw('(SELECT COUNT(*) FROM products WHERE products.branch_id = branches.id) < branches.allowed_product_publish_count');
+
+        // Optional company filter
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $branches = $query->get(['id', 'branch_name', 'allowed_product_publish_count']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $branches
+        ]);
+    }
 
     public function getProvinces()
     {

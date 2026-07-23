@@ -15,7 +15,7 @@ const DEFAULT_META = { gradient: 'from-slate-400 via-slate-500 to-slate-700', em
 const FEATURES = [
   { label: 'Sales & POS', desc: 'Fast checkout & invoices', icon: '💳', ring: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50' },
   { label: 'Inventory', desc: 'Real-time stock control', icon: '📦', ring: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50' },
-  { label: 'Accounts', desc: 'Cash, books & ledgers', icon: '📊', ring: 'from-violet-500 to-purple-500', bg: 'bg-violet-50' },
+  { label: 'Wallets', desc: 'Cash, books & ledgers', icon: '📊', ring: 'from-violet-500 to-purple-500', bg: 'bg-violet-50' },
   { label: 'Multi-branch', desc: 'All locations in one', icon: '🏪', ring: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
 ];
 
@@ -1540,7 +1540,7 @@ const Welcome = () => {
               </div>
             </div>
             <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-400">
-              {['Sales', 'Inventory', 'Accounts', 'Branches'].map((item, i) => (
+              {['Sales', 'Inventory', 'Wallets', 'Branches'].map((item, i) => (
                 <React.Fragment key={item}>
                   {i > 0 && <span className="text-slate-300 hidden sm:inline">·</span>}
                   <span className="hover:text-blue-600 transition cursor-default">{item}</span>

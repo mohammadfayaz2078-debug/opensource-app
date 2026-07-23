@@ -152,7 +152,7 @@ const Seeder = () => {
               </p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400">Accounts</p>
+              <p className="text-xs text-gray-400">Wallets</p>
               <p className="text-sm font-semibold flex items-center gap-2 mt-1">
                 {status?.accounts_exist ? (
                   <>

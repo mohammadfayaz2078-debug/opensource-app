@@ -35,6 +35,7 @@ use App\Http\Controllers\SaleReportController;
 use App\Http\Controllers\PurchaseReportController;
 use App\Http\Controllers\ProfitLossReportController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CompanyDashboardController;
 use Illuminate\Http\Request;
 
 // Replace login route
@@ -86,8 +87,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/backup/download', [BackupController::class, 'download'])->name('api.backup.download');
 
     
-    Route::apiResource('branches', BranchController::class);
-    Route::patch('branches/{branch}/toggle-status', [BranchController::class, 'toggleStatus']);
+   Route::prefix('branches')->group(function () {
+        Route::get('/', [BranchController::class, 'index']);
+        Route::post('/', [BranchController::class, 'store']);
+        Route::get('/provinces', [BranchController::class, 'getProvinces']);
+        Route::get('/{branch}', [BranchController::class, 'show']);
+        Route::put('/{branch}', [BranchController::class, 'update']);
+        Route::patch('/{branch}/toggle-status', [BranchController::class, 'toggleStatus']);
+        Route::delete('/{branch}', [BranchController::class, 'destroy']);
+    });
     Route::apiResource('roles', RoleController::class);
 
     // ── Expense Module ──────────────────────────────────────────────────────
@@ -378,6 +386,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // In routes/api.php
     Route::get('/dashboard', [DashboardController::class, 'index']);
+
     // In routes/api.php
     Route::prefix('sales-report')->group(function () {
         Route::get('/', [SaleReportController::class, 'index']);
@@ -399,13 +408,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/filters', [ProfitLossReportController::class, 'filterOptions']);
         Route::get('/export', [ProfitLossReportController::class, 'export']);
     });
+
+
 });
 
 
 Route::prefix('company-admin')
     ->middleware(['auth:sanctum'])
     ->group(function () {
-        Route::get('dashboard', [\App\Http\Controllers\API\CompanyAdminController::class, 'dashboard']);
+
+        Route::get('/dashboard', [CompanyDashboardController::class, 'index']);
+        Route::get('/dashboard/branch-options', [CompanyDashboardController::class, 'branchOptions']);
+
         Route::get('branches', [\App\Http\Controllers\API\CompanyAdminController::class, 'branches']);
         Route::post('branches/{id}/impersonate', [\App\Http\Controllers\API\CompanyAdminController::class, 'impersonateBranch']);
         Route::post('language', [\App\Http\Controllers\API\CompanyAdminController::class, 'updateLanguage']);

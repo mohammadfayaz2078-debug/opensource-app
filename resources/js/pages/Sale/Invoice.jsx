@@ -51,7 +51,7 @@ export default function SaleInvoice() {
       </div>
       <div class="details">
         <div class="details-box"><h3>Customer</h3><p><strong>${sale?.customer?.first_name || ''} ${sale?.customer?.last_name || ''}</strong></p><p>${sale?.customer?.phone || ''}</p><p>${sale?.customer?.email || ''}</p></div>
-        <div class="details-box"><h3>Invoice Details</h3><p><strong>Reference:</strong> ${sale?.reference_no || ''}</p><p><strong>Date:</strong> ${sale?.document_date || ''}</p>${sale?.due_date ? `<p><strong>Due Date:</strong> ${sale.due_date}</p>` : ''}${sale?.account ? `<p><strong>Account:</strong> ${sale.account.name}</p>` : ''}</div>
+        <div class="details-box"><h3>Invoice Details</h3><p><strong>Reference:</strong> ${sale?.reference_no || ''}</p><p><strong>Date:</strong> ${sale?.document_date || ''}</p>${sale?.due_date ? `<p><strong>Due Date:</strong> ${sale.due_date}</p>` : ''}${sale?.account ? `<p><strong>Wallet:</strong> ${sale.account.name}</p>` : ''}</div>
       </div>
       <table><thead><tr><th>#</th><th>Product</th><th style="text-align:right">Qty</th><th style="text-align:right">Delivered</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Total</th></tr></thead>
       <tbody>${sale?.items?.map((item, idx) => `<tr><td>${idx + 1}</td><td>${item.product?.name || '—'}</td><td style="text-align:right">${item.quantity}</td><td style="text-align:right">${item.delivered_qty}</td><td style="text-align:right">${parseFloat(item.unit_price).toFixed(2)}</td><td style="text-align:right;font-weight:bold">${parseFloat(item.total).toFixed(2)}</td></tr>`).join('') || ''}</tbody></table>
@@ -101,7 +101,7 @@ export default function SaleInvoice() {
             <p className="text-sm"><span className="text-gray-500">Reference: </span><strong>{sale.reference_no}</strong></p>
             <p className="text-sm"><span className="text-gray-500">Date: </span>{sale.document_date}</p>
             {sale.due_date && <p className="text-sm"><span className="text-gray-500">Due Date: </span>{sale.due_date}</p>}
-            {sale.account && <p className="text-sm"><span className="text-gray-500">Account: </span>{sale.account.name}</p>}
+            {sale.account && <p className="text-sm"><span className="text-gray-500">Wallet: </span>{sale.account.name}</p>}
           </div>
         </div>
         <table className="w-full mb-8">

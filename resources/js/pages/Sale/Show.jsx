@@ -602,7 +602,7 @@ export default function SaleShow() {
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-500">Account</span>
+                <span className="text-gray-500">Wallet</span>
                 <span className="text-gray-900">{sale.account?.name || '—'}</span>
               </div>
               <div className="flex justify-between">
@@ -665,14 +665,14 @@ export default function SaleShow() {
 
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-                  Account *
+                  Wallet *
                 </label>
                 <select 
                   value={payAccountId} 
                   onChange={e => setPayAccountId(e.target.value)}
                   className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent transition-all"
                 >
-                  <option value="">Select account</option>
+                  <option value="">Select Wallet</option>
                   {accounts.map(a => (
                     <option key={a.id} value={a.id}>{a.name}</option>
                   ))}

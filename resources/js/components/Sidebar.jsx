@@ -46,7 +46,6 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1 5h12l-1-5M5 21h.01M19 21h.01" />
     </svg>
   ),
-    // Income Icon - Added
   income: () => (
     <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -80,6 +79,9 @@ const Sidebar = ({
   const [collapsedGroupsOpen, setCollapsedGroupsOpen] = useState({});
   const [showSearch, setShowSearch] = useState(true);
   const sidebarRef = useRef(null);
+
+  // API URL for images - Hardcoded to avoid process.env issues
+  const API_URL = 'http://localhost:8000';
 
   // Translation helper (replace with your i18n implementation)
   const t = (key) => {
@@ -135,126 +137,128 @@ const Sidebar = ({
       'sidebar_profile': 'Profile',
       'sidebar_unit_categories': 'Unit Category',
       'sidebar_units': 'Product Units',
-      'sidebar_accounts': 'Accounts',
+      'sidebar_accounts': 'Wallets',
       'sidebar_publication': 'Publication',
       'sidebar_analytics': 'Analytics',
-      'sidebar_account_transactions': 'Account Transactions',
+      'sidebar_account_transactions': 'Wallet Transactions',
     };
     return translations[key] || key;
   };
-const links = [
-  {
-    title: null,
-    children: [
-      {
-        name: 'Dashboard',
-        to: '/dashboard',
-        icon: 'home',
-        translation_key: 'sidebar_dashboard'
-      }
-    ]
-  },
-  {
-    title: 'Sales',
-    icon: 'users',
-    translation_key: 'Sales',
-    children: [
-      { name: 'Customer', to: '/customers', translation_key: 'sidebar_customer_list' },
-      { name: 'Invoices', to: '/sales', translation_key: 'sidebar_invoices' },
-      { name: 'Sale Returns', to: '/sale-returns', translation_key: 'sidebar_sale_returns' },
-    ]
-  },
-  {
-    title: 'Purchases',
-    icon: 'shopping',
-    translation_key: 'Purchases',
-    children: [
-      { name: 'Suppliers', to: '/suppliers', translation_key: 'sidebar_supplier_list' },
-      { name: 'Bill', to: '/purchases', translation_key: 'sidebar_purchase_orders' },
-      { name: 'Purchase Returns', to: '/purchase-returns', translation_key: 'sidebar_purchase_returns' },
-    ]
-  },
-  {
-    title: 'Inventory',
-    icon: 'box',
-    translation_key: 'Inventory',
-    children: [
-      { name: 'Unit Category', to: '/unit-categories', translation_key: 'sidebar_unit_categories' },
-      { name: 'Product Units', to: '/units', translation_key: 'sidebar_units' },
-      { name: 'Product Category', to: '/product-categories', translation_key: 'sidebar_product_categories' },
-      { name: 'Products', to: '/products', translation_key: 'sidebar_products' },
-      { name: 'Stock Balances', to: '/stock/balances', translation_key: 'sidebar_stock_balances' },
-      { name: 'Stock Transactions', to: '/stock/transactions', translation_key: 'sidebar_stock_transactions' },
-    ]
-  },
-  {
-    title: 'Accounting',
-    icon: 'wallet',
-    translation_key: 'Accounting',
-    children: [
-      { name: 'Accounts', to: '/accounts', translation_key: 'sidebar_accounts' },
-      { name: 'Account Transactions', to: '/account-transactions', translation_key: 'sidebar_account_transactions' },
-    ]
-  },
-  {
-    title: 'Incomes',
-    icon: 'income',
-    translation_key: 'Incomes',
-    children: [
-      { name: 'Income Category', to: '/income-categories', translation_key: 'sidebar_income_categories' },
-      { name: 'Other Incomes', to: '/other-incomes', translation_key: 'sidebar_other_incomes' },
-    ]
-  },
-  {
-    title: 'Publication',
-    icon: 'box',
-    translation_key: 'Publication',
-    children: [
-      { name: 'Products & Orders', to: '/publications', translation_key: 'sidebar_publication' },
-    ]
-  },
-  {
-    title: 'Expenses',
-    icon: 'shopping',
-    translation_key: 'Expenses',
-    children: [
-      { name: 'Expense Types', to: '/expense-types', translation_key: 'sidebar_expense_types' },
-      { name: 'Expenses', to: '/expenses', translation_key: 'sidebar_expenses' }
-    ]
-  },
-  {
-    title: 'Reports',
-    icon: 'chart',
-    translation_key: 'Reports',
-    children: [
-      { name: 'Sale Report', to: '/sales-report', translation_key: 'sidebar_sales' },
-      { name: 'Purchase Report', to: '/purchase-report', translation_key: 'sidebar_purchases' },
-      { name: 'Profit & Loss', to: '/profit-loss-report', translation_key: 'sidebar_profit_loss' }
-    ]
-  },
-  {
-    title: 'Settings',
-    icon: 'settings',
-    translation_key: 'Settings',
-    children: [
-      { name: 'Settings', to: '/settings', translation_key: 'sidebar_settings' },
-      { name: 'Profile', to: '/profile', translation_key: 'sidebar_profile' }
-    ]
-  }
-];
+
+  const links = [
+    {
+      title: null,
+      children: [
+        {
+          name: 'Dashboard',
+          to: '/dashboard',
+          icon: 'home',
+          translation_key: 'sidebar_dashboard'
+        }
+      ]
+    },
+    {
+      title: 'Sales',
+      icon: 'users',
+      translation_key: 'Sales',
+      children: [
+        { name: 'Customer', to: '/customers', translation_key: 'sidebar_customer_list' },
+        { name: 'Invoices', to: '/sales', translation_key: 'sidebar_invoices' },
+        { name: 'Sale Returns', to: '/sale-returns', translation_key: 'sidebar_sale_returns' },
+      ]
+    },
+    {
+      title: 'Purchases',
+      icon: 'shopping',
+      translation_key: 'Purchases',
+      children: [
+        { name: 'Suppliers', to: '/suppliers', translation_key: 'sidebar_supplier_list' },
+        { name: 'Bill', to: '/purchases', translation_key: 'sidebar_purchase_orders' },
+        { name: 'Purchase Returns', to: '/purchase-returns', translation_key: 'sidebar_purchase_returns' },
+      ]
+    },
+    {
+      title: 'Inventory',
+      icon: 'box',
+      translation_key: 'Inventory',
+      children: [
+        { name: 'Unit Category', to: '/unit-categories', translation_key: 'sidebar_unit_categories' },
+        { name: 'Product Units', to: '/units', translation_key: 'sidebar_units' },
+        { name: 'Product Category', to: '/product-categories', translation_key: 'sidebar_product_categories' },
+        { name: 'Products', to: '/products', translation_key: 'sidebar_products' },
+        { name: 'Stock Balances', to: '/stock/balances', translation_key: 'sidebar_stock_balances' },
+        { name: 'Stock Transactions', to: '/stock/transactions', translation_key: 'sidebar_stock_transactions' },
+      ]
+    },
+    {
+      title: 'Accounting',
+      icon: 'wallet',
+      translation_key: 'Accounting',
+      children: [
+        { name: 'Wallets', to: '/accounts', translation_key: 'sidebar_accounts' },
+        { name: 'Wallet Transactions', to: '/account-transactions', translation_key: 'sidebar_account_transactions' },
+      ]
+    },
+    {
+      title: 'Incomes',
+      icon: 'income',
+      translation_key: 'Incomes',
+      children: [
+        { name: 'Income Category', to: '/income-categories', translation_key: 'sidebar_income_categories' },
+        { name: 'Other Incomes', to: '/other-incomes', translation_key: 'sidebar_other_incomes' },
+      ]
+    },
+    {
+      title: 'Publication',
+      icon: 'box',
+      translation_key: 'Publication',
+      children: [
+        { name: 'Products & Orders', to: '/publications', translation_key: 'sidebar_publication' },
+      ]
+    },
+    {
+      title: 'Expenses',
+      icon: 'shopping',
+      translation_key: 'Expenses',
+      children: [
+        { name: 'Expense Types', to: '/expense-types', translation_key: 'sidebar_expense_types' },
+        { name: 'Expenses', to: '/expenses', translation_key: 'sidebar_expenses' }
+      ]
+    },
+    {
+      title: 'Reports',
+      icon: 'chart',
+      translation_key: 'Reports',
+      children: [
+        { name: 'Sale Report', to: '/sales-report', translation_key: 'sidebar_sales' },
+        { name: 'Purchase Report', to: '/purchase-report', translation_key: 'sidebar_purchases' },
+        { name: 'Profit & Loss', to: '/profit-loss-report', translation_key: 'sidebar_profit_loss' }
+      ]
+    },
+    {
+      title: 'Settings',
+      icon: 'settings',
+      translation_key: 'Settings',
+      children: [
+        { name: 'Roles', to: '/roles', translation_key: 'Roles' },
+        { name: 'Users', to: '/users', translation_key: 'Users' },
+        { name: 'Branches', to: '/branches', translation_key: 'sidebar_branches' },
+        { name: 'Settings', to: '/settings', translation_key: 'sidebar_settings' },
+        { name: 'Profile', to: '/profile', translation_key: 'sidebar_profile' }
+      ]
+    }
+  ];
 
   const filteredLinks = links
     .map(group => {
       const search = linkSearch.toLowerCase();
       const authorizedChildren = group.children?.filter(child => {
         if (!search) return true;
-
         return (
           child.name.toLowerCase().includes(search) ||
           t(child.translation_key || child.name.toLowerCase().replace(/ /g, '_')).toLowerCase().includes(search)
         );
       });
-
       return {
         ...group,
         children: authorizedChildren
@@ -274,7 +278,6 @@ const links = [
 
       if (isCollapsed) {
         classes.push('opacity-0', 'pointer-events-none');
-
         if (isRTL) {
           classes.push('translate-x-[calc(100%+8px)]');
         } else {
@@ -282,7 +285,6 @@ const links = [
         }
       } else {
         classes.push('w-56', 'translate-x-0', 'opacity-100', 'pointer-events-auto');
-
         if (isRTL) {
           classes.push('right-0');
         } else {
@@ -291,13 +293,11 @@ const links = [
       }
     } else {
       classes.push('w-56');
-
       if (isRTL) {
         classes.push('right-0', 'border-l', 'border-slate-200');
       } else {
         classes.push('left-0', 'border-r', 'border-slate-200');
       }
-
       if (isMobileOpen) {
         classes.push('translate-x-0');
       } else {
@@ -361,7 +361,6 @@ const links = [
     fetchUser();
     window.addEventListener('resize', handleResize);
     handleResize();
-
     return () => window.removeEventListener('resize', handleResize);
   }, [handleResize]);
 
@@ -383,6 +382,22 @@ const links = [
     return <Icon />;
   };
 
+  // Get branch logo URL - Using hardcoded API_URL
+  const getBranchLogoUrl = () => {
+    if (!user?.branch?.branch_logo_url) return null;
+    const logoUrl = user.branch.branch_logo_url;
+    if (logoUrl.startsWith('http')) return logoUrl;
+    return `${API_URL}/storage/${logoUrl}`;
+  };
+
+  // Get initials for fallback
+  const getInitials = () => {
+    const branchName = user?.branch?.branch_name || 'M';
+    return branchName.charAt(0).toUpperCase();
+  };
+
+  const branchLogoUrl = getBranchLogoUrl();
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -401,21 +416,42 @@ const links = [
            transform transition-all duration-300 ease-out
            shadow-sm ${getSidebarClasses()}`}
       >
-        {/* Header */}
+        {/* Header with Logo */}
         <div
           className={`px-3 py-2.5 border-b border-slate-200 flex items-center justify-between flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           {(!isCollapsed || windowWidth < 1024) && (
             <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] rounded-md flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm">
-                {user?.branch ? user.branch.branch_name.charAt(0).toUpperCase() : 'M'}
-              </div>
+              {/* Logo or Initials */}
+              {branchLogoUrl ? (
+                <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 border border-slate-200 bg-white shadow-sm">
+                  <img 
+                    src={branchLogoUrl} 
+                    alt={user?.branch?.branch_name || 'Branch'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initials on error
+                      const parent = e.target.parentElement;
+                      const initials = getInitials();
+                      parent.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-[#0EA5E9] to-[#0284C7]">
+                          ${initials}
+                        </div>
+                      `;
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] rounded-md flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm">
+                  {getInitials()}
+                </div>
+              )}
               <div className={`overflow-hidden ${isRTL ? 'text-right' : ''}`}>
                 <div className="text-sm font-medium text-slate-800 truncate leading-tight">
                   {user?.branch ? user.branch.branch_name : 'Management'}
                 </div>
                 <div className="text-xs text-slate-500 truncate leading-tight">
-                  {user?.branch?.city || ''}
+                  {user?.branch?.branch_province || user?.branch?.city || ''}
                 </div>
               </div>
             </div>
@@ -423,9 +459,28 @@ const links = [
 
           {isCollapsed && windowWidth >= 1024 && (
             <div className="w-full flex justify-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] rounded-md flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                {user?.branch ? user.branch.branch_name.charAt(0).toUpperCase() : 'M'}
-              </div>
+              {branchLogoUrl ? (
+                <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 border border-slate-200 bg-white shadow-sm">
+                  <img 
+                    src={branchLogoUrl} 
+                    alt={user?.branch?.branch_name || 'Branch'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const parent = e.target.parentElement;
+                      const initials = getInitials();
+                      parent.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-[#0EA5E9] to-[#0284C7]">
+                          ${initials}
+                        </div>
+                      `;
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] rounded-md flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                  {getInitials()}
+                </div>
+              )}
             </div>
           )}
 
@@ -514,17 +569,17 @@ const links = [
                           key={childIdx}
                           to={child.to}
                           onClick={handleLinkClick}
-                           className={({ isActive }) => `
-                             flex items-center px-3 py-1.5 transition text-sm rounded
-                             ${isRTL ? 'pr-5' : 'pl-5'}
-                             ${isActive 
-                               ? 'text-[#0EA5E9] bg-[#EFF6FF] font-medium' 
-                               : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                             }
-                           `}
-                         >
-                           <span className="mx-2 text-gray-300">•</span>
-                           <span className="truncate">
+                          className={({ isActive }) => `
+                            flex items-center px-3 py-1.5 transition text-sm rounded
+                            ${isRTL ? 'pr-5' : 'pl-5'}
+                            ${isActive 
+                              ? 'text-[#0EA5E9] bg-[#EFF6FF] font-medium' 
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            }
+                          `}
+                        >
+                          <span className="mx-2 text-gray-300">•</span>
+                          <span className="truncate">
                             {t(child.translation_key || child.name.toLowerCase().replace(/ /g, '_'))}
                           </span>
                         </NavLink>
@@ -563,10 +618,10 @@ const links = [
                     <button
                       onClick={() => toggleCollapsedGroup(group.title.toLowerCase())}
                       title={t(group.translation_key || group.title.toLowerCase().replace(/ /g, '_'))}
-                        className={`w-full flex justify-center p-3 transition group
-                          ${isCollapsedGroupOpen(group.title.toLowerCase())
-                            ? 'bg-slate-100 text-slate-900'
-                            : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
+                      className={`w-full flex justify-center p-3 transition group
+                        ${isCollapsedGroupOpen(group.title.toLowerCase())
+                          ? 'bg-slate-100 text-slate-900'
+                          : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
                         }
                       `}
                     >

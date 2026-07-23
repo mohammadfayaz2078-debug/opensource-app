@@ -469,7 +469,7 @@ const handlePay = async () => {
                   <thead>
                     <tr className="bg-gray-50">
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Account</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Wallet</th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Reference</th>
                       <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">Amount</th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Description</th>
@@ -588,10 +588,10 @@ const handlePay = async () => {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Account *</label>
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Wallet *</label>
           <select value={payAccountId} onChange={e => setPayAccountId(e.target.value)}
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]">
-            <option value="">Select account</option>
+            <option value="">Select Wallet</option>
             {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
         </div>

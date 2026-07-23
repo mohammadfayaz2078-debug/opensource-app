@@ -97,6 +97,7 @@ export default function CustomerShow() {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to convert lead.');
     }
+
   };
 
   const openPayModal = (invoice) => {
@@ -507,7 +508,7 @@ export default function CustomerShow() {
                   <thead>
                     <tr className="bg-gray-50">
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Account</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Wallet</th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Invoice</th>
                       <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">Amount</th>
                       <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">Receipt</th>

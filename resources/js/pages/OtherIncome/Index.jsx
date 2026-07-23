@@ -192,7 +192,7 @@ export default function OtherIncomeIndex() {
             onChange={e => updateFilter('account_id', e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="">All Accounts</option>
+            <option value="">All Wallets</option>
             {accounts.map(acc => (
               <option key={acc.id} value={acc.id}>{acc.name}</option>
             ))}

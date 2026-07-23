@@ -151,9 +151,9 @@ export default function SaleCreate() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Account</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Wallet</label>
                 <select name="account_id" value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className={inputClass}>
-                  <option value="">Select account</option>
+                  <option value="">Select Wallet</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>

@@ -34,10 +34,10 @@ const AccountModal = ({ isOpen, onClose, onSuccess, account }) => {
     try {
       if (account) {
         await api.put(`/accounts/${account.id}`, formData);
-        Swal.fire('Updated!', 'Account updated successfully.', 'success');
+        Swal.fire('Updated!', 'Wallet updated successfully.', 'success');
       } else {
         await api.post('/accounts', formData);
-        Swal.fire('Created!', 'Account created successfully.', 'success');
+        Swal.fire('Created!', 'Wallet created successfully.', 'success');
       }
       onSuccess();
       onClose();
@@ -56,7 +56,7 @@ const AccountModal = ({ isOpen, onClose, onSuccess, account }) => {
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-5 animate-fadeIn">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-gray-800">
-            {account ? 'Edit Account' : 'New Account'}
+            {account ? 'Edit Wallet' : 'New Wallet'}
           </h2>
           <button
             onClick={onClose}
@@ -72,7 +72,7 @@ const AccountModal = ({ isOpen, onClose, onSuccess, account }) => {
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Account Name *
+                Wallet Name *
               </label>
               <input
                 type="text"
