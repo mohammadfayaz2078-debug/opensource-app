@@ -242,24 +242,45 @@ export default function UnitEdit() {
                   {form.uom_type !== 'reference' && (
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        Conversion Factor
+                        Conversion Factor *
                       </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          step="any"
-                          name="factor"
-                          value={form.factor}
-                          onChange={handleChange}
-                          className={inputClass('factor')}
-                        />
-                        {referenceUnit && (
-                          <span className="text-sm text-gray-500">
-                            1 {form.name} = {form.factor} {referenceUnit.name}
-                          </span>
-                        )}
-                      </div>
+                      <input
+                        type="text"
+                        name="factor"
+                        value={form.factor}
+                        onChange={handleChange}
+                        className={inputClass('factor')}
+                        placeholder="Enter conversion factor"
+                      />
                       {errors.factor && <p className="text-red-500 text-xs mt-1">{errors.factor[0]}</p>}
+
+                      {/* Live Conversion Preview */}
+                      {form.factor && form.name && referenceUnit && (
+                        <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="text-sm font-medium text-gray-700">
+                            {form.uom_type === 'bigger' ? (
+                              <>1 <span className="text-[#007c89] font-semibold">{form.name}</span> = <span className="font-mono font-semibold text-[#007c89]">{parseFloat(form.factor).toString()}</span> <span className="text-[#007c89] font-semibold">{referenceUnit.name}</span></>
+                            ) : (
+                              <>1 <span className="text-[#007c89] font-semibold">{referenceUnit.name}</span> = <span className="font-mono font-semibold text-[#007c89]">{parseFloat(form.factor).toString()}</span> <span className="text-[#007c89] font-semibold">{form.name}</span></>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {form.uom_type === 'bigger'
+                              ? `1 ${form.name} contains ${parseFloat(form.factor).toString()} ${referenceUnit.name}`
+                              : `1 ${referenceUnit.name} contains ${parseFloat(form.factor).toString()} ${form.name}`}
+                          </p>
+                        </div>
+                      )}
+                      {!referenceUnit && form.category_id && (
+                        <div className="mt-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <p className="text-xs text-amber-700">⚠️ No reference unit found in this category.</p>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        {form.uom_type === 'bigger'
+                          ? 'How many reference units equal 1 of this unit'
+                          : 'How many of this unit equal 1 reference unit'}
+                      </p>
                     </div>
                   )}
                   

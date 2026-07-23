@@ -32,10 +32,9 @@ class StockController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = StockBalance::with('product')
+        $query = StockBalance::with(['product', 'unitCategory.units'])
             ->where('company_id', $companyId)
-            ->where('branch_id', $branchId)
-            ->where('quantity', '>', 0);
+            ->where('branch_id', $branchId);
 
         if ($request->filled('search')) {
             $query->whereHas('product', function ($q) use ($request) {
@@ -43,11 +42,21 @@ class StockController extends Controller
             });
         }
 
-        $perPage = min((int) $request->get('per_page', 50), 200);
+        $perPage = min((int) $request->get('per_page', 200), 500);
         $balances = $query->orderBy('updated_at', 'desc')->paginate($perPage);
 
+        // Attach reference unit name for each balance
+        $items = collect($balances->items())->map(function ($balance) {
+            $refUnit = null;
+            if ($balance->unitCategory && $balance->unitCategory->units) {
+                $refUnit = $balance->unitCategory->units->firstWhere('uom_type', 'reference');
+            }
+            $balance->reference_unit_name = $refUnit?->name;
+            return $balance;
+        });
+
         return response()->json([
-            'data'         => $balances->items(),
+            'data'         => $items,
             'total'        => $balances->total(),
             'per_page'     => $balances->perPage(),
             'current_page' => $balances->currentPage(),

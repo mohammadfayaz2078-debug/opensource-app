@@ -24,6 +24,7 @@ import PurchaseEdit from './pages/Purchase/Edit';
 import PurchaseShow from './pages/Purchase/Show';
 import PurchaseInvoice from './pages/Purchase/Invoice';
 import PaymentReceipt from './pages/Purchase/PaymentReceipt';
+import SalePaymentReceipt from './pages/Sale/PaymentReceipt';
 import PurchaseReturnIndex from './pages/PurchaseReturn/Index';
 import PurchaseReturnCreate from './pages/PurchaseReturn/Create';
 import PurchaseReturnEdit from './pages/PurchaseReturn/Edit';
@@ -329,6 +330,7 @@ const routes = [
       { path: 'purchases/:id', element: <PurchaseShow /> },
       { path: 'purchases/:id/edit', element: <PurchaseEdit /> },
       { path: 'purchases/:id/invoice', element: <PurchaseInvoice /> },
+      { path: 'payment-receipt/:id', element: <PaymentReceipt /> },
       { path: 'purchase-returns', element: <PurchaseReturnIndex /> },
       { path: 'purchase-returns/create', element: <PurchaseReturnCreate /> },
       { path: 'purchase-returns/:id/edit', element: <PurchaseReturnEdit /> },
@@ -339,6 +341,7 @@ const routes = [
       { path: 'sales/:id', element: <SaleShow /> },
       { path: 'sales/:id/edit', element: <SaleEdit /> },
       { path: 'sales/:id/invoice', element: <SaleInvoice /> },
+      { path: 'sale-payment-receipt/:id', element: <SalePaymentReceipt /> },
       { path: 'sale-returns', element: <SaleReturnIndex /> },
       { path: 'sale-returns/create', element: <SaleReturnCreate /> },
       { path: 'sale-returns/:id/edit', element: <SaleReturnEdit /> },

@@ -48,25 +48,25 @@ export default function ProductShow() {
   if (!product) return null;
 
   return (
-    <div>
+    <div className="p-6 -m-6">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/products')} className="hover:text-[#007c89]">Products</button>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onClick={() => navigate('/products')} className="hover:text-[#007c89] whitespace-nowrap">Products</button>
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">{product.name}</span>
+          <span className="text-gray-700 truncate">{product.name}</span>
         </div>
         
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{product.name}</h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 break-words">{product.name}</h1>
             <p className="text-sm text-gray-500 mt-1">
               {product.barcode && <span>SKU: {product.barcode}</span>}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => navigate(`/products/${id}/edit`)}
               className="inline-flex items-center px-3 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77]"
@@ -95,23 +95,23 @@ export default function ProductShow() {
         <div className="lg:col-span-2 space-y-6">
           {/* Pricing Card */}
           <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4">
+            <div className="p-4 sm:px-6 sm:py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 uppercase">Purchase Price</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Purchase Price</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     ${product.purchase_price?.toLocaleString()}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 uppercase">Sale Price</p>
-                  <p className="text-3xl font-bold text-green-700">
+                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Sale Price</p>
+                  <p className="text-xl sm:text-3xl font-bold text-green-700">
                     ${product.sale_price?.toLocaleString()}
                   </p>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-green-200 text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Margin: {(((product.sale_price - product.purchase_price) / product.sale_price) * 100).toFixed(2)}%
                 </p>
               </div>
@@ -121,20 +121,20 @@ export default function ProductShow() {
           {/* Inventory Settings */}
           {(product.low_stock_warning_count > 0 || product.reorder_point > 0) && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900">Inventory Settings</h2>
               </div>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500 uppercase">Low Stock Warning</p>
-                    <p className="text-xl font-semibold text-orange-600">
+                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Low Stock Warning</p>
+                    <p className="text-base sm:text-xl font-semibold text-orange-600">
                       {product.low_stock_warning_count} units
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 uppercase">Reorder Point</p>
-                    <p className="text-xl font-semibold text-blue-600">
+                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Reorder Point</p>
+                    <p className="text-base sm:text-xl font-semibold text-blue-600">
                       {product.reorder_point} units
                     </p>
                   </div>
@@ -146,11 +146,11 @@ export default function ProductShow() {
           {/* Attachments */}
           {product.attachments && product.attachments.length > 0 && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900">Attachments</h2>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   {product.attachments.map(attachment => (
                     <a
                       key={attachment.id}
@@ -159,11 +159,11 @@ export default function ProductShow() {
                       rel="noopener noreferrer"
                       className="border rounded-lg p-3 text-center hover:shadow-md transition-shadow group"
                     >
-                      <div className="text-4xl mb-2">
+                      <div className="text-3xl sm:text-4xl mb-2">
                         {attachment.mime_type?.startsWith('image/') ? '🖼️' : '📄'}
                       </div>
-                      <p className="text-xs text-gray-600 truncate">{attachment.file_name}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-[10px] sm:text-xs text-gray-600 truncate">{attachment.file_name}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-400">
                         {(attachment.file_size / 1024).toFixed(2)} KB
                       </p>
                     </a>
@@ -178,10 +178,10 @@ export default function ProductShow() {
         <div className="space-y-6">
           {/* Category Card */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Category</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {product.category ? (
                 <div>
                   <p className="text-sm font-medium text-gray-900">{product.category.name}</p>
@@ -203,10 +203,10 @@ export default function ProductShow() {
 
           {/* Audit Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Audit Information</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created At</dt>

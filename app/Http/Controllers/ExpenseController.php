@@ -275,25 +275,27 @@ class ExpenseController extends Controller
         // Debug: Log the request data
         Log::info('Bulk expense store request:', $request->all());
 
-        $validated = $request->validate([
-            'expenses' => 'required|array|min:1',
-            'expenses.*.expense_type_id' => ['required', 'integer', Rule::exists('expense_types', 'id')->where(function ($q) use ($companyId) {
-                $q->where('company_id', $companyId)->where('is_active', true);
-            })],
-            'expenses.*.account_id' => ['required', 'integer', Rule::exists('accounts', 'id')->where(function ($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })],
-            'expenses.*.amount' => 'required|numeric|min:0.01|max:999999999',
-            'expenses.*.description' => 'nullable|string|max:500',
-            'expenses.*.paid_to' => 'nullable|string|max:150',
-            'expenses.*.date' => 'required|date|before_or_equal:today',
-        ]);
-
         $createdExpenses = [];
         $errors = [];
 
-        DB::beginTransaction();
         try {
+            // Validate FIRST, then start transaction after validation passes
+            $validated = $request->validate([
+                'expenses' => 'required|array|min:1',
+                'expenses.*.expense_type_id' => ['required', 'integer', Rule::exists('expense_types', 'id')->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)->where('is_active', true);
+                })],
+                'expenses.*.account_id' => ['required', 'integer', Rule::exists('accounts', 'id')->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId);
+                })],
+                'expenses.*.amount' => 'required|numeric|min:0.01|max:999999999',
+                'expenses.*.description' => 'nullable|string|max:500',
+                'expenses.*.paid_to' => 'nullable|string|max:150',
+                'expenses.*.date' => 'required|date|before_or_equal:today',
+            ]);
+
+            DB::beginTransaction();
+
             foreach ($validated['expenses'] as $index => $expenseData) {
                 try {
                     // Check if account exists
@@ -387,9 +389,16 @@ class ExpenseController extends Controller
                 'message' => $message,
             ], $errorCount > 0 ? 207 : 201);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            Log::error('Bulk expense validation failed: ' . json_encode($e->errors()));
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Bulk expense creation failed: ' . $e->getMessage());
+            Log::error('Bulk expense creation failed: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
             return response()->json([
                 'message' => 'Failed to create expenses: ' . $e->getMessage(),
             ], 500);

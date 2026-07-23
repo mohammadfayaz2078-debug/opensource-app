@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
 
 export default function SalePaymentReceipt() {
-  const { transactionId } = useParams();
+  const { id: transactionId } = useParams();
   const navigate = useNavigate();
   const receiptRef = useRef(null);
   const [data, setData] = useState(null);

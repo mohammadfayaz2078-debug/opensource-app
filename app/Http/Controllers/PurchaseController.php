@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class PurchaseController extends Controller
@@ -237,9 +238,11 @@ class PurchaseController extends Controller
         $purchase = Purchase::where('branch_id', $branchId)->findOrFail($id);
 
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount'     => 'required|numeric|min:0.01',
+            'account_id' => 'required|exists:accounts,id',
         ]);
 
+        $accountId = (int) $validated['account_id'];
         $newPaid = (float) $purchase->paid_amount + (float) $validated['amount'];
         $totalAmount = (float) $purchase->total_amount;
         $dueAmount = max(0, $totalAmount - $newPaid);
@@ -254,32 +257,29 @@ class PurchaseController extends Controller
             'paid_amount'    => $newPaid,
             'due_amount'     => $dueAmount,
             'payment_status' => $paymentStatus,
+            'account_id'     => $accountId,
         ]);
 
         $transaction = null;
 
-        // Update account balance - money goes out for purchases
-        if ($purchase->account_id) {
-            $account = Account::find($purchase->account_id);
-            if ($account) {
-                $balanceBefore = (float) $account->balance;
-                $amount = (float) $validated['amount'];
-                $balanceAfter = $balanceBefore - $amount;
+        // Update account balance — money goes out for purchases
+        $account = Account::find($accountId);
+        if ($account) {
+            $amount = (float) $validated['amount'];
+            $balanceAfter = (float) $account->balance - $amount;
 
-                $account->decrement('balance', $amount);
+            $account->decrement('balance', $amount);
 
-                // Record account transaction
-                $transaction = AccountTransaction::create([
-                    'account_id'     => $account->id,
-                    'type'           => AccountTransaction::TYPE_EXPENSE,
-                    'amount'         => $amount,
-                    'balance_after'  => $balanceAfter,
-                    'description'    => 'Payment for Bill #' . $purchase->id,
-                    'reference_id'   => $purchase->id,
-                    'reference_type' => Purchase::class,
-                    'created_by'     => Auth::id(),
-                ]);
-            }
+            $transaction = AccountTransaction::create([
+                'account_id'     => $account->id,
+                'type'           => AccountTransaction::TYPE_EXPENSE,
+                'amount'         => $amount,
+                'balance_after'  => $balanceAfter,
+                'description'    => 'Payment for Bill #' . $purchase->id,
+                'reference_id'   => $purchase->id,
+                'reference_type' => Purchase::class,
+                'created_by'     => Auth::id(),
+            ]);
         }
 
         $purchase->load(['supplier', 'account', 'items.product', 'items.unit', 'creator']);
@@ -307,19 +307,42 @@ class PurchaseController extends Controller
         ]);
     }
 
-    public function paymentReceipt(Request $request, int $transactionId): JsonResponse
+    public function paymentReceipt(Request $request, $transactionId): JsonResponse
     {
+        $transactionId = (int) $transactionId;
+        if ($transactionId <= 0) {
+            Log::warning('paymentReceipt: invalid transactionId (<=0)', ['raw' => $request->route('transactionId')]);
+            return response()->json(['message' => 'Transaction not found.'], 404);
+        }
+
         $branchId = $this->resolveBranchId($request);
+
+        Log::info('paymentReceipt lookup', ['transactionId' => $transactionId, 'branchId' => $branchId]);
 
         $transaction = AccountTransaction::with(['account', 'reference'])
             ->where('id', $transactionId)
             ->where('reference_type', Purchase::class)
-            ->firstOrFail();
+            ->first();
+
+        if (!$transaction) {
+            // Check if transaction exists with a different reference_type
+            $otherTx = AccountTransaction::where('id', $transactionId)->first();
+            Log::warning('paymentReceipt: transaction not found with Purchase ref_type', [
+                'transactionId' => $transactionId,
+                'exists_with_other_type' => $otherTx ? $otherTx->reference_type : 'NOT_FOUND'
+            ]);
+            return response()->json(['message' => 'Transaction not found.'], 404);
+        }
 
         // Verify the purchase belongs to this branch
         $purchase = Purchase::where('branch_id', $branchId)
             ->with('supplier')
-            ->findOrFail($transaction->reference_id);
+            ->where('id', $transaction->reference_id)
+            ->first();
+
+        if (!$purchase) {
+            return response()->json(['message' => 'Purchase not found.'], 404);
+        }
 
         return response()->json([
             'transaction' => $transaction,

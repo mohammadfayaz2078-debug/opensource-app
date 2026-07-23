@@ -2,16 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
 
+const generatePageNumbers = (current, total) => {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = [];
+  if (current <= 4) {
+    for (let i = 1; i <= 5; i++) pages.push(i);
+    pages.push('...', total);
+  } else if (current >= total - 3) {
+    pages.push(1, '...');
+    for (let i = total - 4; i <= total; i++) pages.push(i);
+  } else {
+    pages.push(1, '...', current - 1, current, current + 1, '...', total);
+  }
+  return pages;
+};
+
 // Items Modal Component
 const ItemsModal = ({ returnData, onClose }) => {
   if (!returnData) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col animate-in fade-in zoom-in duration-200">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50/50 rounded-t-xl">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50/50 rounded-t-xl">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <svg className="w-5 h-5 text-[#007c89]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,53 +44,90 @@ const ItemsModal = ({ returnData, onClose }) => {
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {returnData.items && returnData.items.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">#</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Product</th>
-                    <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Qty</th>
-                    <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Price</th>
-                    <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {returnData.items.map((item, idx) => (
-                    <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{item.product?.name || 'Unknown Product'}</div>
-                        {item.notes && (
-                          <div className="text-xs text-gray-400 mt-0.5">{item.notes}</div>
-                        )}
+            <>
+              {/* Desktop Table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">#</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Product</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Qty</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Price</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {returnData.items.map((item, idx) => (
+                      <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900">{item.product?.name || 'Unknown Product'}</div>
+                          {item.notes && (
+                            <div className="text-xs text-gray-400 mt-0.5">{item.notes}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right text-gray-700">
+                          {parseFloat(item.quantity).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-right text-gray-700">
+                          {parseFloat(item.unit_price).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                          {parseFloat(item.total).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="border-t-2 border-gray-300 bg-gray-50">
+                    <tr>
+                      <td colSpan="4" className="px-4 py-3 text-right font-semibold text-gray-900">
+                        Total
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-700">
-                        {parseFloat(item.quantity).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-gray-700">
-                        {parseFloat(item.unit_price).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">
-                        {parseFloat(item.total).toFixed(2)}
+                      <td className="px-4 py-3 text-right font-bold text-gray-900">
+                        {parseFloat(returnData.total_amount).toFixed(2)}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot className="border-t-2 border-gray-300 bg-gray-50">
-                  <tr>
-                    <td colSpan="4" className="px-4 py-3 text-right font-semibold text-gray-900">
-                      Total
-                    </td>
-                    <td className="px-4 py-3 text-right font-bold text-gray-900">
-                      {parseFloat(returnData.total_amount).toFixed(2)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="sm:hidden space-y-3">
+                {returnData.items.map((item, idx) => (
+                  <div key={item.id} className="border border-gray-200 rounded-lg p-3.5">
+                    <div className="flex items-start justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">#{idx + 1}</span>
+                      <span className="text-xs text-gray-400">{parseFloat(item.total).toFixed(2)} AFN</span>
+                    </div>
+                    <div className="font-medium text-gray-900 text-sm">{item.product?.name || 'Unknown Product'}</div>
+                    {item.notes && (
+                      <div className="text-xs text-gray-400 mt-1">{item.notes}</div>
+                    )}
+                    <div className="grid grid-cols-3 gap-2 mt-2.5 pt-2.5 border-t border-gray-100">
+                      <div>
+                        <div className="text-[10px] text-gray-500 uppercase">Qty</div>
+                        <div className="text-sm font-medium text-gray-800">{parseFloat(item.quantity).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-gray-500 uppercase">Price</div>
+                        <div className="text-sm font-medium text-gray-800">{parseFloat(item.unit_price).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-gray-500 uppercase">Total</div>
+                        <div className="text-sm font-medium text-gray-800">{parseFloat(item.total).toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="bg-gray-50 rounded-lg p-3.5 flex justify-between items-center">
+                  <span className="text-sm font-semibold text-gray-700">Total Amount</span>
+                  <span className="text-sm font-bold text-gray-900">{parseFloat(returnData.total_amount).toFixed(2)} AFN</span>
+                </div>
+              </div>
+            </>
           ) : (
             <div className="text-center py-8">
               <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,7 +139,7 @@ const ItemsModal = ({ returnData, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="border-t border-gray-200 px-6 py-4 bg-gray-50/50 rounded-b-xl flex justify-between items-center">
+        <div className="border-t border-gray-200 px-4 sm:px-6 py-4 bg-gray-50/50 rounded-b-xl flex justify-between items-center">
           <div className="text-xs text-gray-500">
             {returnData.items?.length || 0} item{returnData.items?.length !== 1 ? 's' : ''} returned
           </div>
@@ -112,11 +164,13 @@ export default function PurchaseReturnIndex() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [perPage, setPerPage] = useState(20);
 
-  const fetchReturns = async (page = 1) => {
+  const fetchReturns = async (page = 1, perPageOverride) => {
     setLoading(true);
     try {
-      const params = { page, per_page: 20 };
+      const pp = perPageOverride || perPage;
+      const params = { page, per_page: pp };
       if (search) params.search = search;
       const res = await api.get('/purchase-returns', { params });
       setReturns(res.data?.data || []);
@@ -131,9 +185,10 @@ export default function PurchaseReturnIndex() {
   };
 
   useEffect(() => { 
-    const t = setTimeout(() => fetchReturns(), 300); 
+    setCurrentPage(1);
+    const t = setTimeout(() => fetchReturns(1), 300); 
     return () => clearTimeout(t); 
-  }, [search]);
+  }, [search, perPage]);
 
   const handleViewItems = (returnData) => {
     // Fetch full return data with items
@@ -254,7 +309,7 @@ export default function PurchaseReturnIndex() {
           </div>
         )}
 
-        {/* Table */}
+        {/* Table / Mobile Cards */}
         {!loading && (
           <div className="rounded-lg border border-gray-200 shadow-md overflow-hidden">
             {returns.length === 0 ? (
@@ -267,90 +322,200 @@ export default function PurchaseReturnIndex() {
                 </p>
               </div>
             ) : (
-              <table className="min-w-full">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Reference</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">PO</th>
-                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
-                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-32">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {returns.map((r, idx) => (
-                    <tr key={r.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50 transition-colors`}>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-sm font-medium text-gray-900">{r.reference_no}</td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">{formatDate(r.return_date)}</td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
-                        {r.purchase?.reference_no || '—'}
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {parseFloat(r.total_amount).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-center">
-                        {getStatusBadge(r)}
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1">
-                          {/* View Items Button */}
-                          <button
-                            onClick={() => handleViewItems(r)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                            title="View Items"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
-                          </button>
+              <>
+                {/* Desktop Table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Reference</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">PO</th>
+                        <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-32">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {returns.map((r, idx) => (
+                        <tr key={r.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50 transition-colors`}>
+                          <td className="px-4 py-2.5 whitespace-nowrap text-sm font-medium text-gray-900">{r.reference_no}</td>
+                          <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">{formatDate(r.return_date)}</td>
+                          <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
+                            {r.purchase?.reference_no || '—'}
+                          </td>
+                          <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {parseFloat(r.total_amount).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-2.5 whitespace-nowrap text-center">
+                            {getStatusBadge(r)}
+                          </td>
+                          <td className="px-4 py-2.5 whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1">
+                              {/* View Items Button */}
+                              <button
+                                onClick={() => handleViewItems(r)}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                title="View Items"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                </svg>
+                              </button>
 
-                          {/* Edit Button */}
-                          <button
-                            onClick={() => handleEdit(r.id)}
-                            className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                            title="Edit"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
+                              {/* Edit Button */}
+                              <button
+                                onClick={() => handleEdit(r.id)}
+                                className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors"
+                                title="Edit"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
 
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => handleDelete(r.id)}
-                            disabled={deleting && deleteId === r.id}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                            title="Delete"
-                          >
-                            {deleting && deleteId === r.id ? (
-                              <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            )}
-                          </button>
+                              {/* Delete Button */}
+                              <button
+                                onClick={() => handleDelete(r.id)}
+                                disabled={deleting && deleteId === r.id}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                                title="Delete"
+                              >
+                                {deleting && deleteId === r.id ? (
+                                  <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="sm:hidden divide-y divide-gray-100">
+                  {returns.map((r) => (
+                    <div key={r.id} className="p-4 hover:bg-gray-50/50 transition-colors">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">{r.reference_no}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{formatDate(r.return_date)}</div>
                         </div>
-                      </td>
-                    </tr>
+                        <div className="flex-shrink-0">
+                          {getStatusBadge(r)}
+                        </div>
+                      </div>
+                      <div className="space-y-1 mb-3">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500">PO:</span>
+                          <span className="text-gray-700 font-medium">{r.purchase?.reference_no || '—'}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500">Amount:</span>
+                          <span className="text-gray-900 font-semibold">{parseFloat(r.total_amount).toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleViewItems(r)}
+                          className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                        >
+                          Items
+                        </button>
+                        <button
+                          onClick={() => handleEdit(r.id)}
+                          className="flex-1 px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(r.id)}
+                          disabled={deleting && deleteId === r.id}
+                          className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                        >
+                          {deleting && deleteId === r.id ? (
+                            <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                          ) : 'Delete'}
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </>
             )}
             
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="px-4 py-3 border-t border-gray-100 flex justify-center gap-1.5">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="text-xs text-gray-500 text-center sm:text-left">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex items-center justify-center gap-1">
+                  {/* First */}
                   <button 
-                    key={p} 
-                    onClick={() => fetchReturns(p)} 
-                    className={`px-2.5 py-1 text-xs rounded-md ${p === currentPage ? 'bg-[#007c89] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    onClick={() => fetchReturns(1)} 
+                    disabled={currentPage === 1}
+                    className="hidden sm:inline-flex px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
-                    {p}
+                    ⏮
                   </button>
-                ))}
+                  {/* Prev */}
+                  <button 
+                    onClick={() => fetchReturns(currentPage - 1)} 
+                    disabled={currentPage === 1}
+                    className="px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ◀
+                  </button>
+                  {generatePageNumbers(currentPage, totalPages).map((p, i) => 
+                    p === '...' ? (
+                      <span key={`e${i}`} className="px-1 text-xs text-gray-400">…</span>
+                    ) : (
+                      <button 
+                        key={p} 
+                        onClick={() => fetchReturns(p)} 
+                        className={`px-2.5 py-1 text-xs rounded-md transition-colors ${p === currentPage ? 'bg-[#007c89] text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+                  {/* Next */}
+                  <button 
+                    onClick={() => fetchReturns(currentPage + 1)} 
+                    disabled={currentPage === totalPages}
+                    className="px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ▶
+                  </button>
+                  {/* Last */}
+                  <button 
+                    onClick={() => fetchReturns(totalPages)} 
+                    disabled={currentPage === totalPages}
+                    className="hidden sm:inline-flex px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ⏭
+                  </button>
+                </div>
+                <div className="flex items-center justify-center sm:justify-end gap-2">
+                  <span className="text-xs text-gray-500">Show</span>
+                  <select
+                    value={perPage}
+                    onChange={(e) => { setPerPage(parseInt(e.target.value)); setCurrentPage(1); fetchReturns(1, parseInt(e.target.value)); }}
+                    className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#007c89]"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <span className="text-xs text-gray-500">per page</span>
+                </div>
               </div>
             )}
           </div>

@@ -82,4 +82,36 @@ class Unit extends Model
             'updated_by'
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Unit Conversion Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get the reference unit for this unit's category.
+     */
+    public function referenceUnit(): ?self
+    {
+        return self::where('category_id', $this->category_id)
+            ->where('uom_type', 'reference')
+            ->first();
+    }
+
+    /**
+     * Convert a quantity from this unit to the category's reference unit.
+     */
+    public function convertToReference(float $quantity): float
+    {
+        return $quantity * (float) $this->factor_inv;
+    }
+
+    /**
+     * Convert a quantity from the reference unit to this unit.
+     */
+    public function convertFromReference(float $quantity): float
+    {
+        return $quantity * (float) $this->factor;
+    }
 }

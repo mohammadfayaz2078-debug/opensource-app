@@ -56,23 +56,23 @@ export default function IncomeCategoryShow() {
   if (!category) return null;
 
   return (
-    <div>
+    <div className="p-6 -m-6">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/income-categories')} className="hover:text-[#007c89]">Income Categories</button>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onClick={() => navigate('/income-categories')} className="hover:text-[#007c89] whitespace-nowrap">Income Categories</button>
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">{category.name}</span>
+          <span className="text-gray-700 truncate">{category.name}</span>
         </div>
         
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{category.name}</h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 break-words">{category.name}</h1>
             <p className="text-sm text-gray-500 mt-1">Income Category</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={handleToggleStatus}
               className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md ${
@@ -111,23 +111,23 @@ export default function IncomeCategoryShow() {
         <div className="lg:col-span-2 space-y-6">
           {/* Description */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Description</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <p className="text-sm text-gray-600 whitespace-pre-wrap">
                 {category.description || 'No description provided.'}
               </p>
             </div>
           </div>
 
-          {/* Related Incomes (if other_incomes relationship exists) */}
+          {/* Related Incomes */}
           {category.other_incomes_count > 0 && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900">Related Income Records</h2>
               </div>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <p className="text-sm text-gray-600">
                   This category has {category.other_incomes_count} income record(s) associated with it.
                 </p>
@@ -146,10 +146,10 @@ export default function IncomeCategoryShow() {
         <div className="space-y-6">
           {/* Status & Audit */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Status & Audit</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Status</dt>

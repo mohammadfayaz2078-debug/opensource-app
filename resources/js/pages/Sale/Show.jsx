@@ -218,7 +218,8 @@ export default function SaleShow() {
                 )}
               </div>
             </div>
-            <div className="overflow-x-auto">
+{/* Items — Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50/30 text-xs text-gray-500 uppercase">
@@ -347,12 +348,96 @@ export default function SaleShow() {
                 )}
               </table>
             </div>
+
+            {/* Items — Mobile Cards */}
+            <div className="lg:hidden divide-y divide-gray-100">
+              {sale.items?.map((item, idx) => {
+                const refundStatus = item.refund_status || 'none';
+                const refundedQty = parseFloat(item.refunded_quantity || 0);
+                const refundedAmount = parseFloat(item.refunded_amount || 0);
+                const quantity = parseFloat(item.quantity);
+                const isFullyRefunded = refundStatus === 'full';
+                const hasRefund = refundStatus !== 'none';
+                const progressPercentage = quantity > 0 ? (refundedQty / quantity) * 100 : 0;
+
+                const refundStatusBadge = () => {
+                  if (refundStatus === 'full') {
+                    return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">✅ Full</span>;
+                  } else if (refundStatus === 'partial') {
+                    return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-medium">⏳ Partial</span>;
+                  } else {
+                    return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[10px] font-medium">— None</span>;
+                  }
+                };
+
+                return (
+                  <div key={item.id} className={`p-4 space-y-2.5 ${hasRefund ? 'bg-purple-50/30' : ''}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 text-sm leading-tight truncate">{item.product?.name || '—'}</div>
+                        {item.notes && <div className="text-xs text-gray-400 mt-0.5">{item.notes}</div>}
+                        {hasRefund && (
+                          <div className="mt-1.5">
+                            <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
+                              <div className={`h-full transition-all duration-500 ${isFullyRefunded ? 'bg-purple-500' : 'bg-yellow-500'}`}
+                                style={{ width: `${Math.min(progressPercentage, 100)}%` }}></div>
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-0.5">{progressPercentage.toFixed(0)}% refunded</div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0 ml-3">{refundStatusBadge()}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <span className="text-[10px] text-gray-400 uppercase block">Qty</span>
+                        <span className={`font-medium ${isFullyRefunded ? 'line-through text-gray-400' : 'text-gray-700'}`}>{quantity.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 uppercase block">Price</span>
+                        <span className="text-gray-700">{parseFloat(item.unit_price).toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 uppercase block">Total</span>
+                        <span className="font-medium text-gray-900">{parseFloat(item.total).toFixed(2)}</span>
+                      </div>
+                    </div>
+                    {(refundedQty > 0 || refundedAmount > 0) && (
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100 text-sm">
+                        <div>
+                          <span className="text-[10px] text-gray-400 uppercase block">Refunded Qty</span>
+                          <span className="font-medium text-purple-700">{refundedQty.toFixed(2)} <span className="text-[10px] text-gray-400">/ {quantity.toFixed(2)}</span></span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-gray-400 uppercase block">Refunded Amt</span>
+                          <span className="font-medium text-purple-700">{refundedAmount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {/* Mobile summary */}
+              {sale.items?.some(item => item.refund_status && item.refund_status !== 'none') && (
+                <div className="p-4 bg-gray-50/50 border-t-2 border-gray-200 flex items-center justify-between text-sm">
+                  <span className="font-semibold text-gray-900">Total Refunded</span>
+                  <div className="text-right">
+                    <span className="font-semibold text-gray-900">
+                      {sale.items?.reduce((sum, item) => sum + parseFloat(item.refunded_amount || 0), 0).toFixed(2)}
+                    </span>
+                    <div className="text-[10px] text-gray-500">
+                      {sale.items?.filter(item => item.refund_status === 'full').length} fully refunded
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Payment History */}
           {payments.length > 0 && (
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex items-center justify-between">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -361,7 +446,9 @@ export default function SaleShow() {
                 </h2>
                 <span className="text-xs text-gray-500">{payments.length} transactions</span>
               </div>
-              <div className="overflow-x-auto">
+
+              {/* Payment History — Desktop Table */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50/30 text-xs text-gray-500 uppercase">
@@ -404,6 +491,44 @@ export default function SaleShow() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Payment History — Mobile Cards */}
+              <div className="sm:hidden divide-y divide-gray-100">
+                {payments.map((pmt) => (
+                  <div key={pmt.id} className="p-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        {new Date(pmt.created_at).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                      <button
+                        onClick={() => navigate(`/sale-payment-receipt/${pmt.id}`)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Receipt
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-[10px] text-gray-400 uppercase block">Amount</span>
+                        <span className="font-medium text-green-600">+{parseFloat(pmt.amount).toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 uppercase block">Balance</span>
+                        <span className="text-gray-700">{parseFloat(pmt.balance_after).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

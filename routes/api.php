@@ -169,15 +169,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('other-incomes')->group(function () {
         Route::get('/', [OtherIncomeController::class, 'index']);
         Route::post('/', [OtherIncomeController::class, 'store']);
-        Route::get('/{id}', [OtherIncomeController::class, 'show']);
-        Route::put('/{id}', [OtherIncomeController::class, 'update']);
-        Route::delete('/{id}', [OtherIncomeController::class, 'destroy']);
-        Route::post('/{id}/duplicate', [OtherIncomeController::class, 'duplicate']);
+        // Specific routes MUST come BEFORE the wildcard {id} route
         Route::get('/report', [OtherIncomeController::class, 'report']);
         Route::get('/export', [OtherIncomeController::class, 'export']);
         Route::get('/stats', [OtherIncomeController::class, 'stats']);
         Route::get('/account-summary', [OtherIncomeController::class, 'accountSummary']);
         Route::get('/category-summary', [OtherIncomeController::class, 'categorySummary']);
+        Route::get('/{id}', [OtherIncomeController::class, 'show']);
+        Route::put('/{id}', [OtherIncomeController::class, 'update']);
+        Route::delete('/{id}', [OtherIncomeController::class, 'destroy']);
+        Route::post('/{id}/duplicate', [OtherIncomeController::class, 'duplicate']);
     });
 
 
@@ -201,6 +202,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Unit reference by category
     Route::get('/units/category/{categoryId}/reference', [UnitController::class, 'getReferenceUnit']);
+    Route::get('/units/category/{categoryId}/units', [UnitController::class, 'getCategoryUnits']);
 
 
     // ── Unit Categories Module ───────────────────────────────────────────────

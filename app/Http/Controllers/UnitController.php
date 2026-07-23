@@ -636,7 +636,7 @@ class UnitController extends Controller
     /**
      * GET /api/units/category/{categoryId}/reference
      * Get reference unit for a category
-     * 
+     *
      * @param Request $request
      * @param int $categoryId
      * @return JsonResponse
@@ -659,6 +659,23 @@ class UnitController extends Controller
         }
 
         return response()->json(['data' => $referenceUnit]);
+    }
+
+    /**
+     * GET /api/units/category/{categoryId}/units
+     * Get all units for a category
+     */
+    public function getCategoryUnits(Request $request, int $categoryId): JsonResponse
+    {
+        $branchId = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
+
+        $units = Unit::where('company_id', $companyId)
+            ->where('branch_id', $branchId)
+            ->where('category_id', $categoryId)
+            ->get(['id', 'name', 'uom_type']);
+
+        return response()->json(['data' => $units]);
     }
 
     /**

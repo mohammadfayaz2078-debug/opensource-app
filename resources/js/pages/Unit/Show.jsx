@@ -80,31 +80,29 @@ export default function UnitShow() {
     );
   }
 
-  if (!unit) return null;
-
-  return (
-    <div>
+  if (!unit) return null;    return (
+    <div className="p-6 -m-6">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/units')} className="hover:text-[#007c89]">Units</button>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onClick={() => navigate('/units')} className="hover:text-[#007c89] whitespace-nowrap">Units</button>
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">{unit.name}</span>
+          <span className="text-gray-700 truncate">{unit.name}</span>
         </div>
         
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center text-4xl bg-gray-100">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-3xl sm:text-4xl bg-gray-100 flex-shrink-0">
               {getTypeIcon(unit.uom_type)}
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">{unit.name}</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 break-words">{unit.name}</h1>
               <p className="text-sm text-gray-500 mt-1">Unit of Measurement</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={handleToggleStatus}
               className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md ${

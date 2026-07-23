@@ -237,9 +237,11 @@ class SaleController extends Controller
         $sale = Sale::where('branch_id', $branchId)->findOrFail($id);
 
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount'     => 'required|numeric|min:0.01',
+            'account_id' => 'required|exists:accounts,id',
         ]);
 
+        $accountId = (int) $validated['account_id'];
         $newPaid = (float) $sale->paid_amount + (float) $validated['amount'];
         $totalAmount = (float) $sale->total_amount;
         $dueAmount = max(0, $totalAmount - $newPaid);
@@ -254,32 +256,29 @@ class SaleController extends Controller
             'paid_amount'    => $newPaid,
             'due_amount'     => $dueAmount,
             'payment_status' => $paymentStatus,
+            'account_id'     => $accountId,
         ]);
 
         $transaction = null;
 
-        // Update account balance - money comes in for sales
-        if ($sale->account_id) {
-            $account = Account::find($sale->account_id);
-            if ($account) {
-                $balanceBefore = (float) $account->balance;
-                $amount = (float) $validated['amount'];
-                $balanceAfter = $balanceBefore + $amount;
+        // Update account balance — money comes in for sales
+        $account = Account::find($accountId);
+        if ($account) {
+            $amount = (float) $validated['amount'];
+            $balanceAfter = (float) $account->balance + $amount;
 
-                $account->increment('balance', $amount);
+            $account->increment('balance', $amount);
 
-                // Record account transaction
-                $transaction = AccountTransaction::create([
-                    'account_id'     => $account->id,
-                    'type'           => AccountTransaction::TYPE_INCOME,
-                    'amount'         => $amount,
-                    'balance_after'  => $balanceAfter,
-                    'description'    => 'Payment received for Invoice #' . $sale->id,
-                    'reference_id'   => $sale->id,
-                    'reference_type' => Sale::class,
-                    'created_by'     => Auth::id(),
-                ]);
-            }
+            $transaction = AccountTransaction::create([
+                'account_id'     => $account->id,
+                'type'           => AccountTransaction::TYPE_INCOME,
+                'amount'         => $amount,
+                'balance_after'  => $balanceAfter,
+                'description'    => 'Payment received for Invoice #' . $sale->id,
+                'reference_id'   => $sale->id,
+                'reference_type' => Sale::class,
+                'created_by'     => Auth::id(),
+            ]);
         }
 
         $sale->load(['customer', 'account', 'items.product', 'items.unit', 'creator']);
@@ -307,19 +306,32 @@ class SaleController extends Controller
         ]);
     }
 
-    public function paymentReceipt(Request $request, int $transactionId): JsonResponse
+    public function paymentReceipt(Request $request, $transactionId): JsonResponse
     {
+        $transactionId = (int) $transactionId;
+        if ($transactionId <= 0) {
+            return response()->json(['message' => 'Transaction not found.'], 404);
+        }
+
         $branchId = $this->resolveBranchId($request);
 
         $transaction = AccountTransaction::with(['account', 'reference'])
             ->where('id', $transactionId)
             ->where('reference_type', Sale::class)
-            ->firstOrFail();
+            ->first();
 
-        // Verify the sale belongs to this branch
+        if (!$transaction) {
+            return response()->json(['message' => 'Transaction not found.'], 404);
+        }
+
         $sale = Sale::where('branch_id', $branchId)
             ->with('customer')
-            ->findOrFail($transaction->reference_id);
+            ->where('id', $transaction->reference_id)
+            ->first();
+
+        if (!$sale) {
+            return response()->json(['message' => 'Sale not found.'], 404);
+        }
 
         return response()->json([
             'transaction' => $transaction,

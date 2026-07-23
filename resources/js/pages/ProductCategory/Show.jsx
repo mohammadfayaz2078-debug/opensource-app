@@ -47,23 +47,23 @@ export default function ProductCategoryShow() {
   if (!category) return null;
 
   return (
-    <div>
+    <div className="p-6 -m-6">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/product-categories')} className="hover:text-[#007c89]">Product Categories</button>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onClick={() => navigate('/product-categories')} className="hover:text-[#007c89] whitespace-nowrap">Product Categories</button>
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">{category.name}</span>
+          <span className="text-gray-700 truncate">{category.name}</span>
         </div>
         
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{category.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 break-words">{category.name}</h1>
             <p className="text-sm text-gray-500 mt-1">Product Category</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => navigate(`/product-categories/${id}/edit`)}
               className="inline-flex items-center px-3 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77]"
@@ -92,10 +92,10 @@ export default function ProductCategoryShow() {
         <div className="lg:col-span-2 space-y-6">
           {/* Description */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Description</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <p className="text-sm text-gray-600 whitespace-pre-wrap">
                 {category.description || 'No description provided.'}
               </p>
@@ -105,11 +105,11 @@ export default function ProductCategoryShow() {
           {/* Products in this category */}
           {category.recent_products && category.recent_products.length > 0 && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                 <h2 className="text-lg font-medium text-gray-900">Recent Products</h2>
                 <Link
                   to={`/products?category_id=${category.id}`}
-                  className="text-sm text-[#007c89] hover:underline"
+                  className="text-sm text-[#007c89] hover:underline whitespace-nowrap"
                 >
                   View All ({category.products_count}) →
                 </Link>
@@ -118,16 +118,16 @@ export default function ProductCategoryShow() {
                 {category.recent_products.map(product => (
                   <div key={product.id} className="p-4 hover:bg-gray-50 transition-colors">
                     <Link to={`/products/${product.id}`} className="block">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900 hover:text-[#007c89]">
+                      <div className="flex justify-between items-center gap-3">
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-medium text-gray-900 hover:text-[#007c89] truncate">
                             {product.name}
                           </h4>
                           {product.sku && (
                             <p className="text-xs text-gray-500 mt-1">SKU: {product.sku}</p>
                           )}
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <p className="text-sm font-semibold text-gray-900">
                             ${product.price?.toLocaleString()}
                           </p>
@@ -145,10 +145,10 @@ export default function ProductCategoryShow() {
         <div className="space-y-6">
           {/* Statistics Card */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Statistics</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <dl className="space-y-3">
                 <div className="flex justify-between items-center">
                   <dt className="text-sm text-gray-500">Total Products</dt>
@@ -160,10 +160,10 @@ export default function ProductCategoryShow() {
 
           {/* Quick Actions */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
             </div>
-            <div className="p-6 space-y-2">
+            <div className="p-4 sm:p-6 space-y-2">
               <button
                 onClick={() => navigate('/products/create', { state: { category_id: category.id } })}
                 className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
@@ -178,10 +178,10 @@ export default function ProductCategoryShow() {
 
           {/* Audit Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Audit Information</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-xs font-medium text-gray-500 uppercase">Created At</dt>
