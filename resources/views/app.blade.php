@@ -17,7 +17,7 @@
     <meta name="msapplication-TileColor" content="#007c89">
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="format-detection" content="telephone=no">
-    <meta name="color-scheme" content="light dark">
+    <meta name="color-scheme" content="light">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">

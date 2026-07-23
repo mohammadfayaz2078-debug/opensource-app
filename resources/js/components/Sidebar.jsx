@@ -108,7 +108,6 @@ const Sidebar = ({
       'sidebar_stock_balances': 'Stock Balances',
       'sidebar_stock_transactions': 'Transactions',
       'sidebar_suppliers': 'Suppliers',
-      'sidebar_sales': 'Sales',
       'sidebar_income_categories': 'Income Categories',
       'sidebar_other_incomes': 'Other Incomes',
       'sidebar_expense_categories': 'Categories',
