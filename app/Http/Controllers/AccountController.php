@@ -79,7 +79,7 @@ class AccountController extends Controller
             ->where('branch_id', $branchId)
             ->active()
             ->orderBy('name')
-            ->get(['id', 'name', 'type', 'balance']);
+            ->get(['id', 'name', 'wallet_number', 'type', 'balance']);
 
         return response()->json(['data' => $accounts]);
     }
@@ -113,6 +113,7 @@ class AccountController extends Controller
             'company_id' => $companyId,
             'branch_id' => $branchId,
             'name' => $validated['name'],
+            'wallet_number' => Account::generateWalletNumber(),
             'type' => $validated['type'] ?? 'cash',
             'description' => $validated['description'] ?? null,
             'is_active' => $validated['is_active'] ?? true,

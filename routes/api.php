@@ -31,6 +31,7 @@ use App\Http\Controllers\PublicationController;
 use App\Http\Controllers\CommentOrderController;
 use App\Http\Controllers\AccountDepositController;
 use App\Http\Controllers\AccountWithdrawalController;
+use App\Http\Controllers\AccountTransferController;
 use App\Http\Controllers\SaleReportController;
 use App\Http\Controllers\PurchaseReportController;
 use App\Http\Controllers\ProfitLossReportController;
@@ -378,6 +379,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('account-withdrawals',              [AccountWithdrawalController::class, 'index']);
     Route::post('account-withdrawals',             [AccountWithdrawalController::class, 'store']);
     Route::get('account-withdrawals/{accountWithdrawal}', [AccountWithdrawalController::class, 'show']);
+
+    // ── Account Transfers Module ──────────────────────────────────────────────
+    Route::prefix('account-transfers')->group(function () {
+        Route::get('/',                            [AccountTransferController::class, 'index']);
+        Route::post('/',                           [AccountTransferController::class, 'store']);
+        Route::get('/my-wallets',                  [AccountTransferController::class, 'myWallets']);
+        Route::post('/verify-recipient',           [AccountTransferController::class, 'verifyRecipient']);
+        Route::get('/{id}',                        [AccountTransferController::class, 'show']);
+        Route::post('/{id}/reverse',               [AccountTransferController::class, 'reverse']);
+    });
 
     Route::get('/account-transactions', [AccountController::class, 'allTransactions']);
     Route::get('/accounts/{account}/transactions', [AccountController::class, 'transactions']);

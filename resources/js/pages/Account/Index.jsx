@@ -31,6 +31,7 @@ export default function AccountIndex() {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({ name: '', type: 'cash', description: '' });
+  const [copiedId, setCopiedId] = useState(null);
 
   const fetchAccounts = async (page = 1, perPageOverride) => {
     setLoading(true);
@@ -138,6 +139,29 @@ export default function AccountIndex() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold text-gray-900 truncate">{account.name}</h3>
+                      {account.wallet_number && (
+                        <p className="text-xs text-gray-400 font-mono truncate mt-0.5 flex items-center gap-1">
+                          <span className="truncate">{account.wallet_number}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(account.wallet_number);
+                              setCopiedId(account.id);
+                              setTimeout(() => setCopiedId(null), 1500);
+                            }}
+                            className="shrink-0 relative text-gray-300 hover:text-gray-500 transition-colors"
+                            title="Copy wallet number"
+                          >
+                            {copiedId === account.id ? (
+                              <span className="text-[10px] text-green-600 font-semibold whitespace-nowrap">Copied!</span>
+                            ) : (
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            )}
+                          </button>
+                        </p>
+                      )}
                       {account.description && (
                         <p className="text-xs text-gray-500 truncate mt-0.5">{account.description}</p>
                       )}
@@ -155,6 +179,9 @@ export default function AccountIndex() {
                     <div className="flex items-center gap-1">
                       <button onClick={() => navigate(`/accounts/${account.id}`)} className="p-1.5 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors" title="View">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      </button>
+                      <button onClick={() => navigate(`/accounts/transfer?wallet_id=${account.id}`)} className="p-1.5 rounded hover:bg-cyan-50 text-gray-400 hover:text-cyan-600 transition-colors" title="Transfer">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                       </button>
                       <button onClick={() => openEditModal(account)} className="p-1.5 rounded hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 transition-colors" title="Edit">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>

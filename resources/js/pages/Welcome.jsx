@@ -205,7 +205,6 @@ const ProductCardWithActions = ({ product, index }) => {
   }, []);
 
   const handlePlaceOrder = useCallback(async () => {
-    // Validate: email is required. For new customers, name + phone also required.
     if (!orderForm.customer_email.trim()) return;
     if (!existingCustomer && (!orderForm.customer_name.trim() || !orderForm.customer_phone.trim())) return;
     const validItems = orderForm.items.filter(i => i.product_id);
@@ -288,19 +287,18 @@ const ProductCardWithActions = ({ product, index }) => {
   return (
     <>
       <article
-        className="welcome-card group relative bg-white rounded-[1.25rem] overflow-hidden
-          border border-slate-200/70
-          shadow-[0_2px_8px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.03)]
-          hover:shadow-[0_20px_40px_-12px_rgba(15,23,42,0.15),0_8px_16px_-8px_rgba(24,119,242,0.12)]
-          hover:-translate-y-1.5 hover:border-blue-200/60
-          transition-all duration-300 ease-out flex flex-col"
-        style={{ animationDelay: `${Math.min(index, 12) * 50}ms` }}
+        className="fb-card group relative bg-white rounded-xl overflow-hidden
+          border border-gray-200
+          shadow-[0_1px_2px_rgba(0,0,0,0.1)]
+          hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]
+          hover:-translate-y-0.5
+          transition-all duration-200 flex flex-col"
+        style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
       >
-        {/* Image */}
         <button
           type="button"
           onClick={() => setShowDetail(true)}
-          className="relative w-full aspect-square bg-slate-100 overflow-hidden focus:outline-none"
+          className="relative w-full aspect-square bg-gray-100 overflow-hidden focus:outline-none"
           aria-label={`View ${product.name}`}
         >
           {image ? (
@@ -308,7 +306,7 @@ const ProductCardWithActions = ({ product, index }) => {
               src={image}
               alt={product.name || 'Product'}
               loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -327,57 +325,54 @@ const ProductCardWithActions = ({ product, index }) => {
             </div>
           </div>
 
-          {/* Soft gradient overlay */}
-          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/25 to-transparent
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent
             opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
           <span className="absolute top-2.5 left-2.5 max-w-[72%] truncate
-            bg-white/90 backdrop-blur-md text-slate-800 text-[10px] sm:text-[11px] font-bold
+            bg-white/90 backdrop-blur-md text-gray-800 text-[10px] sm:text-[11px] font-semibold
             px-2.5 py-1 rounded-full shadow-sm border border-white/50 tracking-wide">
             {categoryName}
           </span>
 
           <span className="absolute bottom-2.5 right-2.5
-            bg-white/95 backdrop-blur-md text-slate-900 text-xs sm:text-sm font-extrabold
+            bg-white/95 backdrop-blur-md text-gray-900 text-xs sm:text-sm font-bold
             px-2.5 py-1 rounded-lg shadow-md border border-white/60 tracking-tight">
             {formatPrice(product.sale_price ?? product.price)}
           </span>
         </button>
 
-        {/* Info */}
         <div className="px-3 sm:px-3.5 pt-3 pb-1.5 flex-1 flex flex-col">
           <button
             type="button"
             onClick={() => setShowDetail(true)}
             className="text-left focus:outline-none"
           >
-            <h3 className="text-[13px] sm:text-[15px] text-slate-900 font-semibold line-clamp-2 leading-snug min-h-[2.5em]
-              group-hover:text-[#1864f2] transition-colors">
+            <h3 className="text-[13px] sm:text-[15px] text-gray-900 font-semibold line-clamp-2 leading-snug min-h-[2.5em]
+              group-hover:text-[#1877F2] transition-colors">
               {product.name || 'Untitled product'}
             </h3>
           </button>
-          <p className="mt-1.5 text-[11px] sm:text-xs text-slate-500 flex items-center gap-1 truncate">
-            <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-blue-500/70" fill="currentColor" viewBox="0 0 16 16" aria-hidden>
+          <p className="mt-1.5 text-[11px] sm:text-xs text-gray-500 flex items-center gap-1 truncate">
+            <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-[#1877F2]/60" fill="currentColor" viewBox="0 0 16 16" aria-hidden>
               <path d="M8 0a5 5 0 0 0-5 5c0 3.5 5 11 5 11s5-7.5 5-11a5 5 0 0 0-5-5zm0 7.5A2.5 2.5 0 1 1 8 2.5a2.5 2.5 0 0 1 0 5z" />
             </svg>
             <span className="truncate">{location}</span>
           </p>
           {product.description && (
-            <p className="mt-1.5 text-[11px] sm:text-xs text-slate-400 leading-relaxed line-clamp-2">
+            <p className="mt-1.5 text-[11px] sm:text-xs text-gray-400 leading-relaxed line-clamp-2">
               {product.description}
             </p>
           )}
         </div>
 
-        {/* Action bar */}
-        <div className="mx-2.5 mb-2.5 mt-1 rounded-xl bg-slate-50/90 border border-slate-100 overflow-hidden">
-          <div className="flex items-stretch divide-x divide-slate-200/80">
+        <div className="mx-2.5 mb-2.5 mt-1 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden">
+          <div className="flex items-stretch divide-x divide-gray-200">
             <button
               type="button"
               onClick={handleLike}
               className={`flex-1 flex items-center justify-center gap-1 py-2 sm:py-2.5 text-[11px] sm:text-xs
-                font-bold transition-all duration-200
-                ${liked ? 'text-rose-500 bg-rose-50/60 hover:bg-rose-50' : 'text-slate-500 hover:bg-white hover:text-rose-500'}`}
+                font-semibold transition-all duration-150
+                ${liked ? 'text-[#F0284A] bg-red-50/60 hover:bg-red-50' : 'text-gray-500 hover:bg-white hover:text-[#F0284A]'}`}
               aria-label={liked ? 'Unlike' : 'Like'}
             >
               <svg
@@ -397,7 +392,7 @@ const ProductCardWithActions = ({ product, index }) => {
               type="button"
               onClick={openComments}
               className="flex-1 flex items-center justify-center gap-1 py-2 sm:py-2.5 text-[11px] sm:text-xs
-                font-bold text-slate-500 hover:bg-white hover:text-blue-600 transition-all duration-200"
+                font-semibold text-gray-500 hover:bg-white hover:text-[#1877F2] transition-all duration-150"
               aria-label="Comments"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
@@ -411,7 +406,7 @@ const ProductCardWithActions = ({ product, index }) => {
               type="button"
               onClick={openOrder}
               className="flex-1 flex items-center justify-center gap-1 py-2 sm:py-2.5 text-[11px] sm:text-xs
-                font-bold text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-all duration-200"
+                font-semibold text-[#1877F2] hover:bg-blue-50 active:bg-blue-100 transition-all duration-150"
               aria-label="Order"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
@@ -427,20 +422,18 @@ const ProductCardWithActions = ({ product, index }) => {
       {/* ── Expanded product detail modal ────────────────── */}
       {showDetail && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center welcome-modal-overlay p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center fb-modal-overlay p-0 sm:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) closeAllModals(); }}
         >
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" aria-hidden />
-          <div className="relative bg-white w-full max-w-2xl max-h-[92dvh] sm:max-h-[90vh] rounded-t-[1.5rem] sm:rounded-[1.5rem]
-            shadow-2xl flex flex-col welcome-modal-panel overflow-hidden border border-white/20">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden />
+          <div className="relative bg-white w-full max-w-2xl max-h-[92dvh] sm:max-h-[90vh] rounded-t-2xl sm:rounded-2xl
+            shadow-2xl flex flex-col fb-modal-panel overflow-hidden">
             <div className="sm:hidden flex justify-center pt-2.5" aria-hidden>
-              <div className="w-10 h-1 rounded-full bg-slate-300" />
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
             </div>
 
-            {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto">
-              {/* Large image */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] bg-slate-100 overflow-hidden">
+              <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] bg-gray-100 overflow-hidden">
                 {image ? (
                   <img
                     src={image}
@@ -456,16 +449,13 @@ const ProductCardWithActions = ({ product, index }) => {
                     </div>
                   </div>
                 )}
-                {/* Gradient overlay at bottom */}
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
-                {/* Category badge */}
-                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-slate-800
-                  text-[11px] font-bold px-3 py-1.5 rounded-full shadow-md border border-white/50">
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-gray-800
+                  text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-white/50">
                   {categoryName}
                 </span>
 
-                {/* Close button on image */}
                 <button
                   type="button"
                   onClick={closeAllModals}
@@ -478,59 +468,55 @@ const ProductCardWithActions = ({ product, index }) => {
                   </svg>
                 </button>
 
-                {/* Price badge on image */}
-                <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md text-slate-900
-                  text-lg sm:text-xl font-extrabold px-4 py-1.5 rounded-xl shadow-lg border border-white/50">
+                <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md text-gray-900
+                  text-lg sm:text-xl font-bold px-4 py-1.5 rounded-xl shadow-lg border border-white/50">
                   {formatPrice(product.sale_price ?? product.price)}
                 </div>
               </div>
 
-              {/* Product info */}
               <div className="px-5 sm:px-6 pt-4 sm:pt-5 pb-4">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-tight">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
                   {product.name || 'Untitled product'}
                 </h2>
 
                 <div className="flex flex-wrap items-center gap-3 mt-2">
-                  <span className="flex items-center gap-1 text-xs sm:text-sm text-slate-500 font-medium">
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500/70" fill="currentColor" viewBox="0 0 16 16">
+                  <span className="flex items-center gap-1 text-xs sm:text-sm text-gray-500 font-medium">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1877F2]/60" fill="currentColor" viewBox="0 0 16 16">
                       <path d="M8 0a5 5 0 0 0-5 5c0 3.5 5 11 5 11s5-7.5 5-11a5 5 0 0 0-5-5zm0 7.5A2.5 2.5 0 1 1 8 2.5a2.5 2.5 0 0 1 0 5z" />
                     </svg>
                     {location}
                   </span>
                   {product.barcode && (
-                    <span className="text-xs text-slate-400 font-mono bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                    <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
                       SKU: {product.barcode}
                     </span>
                   )}
                 </div>
 
-                {/* Description */}
                 {product.description ? (
-                  <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+                  <p className="mt-4 text-sm sm:text-base text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
                     {product.description}
                   </p>
                 ) : (
-                  <p className="mt-4 text-sm text-slate-400 italic border-t border-slate-100 pt-4">
+                  <p className="mt-4 text-sm text-gray-400 italic border-t border-gray-100 pt-4">
                     No description available.
                   </p>
                 )}
 
-                {/* Stats row */}
-                <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100">
                   <div className="flex items-center gap-1.5 text-sm">
-                    <span className={`font-bold ${liked ? 'text-rose-500' : 'text-slate-600'}`}>
+                    <span className={`font-bold ${liked ? 'text-[#F0284A]' : 'text-gray-600'}`}>
                       {likeCount}
                     </span>
-                    <span className="text-slate-400 text-xs font-medium">likes</span>
+                    <span className="text-gray-400 text-xs font-medium">likes</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm">
-                    <span className="font-bold text-slate-600">{commentsCount}</span>
-                    <span className="text-slate-400 text-xs font-medium">comments</span>
+                    <span className="font-bold text-gray-600">{commentsCount}</span>
+                    <span className="text-gray-400 text-xs font-medium">comments</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm">
                     <span className="font-bold text-amber-600">{initialOrders}</span>
-                    <span className="text-slate-400 text-xs font-medium">orders</span>
+                    <span className="text-gray-400 text-xs font-medium">orders</span>
                   </div>
                   {product.stock_balance !== undefined && product.stock_balance !== null && (
                     <div className="flex items-center gap-1.5 text-sm ml-auto">
@@ -543,15 +529,14 @@ const ProductCardWithActions = ({ product, index }) => {
               </div>
             </div>
 
-            {/* Action buttons footer */}
-            <div className="border-t border-slate-100 px-5 py-3.5 shrink-0 bg-white/95 backdrop-blur flex items-center gap-2">
+            <div className="border-t border-gray-100 px-5 py-3.5 shrink-0 bg-white flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleLike}
-                className={`flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-sm font-bold transition
+                className={`flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg text-sm font-semibold transition
                   ${liked
-                    ? 'bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100'
-                    : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-rose-500'
+                    ? 'bg-red-50 text-[#F0284A] border border-red-200 hover:bg-red-100'
+                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-[#F0284A]'
                   }`}
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'}
@@ -563,8 +548,8 @@ const ProductCardWithActions = ({ product, index }) => {
               <button
                 type="button"
                 onClick={() => { setShowDetail(false); openComments(); }}
-                className="flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-sm font-bold
-                  bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-blue-600 transition"
+                className="flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg text-sm font-semibold
+                  bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-[#1877F2] transition"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -575,9 +560,9 @@ const ProductCardWithActions = ({ product, index }) => {
               <button
                 type="button"
                 onClick={openOrder}
-                className="flex items-center justify-center gap-1.5 h-10 px-5 rounded-xl text-sm font-bold
-                  bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25
-                  hover:from-blue-600 hover:to-blue-700 active:scale-[0.97] transition"
+                className="flex items-center justify-center gap-1.5 h-10 px-5 rounded-lg text-sm font-bold
+                  bg-[#1877F2] text-white shadow-lg shadow-[#1877F2]/25
+                  hover:bg-[#166FE5] active:scale-[0.97] transition"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
@@ -592,20 +577,20 @@ const ProductCardWithActions = ({ product, index }) => {
       {/* Comments modal */}
       {showComments && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center welcome-modal-overlay p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center fb-modal-overlay p-0 sm:p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeAllModals();
           }}
         >
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" aria-hidden />
-          <div className="relative bg-white w-full max-w-lg max-h-[88dvh] sm:max-h-[82vh] rounded-t-[1.5rem] sm:rounded-[1.5rem]
-            shadow-2xl flex flex-col welcome-modal-panel overflow-hidden border border-white/20">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden />
+          <div className="relative bg-white w-full max-w-lg max-h-[88dvh] sm:max-h-[82vh] rounded-t-2xl sm:rounded-2xl
+            shadow-2xl flex flex-col fb-modal-panel overflow-hidden">
             <div className="sm:hidden flex justify-center pt-2.5" aria-hidden>
-              <div className="w-10 h-1 rounded-full bg-slate-300" />
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
             </div>
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 shrink-0 bg-white/95 backdrop-blur">
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 shrink-0 bg-white">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-100 shrink-0 ring-2 ring-slate-100">
+                <div className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100 shrink-0 ring-2 ring-gray-100">
                   {image ? (
                     <img src={image} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -615,8 +600,8 @@ const ProductCardWithActions = ({ product, index }) => {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-sm text-slate-900 leading-tight truncate">{product.name}</p>
-                  <p className="text-xs font-semibold text-blue-600 mt-0.5">
+                  <p className="font-bold text-sm text-gray-900 leading-tight truncate">{product.name}</p>
+                  <p className="text-xs font-semibold text-[#1877F2] mt-0.5">
                     {formatPrice(product.sale_price ?? product.price)}
                   </p>
                 </div>
@@ -625,7 +610,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 type="button"
                 onClick={closeAllModals}
                 className="w-9 h-9 rounded-full flex items-center justify-center
-                  bg-slate-100 hover:bg-slate-200 text-slate-600 transition shrink-0"
+                  bg-gray-100 hover:bg-gray-200 text-gray-600 transition shrink-0"
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -637,32 +622,32 @@ const ProductCardWithActions = ({ product, index }) => {
             <div ref={commentsListRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5">
               {loadingComments ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-7 h-7 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin" />
+                  <div className="w-7 h-7 border-2 border-gray-200 border-t-[#1877F2] rounded-full animate-spin" />
                 </div>
               ) : comments.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 flex items-center justify-center text-2xl mb-3">
                     💬
                   </div>
-                  <p className="text-slate-700 text-sm font-semibold">No comments yet</p>
-                  <p className="text-slate-400 text-xs mt-1">Be the first to share your thoughts</p>
+                  <p className="text-gray-700 text-sm font-semibold">No comments yet</p>
+                  <p className="text-gray-400 text-xs mt-1">Be the first to share your thoughts</p>
                 </div>
               ) : (
                 comments.map((c, idx) => (
                   <div key={idx} className="flex gap-2.5">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1877F2] to-[#0C5DC7]
                       flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 shadow-sm">
                       {(c.name || 'A')[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="bg-slate-50 border border-slate-100 rounded-2xl rounded-tl-md px-3.5 py-2.5">
-                        <p className="text-xs font-bold text-slate-900">{c.name}</p>
-                        <p className="text-sm text-slate-700 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
+                      <div className="bg-gray-100 rounded-2xl rounded-tl-md px-3.5 py-2.5">
+                        <p className="text-xs font-bold text-gray-900">{c.name}</p>
+                        <p className="text-sm text-gray-700 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
                           {c.message}
                         </p>
                       </div>
                       {c.created_at && (
-                        <p className="text-[11px] text-slate-400 mt-1 ml-1.5">
+                        <p className="text-[11px] text-gray-400 mt-1 ml-1.5">
                           {new Date(c.created_at).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
@@ -677,16 +662,16 @@ const ProductCardWithActions = ({ product, index }) => {
               )}
             </div>
 
-            <div className="border-t border-slate-100 px-4 py-3.5 shrink-0 bg-white space-y-2">
+            <div className="border-t border-gray-100 px-4 py-3.5 shrink-0 bg-white space-y-2">
               <input
                 type="text"
                 value={commentName}
                 onChange={(e) => setCommentName(e.target.value)}
                 placeholder="Your name…"
                 maxLength={255}
-                className="w-full px-4 py-2.5 text-sm bg-slate-50 rounded-full border border-slate-200
-                  outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400
-                  placeholder:text-slate-400 transition"
+                className="w-full px-4 py-2.5 text-sm bg-gray-100 rounded-full border border-gray-200
+                  outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
+                  placeholder:text-gray-400 transition"
               />
               <div className="flex items-center gap-2">
                 <input
@@ -701,17 +686,17 @@ const ProductCardWithActions = ({ product, index }) => {
                   }}
                   placeholder="Write a comment…"
                   maxLength={1000}
-                  className="flex-1 px-4 py-2.5 text-sm bg-slate-50 rounded-full border border-slate-200
-                    outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400
-                    placeholder:text-slate-400 transition"
+                  className="flex-1 px-4 py-2.5 text-sm bg-gray-100 rounded-full border border-gray-200
+                    outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
+                    placeholder:text-gray-400 transition"
                 />
                 <button
                   type="button"
                   onClick={handleAddComment}
                   disabled={submittingComment || !commentName.trim() || !commentMsg.trim()}
                   className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full
-                    bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/25
-                    hover:from-blue-600 hover:to-blue-700
+                    bg-[#1877F2] text-white shadow-md shadow-[#1877F2]/25
+                    hover:bg-[#166FE5]
                     disabled:opacity-40 disabled:cursor-not-allowed transition"
                   aria-label="Send comment"
                 >
@@ -732,27 +717,27 @@ const ProductCardWithActions = ({ product, index }) => {
       {/* Order modal */}
       {showOrder && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center welcome-modal-overlay p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center fb-modal-overlay p-0 sm:p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeAllModals();
           }}
         >
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" aria-hidden />
-          <div className="relative bg-white w-full max-w-xl max-h-[92dvh] sm:max-h-[88vh] rounded-t-[1.5rem] sm:rounded-[1.5rem]
-            shadow-2xl flex flex-col welcome-modal-panel overflow-hidden">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden />
+          <div className="relative bg-white w-full max-w-xl max-h-[92dvh] sm:max-h-[88vh] rounded-t-2xl sm:rounded-2xl
+            shadow-2xl flex flex-col fb-modal-panel overflow-hidden">
             <div className="sm:hidden flex justify-center pt-2.5" aria-hidden>
-              <div className="w-10 h-1 rounded-full bg-slate-300" />
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
             </div>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Place Order</h2>
-                <p className="text-xs text-slate-500 mt-0.5">We&apos;ll contact you to confirm</p>
+                <h2 className="text-lg font-bold text-gray-900">Place Order</h2>
+                <p className="text-xs text-gray-500 mt-0.5">We&apos;ll contact you to confirm</p>
               </div>
               <button
                 type="button"
                 onClick={closeAllModals}
                 className="w-9 h-9 rounded-full flex items-center justify-center
-                  bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+                  bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -762,9 +747,8 @@ const ProductCardWithActions = ({ product, index }) => {
             </div>
 
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-              {/* Email — Primary Identifier */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                   Email Address <span className="text-rose-500">*</span>
                 </label>
                 <div className="flex gap-2">
@@ -784,9 +768,9 @@ const ProductCardWithActions = ({ product, index }) => {
                       }
                     }}
                     placeholder="Enter your email"
-                    className="flex-1 px-3.5 py-3 text-sm bg-slate-50 rounded-xl border border-slate-200
-                      outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400
-                      placeholder:text-slate-400 transition"
+                    className="flex-1 px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200
+                      outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
+                      placeholder:text-gray-400 transition"
                     required
                   />
                   <button
@@ -794,7 +778,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     onClick={() => handleCheckEmail(orderForm.customer_email)}
                     disabled={checkingEmail || !orderForm.customer_email.includes('@')}
                     className="shrink-0 px-4 py-3 rounded-xl text-sm font-bold text-white
-                      bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
+                      bg-[#1877F2] hover:bg-[#166FE5]
                       disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     {checkingEmail ? (
@@ -806,7 +790,6 @@ const ProductCardWithActions = ({ product, index }) => {
                 </div>
               </div>
 
-              {/* Existing customer — show welcome back */}
               {emailChecked && existingCustomer && (
                 <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl px-4 py-3">
                   <div className="flex items-center gap-2.5">
@@ -827,13 +810,11 @@ const ProductCardWithActions = ({ product, index }) => {
                 </div>
               )}
 
-              {/* New customer — show full form */}
               {emailChecked && !existingCustomer && (
                 <>
-                  {/* Customer Name — First + Last */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                         First Name <span className="text-rose-500">*</span>
                       </label>
                       <input
@@ -841,14 +822,14 @@ const ProductCardWithActions = ({ product, index }) => {
                         value={orderForm.customer_name}
                         onChange={(e) => setOrderForm((p) => ({ ...p, customer_name: e.target.value }))}
                         placeholder="First name"
-                        className="w-full px-3.5 py-3 text-sm bg-slate-50 rounded-xl border border-slate-200
-                          outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400
-                          placeholder:text-slate-400 transition"
+                        className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200
+                          outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
+                          placeholder:text-gray-400 transition"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                         Last Name
                       </label>
                       <input
@@ -856,44 +837,43 @@ const ProductCardWithActions = ({ product, index }) => {
                         value={orderForm.customer_last_name}
                         onChange={(e) => setOrderForm((p) => ({ ...p, customer_last_name: e.target.value }))}
                         placeholder="Last name"
-                        className="w-full px-3.5 py-3 text-sm bg-slate-50 rounded-xl border border-slate-200
-                          outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400
-                          placeholder:text-slate-400 transition"
+                        className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200
+                          outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
+                          placeholder:text-gray-400 transition"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                         Phone <span className="text-rose-500">*</span>
                       </label>
                       <input type="tel" value={orderForm.customer_phone}
                         onChange={(e) => setOrderForm((p) => ({ ...p, customer_phone: e.target.value }))}
                         placeholder="Phone number"
-                        className="w-full px-3.5 py-3 text-sm bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400 placeholder:text-slate-400 transition"
+                        className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 transition"
                         required />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Province</label>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Province</label>
                       <input type="text" value={orderForm.province}
                         onChange={(e) => setOrderForm((p) => ({ ...p, province: e.target.value }))}
                         placeholder="Province / State"
-                        className="w-full px-3.5 py-3 text-sm bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400 placeholder:text-slate-400 transition" />
+                        className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 transition" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Delivery Address</label>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Delivery Address</label>
                     <textarea value={orderForm.customer_address}
                       onChange={(e) => setOrderForm((p) => ({ ...p, customer_address: e.target.value }))}
                       rows={2} placeholder="Street, city, area..."
-                      className="w-full px-3.5 py-3 text-sm bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400 placeholder:text-slate-400 resize-none transition" />
+                      className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 resize-none transition" />
                   </div>
 
-                  {/* GPS Location */}
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">GPS Location</label>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">GPS Location</label>
                     <div className="flex items-center gap-2">
                       <button type="button" onClick={handleGetLocation} disabled={locating}
                         className={`${getLocBtnClass(!!(orderForm.gps_lat && orderForm.gps_lng))} disabled:opacity-50`}>
@@ -906,7 +886,7 @@ const ProductCardWithActions = ({ product, index }) => {
                         )}
                       </button>
                       {orderForm.gps_lat && orderForm.gps_lng && (
-                        <span className="text-[10px] text-slate-400 font-mono truncate">
+                        <span className="text-[10px] text-gray-400 font-mono truncate">
                           {orderForm.gps_lat}, {orderForm.gps_lng}
                         </span>
                       )}
@@ -916,33 +896,32 @@ const ProductCardWithActions = ({ product, index }) => {
               )}
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Notes</label>
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Notes</label>
                 <textarea value={orderForm.notes}
                   onChange={(e) => setOrderForm((p) => ({ ...p, notes: e.target.value }))}
                   rows={1} placeholder="Any special requests?"
-                  className="w-full px-3.5 py-3 text-sm bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400 placeholder:text-slate-400 resize-none transition" />
+                  className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 resize-none transition" />
               </div>
 
-              {/* Order Items */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Order Item</label>
+                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Order Item</label>
                 </div>
-                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <table className="min-w-full">
                     <thead>
-                      <tr className="bg-slate-50">
-                        <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-500 uppercase">Product</th>
-                        <th className="px-3 py-2 text-center text-[10px] font-bold text-slate-500 uppercase w-20">Qty</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-bold text-slate-500 uppercase w-24">Price</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-bold text-slate-500 uppercase w-24">Total</th>
+                      <tr className="bg-gray-50">
+                        <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase">Product</th>
+                        <th className="px-3 py-2 text-center text-[10px] font-bold text-gray-500 uppercase w-20">Qty</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-bold text-gray-500 uppercase w-24">Price</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-bold text-gray-500 uppercase w-24">Total</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-t border-slate-100">
+                      <tr className="border-t border-gray-100">
                         <td className="px-3 py-2">
-                          <div className="text-xs font-semibold text-slate-800">{product.name}</div>
-                          <div className="text-[10px] text-slate-400">{formatPrice(product.sale_price)} each</div>
+                          <div className="text-xs font-semibold text-gray-800">{product.name}</div>
+                          <div className="text-[10px] text-gray-400">{formatPrice(product.sale_price)} each</div>
                         </td>
                         <td className="px-2 py-1.5 text-center">
                           <input type="number" min="1" value={orderForm.items[0]?.quantity || '1'}
@@ -951,16 +930,16 @@ const ProductCardWithActions = ({ product, index }) => {
                               items[0] = { ...items[0], quantity: e.target.value };
                               setOrderForm(prev => ({ ...prev, items }));
                             }}
-                            className="w-16 px-2 py-1.5 text-xs text-center bg-white border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-400" />
+                            className="w-16 px-2 py-1.5 text-xs text-center bg-white border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-[#1877F2]" />
                         </td>
-                        <td className="px-3 py-1.5 text-right text-xs text-slate-600">{formatPrice(product.sale_price)}</td>
-                        <td className="px-3 py-1.5 text-right text-xs font-semibold text-slate-800">{formatPrice((parseFloat(product.sale_price) || 0) * (parseInt(orderForm.items[0]?.quantity) || 0))}</td>
+                        <td className="px-3 py-1.5 text-right text-xs text-gray-600">{formatPrice(product.sale_price)}</td>
+                        <td className="px-3 py-1.5 text-right text-xs font-semibold text-gray-800">{formatPrice((parseFloat(product.sale_price) || 0) * (parseInt(orderForm.items[0]?.quantity) || 0))}</td>
                       </tr>
                     </tbody>
                     <tfoot>
-                      <tr className="bg-slate-50 border-t border-slate-200">
-                        <td colSpan="3" className="px-3 py-2 text-right text-xs font-bold text-slate-600">Total:</td>
-                        <td className="px-3 py-2 text-right text-sm font-extrabold text-blue-600">
+                      <tr className="bg-gray-50 border-t border-gray-200">
+                        <td colSpan="3" className="px-3 py-2 text-right text-xs font-bold text-gray-600">Total:</td>
+                        <td className="px-3 py-2 text-right text-sm font-bold text-[#1877F2]">
                           {formatPrice((parseFloat(product.sale_price) || 0) * (parseInt(orderForm.items[0]?.quantity) || 0))}
                         </td>
                       </tr>
@@ -970,12 +949,12 @@ const ProductCardWithActions = ({ product, index }) => {
               </div>
             </div>
 
-            <div className="border-t border-slate-100 px-5 py-4 shrink-0 flex gap-3 bg-white">
+            <div className="border-t border-gray-100 px-5 py-4 shrink-0 flex gap-3 bg-white">
               <button
                 type="button"
                 onClick={closeAllModals}
-                className="flex-1 py-3 rounded-xl text-sm font-bold text-slate-600
-                  bg-slate-100 hover:bg-slate-200 transition"
+                className="flex-1 py-3 rounded-xl text-sm font-bold text-gray-600
+                  bg-gray-100 hover:bg-gray-200 transition"
               >
                 Cancel
               </button>
@@ -984,8 +963,8 @@ const ProductCardWithActions = ({ product, index }) => {
                 onClick={handlePlaceOrder}
                 disabled={ordering || !orderForm.customer_email.trim() || (emailChecked && !existingCustomer && (!orderForm.customer_name.trim() || !orderForm.customer_phone.trim())) || !emailChecked}
                 className="flex-[2] py-3 rounded-xl text-sm font-bold text-white
-                  bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
-                  shadow-lg shadow-blue-500/25
+                  bg-[#1877F2] hover:bg-[#166FE5]
+                  shadow-lg shadow-[#1877F2]/25
                   disabled:opacity-40 disabled:cursor-not-allowed transition
                   flex items-center justify-center gap-2"
               >
@@ -1012,13 +991,13 @@ const ProductCardWithActions = ({ product, index }) => {
 };
 
 const ProductSkeleton = () => (
-  <div className="bg-white rounded-[1.25rem] border border-slate-200/70 overflow-hidden animate-pulse shadow-sm">
-    <div className="aspect-square bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100" />
+  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse shadow-sm">
+    <div className="aspect-square bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100" />
     <div className="p-3.5 space-y-2.5">
-      <div className="h-4 bg-slate-100 rounded-md w-full" />
-      <div className="h-4 bg-slate-100 rounded-md w-3/5" />
-      <div className="h-3 bg-slate-100 rounded-md w-1/2" />
-      <div className="h-9 bg-slate-100 rounded-xl w-full mt-2" />
+      <div className="h-4 bg-gray-100 rounded-md w-full" />
+      <div className="h-4 bg-gray-100 rounded-md w-3/5" />
+      <div className="h-3 bg-gray-100 rounded-md w-1/2" />
+      <div className="h-9 bg-gray-100 rounded-lg w-full mt-2" />
     </div>
   </div>
 );
@@ -1079,106 +1058,57 @@ const Welcome = () => {
   }, [products, search, activeCategory]);
 
   return (
-    <div className="welcome-page min-h-screen min-h-[100dvh] text-slate-900 antialiased" dir="ltr">
+    <div className="fb-page min-h-screen min-h-[100dvh] text-gray-900 antialiased" dir="ltr">
       <style>{`
-        .welcome-page {
-          font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        .fb-page {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           -webkit-tap-highlight-color: transparent;
-          background:
-            radial-gradient(ellipse 100% 80% at 50% -20%, rgba(59, 130, 246, 0.12), transparent 55%),
-            radial-gradient(ellipse 60% 40% at 100% 0%, rgba(16, 185, 129, 0.08), transparent 45%),
-            linear-gradient(180deg, #f8fafc 0%, #f1f5f9 40%, #eef2ff 100%);
-          background-attachment: fixed;
+          background: #f0f2f5;
         }
 
-        .welcome-card {
-          animation: welcomeFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        .fb-card {
+          animation: fbFadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
-        @keyframes welcomeFadeUp {
-          from { opacity: 0; transform: translateY(18px) scale(0.98); }
+        @keyframes fbFadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fbModalIn {
+          from { opacity: 0; transform: translateY(20px) scale(0.98); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        @keyframes welcomeModalIn {
-          from { opacity: 0; transform: translateY(28px) scale(0.97); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @keyframes welcomeOverlayIn {
+        @keyframes fbOverlayIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
 
-        @keyframes welcomeFloat {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-12px) rotate(2deg); }
+        .fb-modal-overlay {
+          animation: fbOverlayIn 0.2s ease-out both;
         }
 
-        @keyframes welcomeShimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
+        .fb-modal-panel {
+          animation: fbModalIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
-        .welcome-modal-overlay {
-          animation: welcomeOverlayIn 0.22s ease-out both;
-        }
-
-        .welcome-modal-panel {
-          animation: welcomeModalIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .welcome-hide-scrollbar {
+        .fb-hide-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
-        .welcome-hide-scrollbar::-webkit-scrollbar { display: none; }
+        .fb-hide-scrollbar::-webkit-scrollbar { display: none; }
 
-        .welcome-orb {
-          position: absolute;
-          border-radius: 9999px;
-          filter: blur(60px);
-          opacity: 0.55;
-          pointer-events: none;
-          animation: welcomeFloat 8s ease-in-out infinite;
+        .fb-tabs-scroll {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
-
-        .welcome-mesh {
-          background-image:
-            linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-
-        .welcome-text-shine {
-          background: linear-gradient(110deg, #0f172a 0%, #0f172a 35%, #2563eb 50%, #0f172a 65%, #0f172a 100%);
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-        }
-
-        .welcome-gradient-text {
-          background: linear-gradient(135deg, #2563eb 0%, #4f46e5 45%, #059669 100%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-        }
-
-        .welcome-btn-primary {
-          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
-          box-shadow: 0 10px 25px -8px rgba(37, 99, 235, 0.55), inset 0 1px 0 rgba(255,255,255,0.2);
-        }
-        .welcome-btn-primary:hover {
-          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
-          box-shadow: 0 14px 30px -8px rgba(37, 99, 235, 0.6), inset 0 1px 0 rgba(255,255,255,0.2);
-        }
+        .fb-tabs-scroll::-webkit-scrollbar { display: none; }
 
         @media (prefers-reduced-motion: reduce) {
-          .welcome-card,
-          .welcome-modal-overlay,
-          .welcome-modal-panel,
-          .welcome-orb {
+          .fb-card,
+          .fb-modal-overlay,
+          .fb-modal-panel {
             animation: none !important;
           }
         }
@@ -1186,73 +1116,62 @@ const Welcome = () => {
 
       {/* ── Header ───────────────────────────────────────────── */}
       <header
-        className={`sticky top-0 z-40 transition-all duration-300 ${
+        className={`sticky top-0 z-40 transition-all duration-200 ${
           scrolled
-            ? 'bg-white/80 backdrop-blur-2xl shadow-[0_4px_24px_rgba(15,23,42,0.06)] border-b border-slate-200/60'
-            : 'bg-white/60 backdrop-blur-xl border-b border-transparent'
+            ? 'bg-white shadow-[0_2px_4px_rgba(0,0,0,0.1)]'
+            : 'bg-white shadow-[0_2px_4px_rgba(0,0,0,0.1)]'
         }`}
       >
         <div className="max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6">
-          <div className="h-14 sm:h-[4.25rem] flex items-center justify-between gap-2 sm:gap-4">
+          <div className="h-14 sm:h-[3.75rem] flex items-center justify-between gap-2 sm:gap-4">
             <Link
               to="/welcome"
               className="flex items-center gap-2.5 shrink-0 group"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              <div className="relative">
-                <div className="absolute inset-0 rounded-2xl bg-blue-500/30 blur-md group-hover:blur-lg transition" />
-                <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600
-                  flex items-center justify-center shadow-lg shadow-blue-500/30
-                  group-hover:scale-105 transition-transform ring-2 ring-white/50">
-                  <span className="text-white font-extrabold text-base sm:text-lg">B</span>
-                </div>
+              <div className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center shadow-md">
+                <span className="text-white font-extrabold text-xl">B</span>
               </div>
-              <div className="leading-none">
-                <span className="block text-slate-900 font-extrabold text-lg sm:text-xl tracking-tight">
-                  bazar<span className="text-blue-600">net</span>
-                </span>
-                <span className="hidden sm:block text-[10px] font-semibold text-slate-400 tracking-wider uppercase mt-0.5">
-                  Marketplace
-                </span>
-              </div>
+              <span className="hidden sm:block text-[#1877F2] font-extrabold text-2xl tracking-tight">
+                bazarnet
+              </span>
             </Link>
 
-            <div className="hidden md:flex items-center flex-1 max-w-md mx-4
-              bg-white/80 hover:bg-white focus-within:bg-white
-              border border-slate-200/80 focus-within:border-blue-300
-              focus-within:ring-4 focus-within:ring-blue-500/10
-              rounded-2xl px-4 h-11 transition-all shadow-sm">
-              <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
-              </svg>
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search products, categories…"
-                className="bg-transparent border-0 outline-none text-sm ml-2.5 w-full text-slate-800 placeholder:text-slate-400"
-                aria-label="Search products"
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100 transition"
-                  aria-label="Clear search"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.7 6.7a1 1 0 011.4 0L10 8.6l1.9-1.9a1 1 0 111.4 1.4L11.4 10l1.9 1.9a1 1 0 01-1.4 1.4L10 11.4l-1.9 1.9a1 1 0 01-1.4-1.4L8.6 10 6.7 8.1a1 1 0 010-1.4z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              )}
+            <div className="hidden md:flex items-center flex-1 max-w-md mx-4">
+              <div className="flex items-center w-full bg-[#f0f2f5] rounded-full px-4 h-10
+                focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1877F2]/30 focus-within:shadow-sm transition-all">
+                <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
+                </svg>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search bazarnet"
+                  className="bg-transparent border-0 outline-none text-sm ml-2.5 w-full text-gray-800 placeholder:text-gray-400"
+                  aria-label="Search products"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition"
+                    aria-label="Clear search"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.7 6.7a1 1 0 011.4 0L10 8.6l1.9-1.9a1 1 0 111.4 1.4L11.4 10l1.9 1.9a1 1 0 01-1.4 1.4L10 11.4l-1.9 1.9a1 1 0 01-1.4-1.4L8.6 10 6.7 8.1a1 1 0 010-1.4z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={() => setMobileSearchOpen((v) => !v)}
-                className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl
-                  text-slate-700 bg-white/70 border border-slate-200/70 hover:bg-white transition"
+                className="md:hidden w-10 h-10 flex items-center justify-center rounded-full
+                  text-gray-600 bg-[#f0f2f5] hover:bg-gray-200 transition"
                 aria-label="Toggle search"
                 aria-expanded={mobileSearchOpen}
               >
@@ -1264,37 +1183,37 @@ const Welcome = () => {
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="hidden sm:inline-flex items-center justify-center h-10 px-4 rounded-xl
-                  text-sm font-bold text-blue-600 hover:bg-blue-50 border border-transparent
-                  hover:border-blue-100 transition"
+                className="hidden sm:inline-flex items-center justify-center h-10 px-5 rounded-full
+                  text-sm font-bold text-white bg-[#1877F2] hover:bg-[#166FE5]
+                  shadow-sm transition"
               >
                 Log in
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="welcome-btn-primary inline-flex items-center justify-center h-9 sm:h-10
-                  px-3.5 sm:px-5 rounded-xl text-xs sm:text-sm font-bold text-white transition
-                  hover:-translate-y-0.5 active:translate-y-0"
+                className="sm:hidden inline-flex items-center justify-center h-9 px-4 rounded-full
+                  text-xs font-bold text-white bg-[#1877F2] hover:bg-[#166FE5]
+                  shadow-sm transition"
               >
-                Get started
+                Log in
               </button>
             </div>
           </div>
 
           {mobileSearchOpen && (
             <div className="md:hidden pb-3">
-              <div className="flex items-center bg-white border border-slate-200 rounded-2xl px-3.5 h-11 shadow-sm">
-                <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <div className="flex items-center bg-[#f0f2f5] rounded-full px-4 h-10">
+                <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
                 </svg>
                 <input
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search products…"
+                  placeholder="Search bazarnet"
                   autoFocus
-                  className="bg-transparent border-0 outline-none text-sm ml-2 w-full"
+                  className="bg-transparent border-0 outline-none text-sm ml-2 w-full text-gray-800 placeholder:text-gray-400"
                   aria-label="Search products"
                 />
               </div>
@@ -1304,65 +1223,59 @@ const Welcome = () => {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 welcome-mesh pointer-events-none opacity-70" aria-hidden />
-        <div className="welcome-orb w-72 h-72 bg-blue-400/40 -top-20 -left-16" style={{ animationDelay: '0s' }} aria-hidden />
-        <div className="welcome-orb w-64 h-64 bg-emerald-400/30 top-10 right-0" style={{ animationDelay: '2s' }} aria-hidden />
-        <div className="welcome-orb w-48 h-48 bg-indigo-400/25 bottom-0 left-1/3" style={{ animationDelay: '4s' }} aria-hidden />
-
-        <div className="relative max-w-[1280px] mx-auto px-4 sm:px-5 lg:px-6 py-10 sm:py-14 md:py-16 lg:py-20">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10 lg:gap-14">
+      <section className="relative bg-white border-b border-gray-200">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-5 lg:px-6 py-8 sm:py-10 md:py-12">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 lg:gap-12">
             <div className="max-w-xl xl:max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
-              <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm text-blue-700
-                text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full mb-5
-                border border-blue-100 shadow-sm shadow-blue-500/5">
+              <div className="inline-flex items-center gap-2 bg-blue-50 text-[#1877F2]
+                text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full mb-4
+                border border-blue-100">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
-                Welcome to BazarNet Marketplace
+                Welcome to BazarNet
               </div>
 
-              <h1 className="text-[1.85rem] leading-[1.12] sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight">
-                <span className="text-slate-900">Discover products from</span>{' '}
-                <span className="welcome-gradient-text">local businesses</span>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight leading-[1.15]">
+                <span className="text-gray-900">Discover products from</span>{' '}
+                <span className="text-[#1877F2]">local businesses</span>
               </h1>
 
-              <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-slate-500 leading-relaxed max-w-lg mx-auto lg:mx-0 font-medium">
+              <p className="mt-3 sm:mt-4 text-[15px] sm:text-base text-gray-500 leading-relaxed max-w-lg mx-auto lg:mx-0">
                 Browse featured items, compare prices, like & order online — then run your store
                 with one powerful ERP for sales, inventory and accounts.
               </p>
 
-              <div className="mt-7 sm:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center
+              <div className="mt-6 sm:mt-7 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center
                 justify-center lg:justify-start gap-3">
                 <button
                   type="button"
                   onClick={() => navigate('/login')}
-                  className="welcome-btn-primary h-12 sm:h-[3.25rem] px-7 rounded-2xl text-white font-bold text-[15px]
-                    transition hover:-translate-y-0.5 active:translate-y-0"
+                  className="h-11 sm:h-12 px-7 rounded-full bg-[#1877F2] text-white font-bold text-sm
+                    shadow-lg shadow-[#1877F2]/25 hover:bg-[#166FE5] hover:-translate-y-0.5 active:translate-y-0 transition"
                 >
                   Log in to your account
                 </button>
                 <a
                   href="#products"
-                  className="h-12 sm:h-[3.25rem] px-7 rounded-2xl bg-white/90 hover:bg-white
-                    text-slate-800 font-bold text-[15px] transition inline-flex items-center justify-center
-                    border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                  className="h-11 sm:h-12 px-7 rounded-full bg-white
+                    text-gray-800 font-bold text-sm transition inline-flex items-center justify-center
+                    border border-gray-300 hover:bg-gray-50 hover:-translate-y-0.5"
                 >
                   Browse products ↓
                 </a>
               </div>
 
-              {/* Mini stats */}
-              <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6">
+              <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-5 sm:gap-7">
                 {[
                   { n: loading ? '—' : String(products.length), l: 'Products' },
                   { n: loading ? '—' : String(Math.max(categories.length - 1, 0)), l: 'Categories' },
                   { n: '24/7', l: 'Available' },
                 ].map((s) => (
                   <div key={s.l} className="text-center lg:text-left min-w-[4.5rem]">
-                    <p className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{s.n}</p>
-                    <p className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
+                    <p className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">{s.n}</p>
+                    <p className="text-[11px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mt-0.5">
                       {s.l}
                     </p>
                   </div>
@@ -1370,24 +1283,23 @@ const Welcome = () => {
               </div>
             </div>
 
-            {/* Feature glass cards */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-3.5 w-full max-w-md mx-auto lg:mx-0 lg:max-w-sm xl:max-w-md">
+            <div className="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto lg:mx-0 lg:max-w-sm xl:max-w-md">
               {FEATURES.map((item, i) => (
                 <div
                   key={item.label}
-                  className="group/feat relative bg-white/70 backdrop-blur-xl rounded-2xl p-4 sm:p-5
-                    border border-white/80 shadow-[0_8px_30px_rgba(15,23,42,0.06)]
-                    hover:shadow-[0_16px_40px_rgba(15,23,42,0.1)] hover:-translate-y-1
-                    transition-all duration-300"
-                  style={{ animationDelay: `${i * 80}ms` }}
+                  className="group/feat relative bg-white rounded-xl p-4
+                    border border-gray-200 shadow-sm
+                    hover:shadow-md hover:-translate-y-0.5
+                    transition-all duration-200"
+                  style={{ animationDelay: `${i * 60}ms` }}
                 >
-                  <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${item.bg}
-                    flex items-center justify-center text-xl sm:text-2xl mb-3
-                    ring-1 ring-black/5 shadow-sm group-hover/feat:scale-110 transition-transform`}>
+                  <div className={`w-10 h-10 rounded-xl ${item.bg}
+                    flex items-center justify-center text-xl mb-2.5
+                    group-hover/feat:scale-110 transition-transform`}>
                     {item.icon}
                   </div>
-                  <p className="text-sm sm:text-[15px] font-extrabold text-slate-900 leading-tight">{item.label}</p>
-                  <p className="text-[11px] sm:text-xs text-slate-500 mt-1 font-medium leading-snug">{item.desc}</p>
+                  <p className="text-sm font-bold text-gray-900 leading-tight">{item.label}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -1396,51 +1308,55 @@ const Welcome = () => {
       </section>
 
       {/* ── Products ─────────────────────────────────────────── */}
-      <main id="products" className="relative max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6 py-8 sm:py-10 md:py-12 scroll-mt-24">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5 sm:mb-6">
-          <div>
-            <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">Marketplace</p>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Today&apos;s picks</h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-              {loading
-                ? 'Loading products…'
-                : `${filtered.length} product${filtered.length === 1 ? '' : 's'}${
-                    activeCategory !== 'All' ? ` in ${activeCategory}` : ''
-                  }`}
-            </p>
+      <main id="products" className="relative max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6 py-6 sm:py-8 scroll-mt-14">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-4 sm:mb-5">
+          <div className="px-4 sm:px-5 pt-4 pb-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-gray-900">Marketplace</h2>
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                  {loading
+                    ? 'Loading products…'
+                    : `${filtered.length} product${filtered.length === 1 ? '' : 's'}${
+                        activeCategory !== 'All' ? ` in ${activeCategory}` : ''
+                      }`}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-2 sm:px-3 pb-3 pt-2">
+            <div className="flex gap-1.5 overflow-x-auto pb-2 fb-tabs-scroll">
+              {categories.map((cat) => {
+                const active = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setActiveCategory(cat)}
+                    className={`shrink-0 h-9 px-4 sm:px-5 rounded-full text-xs sm:text-sm font-semibold
+                      transition-all duration-150 whitespace-nowrap ${
+                      active
+                        ? 'bg-[#1877F2] text-white'
+                        : 'bg-[#f0f2f5] text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Category chips */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-5 welcome-hide-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
-          {categories.map((cat) => {
-            const active = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setActiveCategory(cat)}
-                className={`shrink-0 h-9 sm:h-10 px-4 sm:px-5 rounded-full text-xs sm:text-sm font-bold
-                  transition-all duration-200 whitespace-nowrap ${
-                  active
-                    ? 'welcome-btn-primary text-white scale-[1.03]'
-                    : 'bg-white/90 text-slate-700 border border-slate-200/80 hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/50 shadow-sm'
-                }`}
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-
         {error && (
-          <div className="mb-5 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700
-            px-4 py-4 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+          <div className="mb-4 rounded-xl bg-red-50 border border-red-200 text-red-700
+            px-4 py-3 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
             <span className="font-medium">{error}</span>
             <button
               type="button"
               onClick={loadProducts}
-              className="shrink-0 font-bold text-blue-600 hover:text-blue-700 self-start sm:self-auto"
+              className="shrink-0 font-bold text-[#1877F2] hover:text-[#166FE5] self-start sm:self-auto"
             >
               Retry →
             </button>
@@ -1454,14 +1370,14 @@ const Welcome = () => {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white/80 backdrop-blur rounded-[1.5rem] border border-slate-200/70
+          <div className="bg-white rounded-xl border border-gray-200
             py-14 sm:py-20 px-6 text-center shadow-sm">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-3xl bg-gradient-to-br from-slate-100 to-blue-50
-              flex items-center justify-center text-3xl sm:text-4xl mb-5 shadow-inner">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-gray-100
+              flex items-center justify-center text-3xl sm:text-4xl mb-4">
               🔍
             </div>
-            <h3 className="text-lg sm:text-xl font-extrabold text-slate-900">No products found</h3>
-            <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed font-medium">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">No products found</h3>
+            <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
               Try another search or category. Published products will appear here.
             </p>
             <button
@@ -1470,8 +1386,8 @@ const Welcome = () => {
                 setSearch('');
                 setActiveCategory('All');
               }}
-              className="mt-6 inline-flex h-11 px-6 items-center justify-center rounded-xl
-                welcome-btn-primary text-white font-bold text-sm transition hover:-translate-y-0.5"
+              className="mt-5 inline-flex h-10 px-6 items-center justify-center rounded-full
+                bg-[#1877F2] text-white font-bold text-sm hover:bg-[#166FE5] transition"
             >
               Clear filters
             </button>
@@ -1489,65 +1405,30 @@ const Welcome = () => {
         )}
       </main>
 
-      {/* ── CTA ──────────────────────────────────────────────── */}
-      <section className="max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6 pb-8 sm:pb-12">
-        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2rem]
-          bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900
-          px-6 py-10 sm:px-12 sm:py-14 text-center text-white
-          shadow-[0_25px_60px_-15px_rgba(30,58,138,0.45)]">
-          <div className="absolute inset-0 opacity-30 pointer-events-none" aria-hidden
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 15% 20%, rgba(96,165,250,0.5) 0, transparent 40%), radial-gradient(circle at 85% 80%, rgba(52,211,153,0.35) 0, transparent 40%)',
-            }}
-          />
-          <div className="absolute inset-0 welcome-mesh opacity-20 pointer-events-none" aria-hidden />
-          <div className="relative">
-            <p className="text-xs font-bold text-blue-300 uppercase tracking-[0.2em] mb-3">Get started free</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">
-              Ready to run your business?
-            </h2>
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-300 max-w-md mx-auto font-medium leading-relaxed">
-              Log in to manage inventory, sales, purchases and accounts across all your branches.
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              className="mt-7 sm:mt-8 h-12 sm:h-14 px-8 rounded-2xl bg-white text-blue-700
-                font-extrabold text-sm sm:text-[15px] hover:bg-blue-50 active:bg-blue-100
-                transition shadow-xl hover:-translate-y-0.5"
-            >
-              Go to login →
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* ── Footer ───────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200/70 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-5 lg:px-6 py-8 sm:py-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <footer className="bg-white border-t border-gray-200">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-5 lg:px-6 py-6 sm:py-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600
-                flex items-center justify-center shadow-md shadow-blue-500/25">
+              <div className="w-9 h-9 rounded-full bg-[#1877F2] flex items-center justify-center">
                 <span className="text-white font-extrabold text-sm">B</span>
               </div>
               <div>
-                <p className="font-extrabold text-slate-900 text-base leading-none">
-                  bazar<span className="text-blue-600">net</span>
+                <p className="font-extrabold text-gray-900 text-sm leading-none">
+                  bazarnet
                 </p>
-                <p className="text-[11px] text-slate-400 mt-1 font-semibold">ERP for modern businesses</p>
+                <p className="text-[10px] text-gray-400 mt-0.5 font-medium">ERP for modern businesses</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-400">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-gray-400">
               {['Sales', 'Inventory', 'Wallets', 'Branches'].map((item, i) => (
                 <React.Fragment key={item}>
-                  {i > 0 && <span className="text-slate-300 hidden sm:inline">·</span>}
-                  <span className="hover:text-blue-600 transition cursor-default">{item}</span>
+                  {i > 0 && <span className="text-gray-300 hidden sm:inline">·</span>}
+                  <span className="hover:text-[#1877F2] transition cursor-default">{item}</span>
                 </React.Fragment>
               ))}
             </div>
-            <p className="text-xs font-medium text-slate-400">
+            <p className="text-xs font-medium text-gray-400">
               © {new Date().getFullYear()} BazarNet. All rights reserved.
             </p>
           </div>
