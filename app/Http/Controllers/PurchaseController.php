@@ -40,7 +40,13 @@ class PurchaseController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = Purchase::with(['supplier', 'creator'])
+        // Include items.product when filtering by supplier_id (for Products tab)
+        $withRelations = ['supplier', 'creator'];
+        if ($request->filled('supplier_id')) {
+            $withRelations[] = 'items.product';
+        }
+
+        $query = Purchase::with($withRelations)
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
 

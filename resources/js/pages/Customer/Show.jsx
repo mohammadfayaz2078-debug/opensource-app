@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../plugins/axios';
 import PaymentModal from '../../components/PaymentModal';
+import ProductsTab from './tabs/ProductsTab';
 
 export default function CustomerShow() {
   const { id } = useParams();
@@ -13,9 +14,14 @@ export default function CustomerShow() {
   const [invoices, setInvoices] = useState([]);
   const [returns, setReturns] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [products, setProducts] = useState([]);
   const [paymentMeta, setPaymentMeta] = useState(null);
   const [paymentPage, setPaymentPage] = useState(1);
   const [loadingTab, setLoadingTab] = useState(false);
+
+  // Date filter state for all tabs
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Payment modal state
   const [showPayModal, setShowPayModal] = useState(false);
@@ -40,6 +46,57 @@ export default function CustomerShow() {
       day: 'numeric'
     });
   };
+
+  const handlePrint = (tableId, title) => {
+    const printContent = document.getElementById(tableId);
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: #f3f4f6; font-weight: 600; text-align: left; padding: 8px; border: 1px solid #ddd; }
+            td { padding: 8px; border: 1px solid #ddd; }
+            .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>${title}</h2>
+            <p>${new Date().toLocaleDateString()}</p>
+          </div>
+          ${printContent ? printContent.innerHTML : ''}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const clearDateFilters = () => {
+    setDateFrom('');
+    setDateTo('');
+  };
+
+  const DateFilterBar = ({ tableId, title }) => (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+      <div className="flex items-center gap-2">
+        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+          className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]" />
+        <span className="text-xs text-gray-400">to</span>
+        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+          className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]" />
+        <button onClick={clearDateFilters} className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors">Clear</button>
+      </div>
+      <button onClick={() => handlePrint(tableId, title)}
+        className="inline-flex items-center px-2.5 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+        <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+        Print
+      </button>
+    </div>
+  );
 
   const fetchTabData = async (tab) => {
     setLoadingTab(true);
@@ -68,6 +125,38 @@ export default function CustomerShow() {
         }
         setPaymentMeta(res.data);
         setPaymentPage(1);
+      } else if (tab === 'products') {
+        const res = await api.get('/sales', { params: { customer_id: id, per_page: 100 } });
+        const sales = res.data?.data || [];
+        // Extract unique products from sale items
+        const productMap = {};
+        sales.forEach(sale => {
+          if (sale.items) {
+            sale.items.forEach(item => {
+              const productId = item.product_id;
+              if (productId) {
+                if (!productMap[productId]) {
+                  productMap[productId] = {
+                    id: productId,
+                    name: item.product?.name || item.name || '—',
+                    barcode: item.product?.barcode || '',
+                    unit_price: item.unit_price,
+                    total_quantity: 0,
+                    total_spent: 0,
+                    last_purchase: sale.document_date,
+                  };
+                }
+                productMap[productId].total_quantity += parseFloat(item.quantity) || 0;
+                productMap[productId].total_spent += parseFloat(item.total) || 0;
+                // Update last purchase date if newer
+                if (sale.document_date && new Date(sale.document_date) > new Date(productMap[productId].last_purchase)) {
+                  productMap[productId].last_purchase = sale.document_date;
+                }
+              }
+            });
+          }
+        });
+        setProducts(Object.values(productMap));
       }
     } catch (err) { console.error(err); }
     finally { setLoadingTab(false); }
@@ -117,6 +206,7 @@ export default function CustomerShow() {
   const tabs = [
     { id: 'info', label: 'Info' },
     { id: 'invoices', label: 'Invoices' },
+    { id: 'products', label: 'Products' },
     { id: 'returns', label: 'Returns' },
     { id: 'payments', label: 'Payments' },
   ].filter(t => customer?.status === 'lead' ? t.id === 'info' : true);
@@ -213,8 +303,15 @@ export default function CustomerShow() {
       {/* Invoices Tab */}
       {activeTab === 'invoices' && (
         <div>
+          <DateFilterBar tableId="customer-invoices-table" title="Customer Invoices" />
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-            <span className="text-sm text-gray-500">{invoices.length} invoice{invoices.length !== 1 ? 's' : ''}</span>
+            <span className="text-sm text-gray-500">{invoices.filter(s => {
+              if (!dateFrom && !dateTo) return true;
+              const d = new Date(s.document_date);
+              if (dateFrom && d < new Date(dateFrom)) return false;
+              if (dateTo && d > new Date(dateTo)) return false;
+              return true;
+            }).length} invoice(s)</span>
             <button onClick={() => navigate('/sales/create')} className="px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">+ New Invoice</button>
           </div>
           {loadingTab ? <div className="py-8 text-center text-gray-500 text-sm">Loading...</div> : invoices.length === 0 ? (
@@ -222,7 +319,7 @@ export default function CustomerShow() {
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
               {/* Desktop Table */}
-              <div className="hidden sm:block overflow-x-auto">
+              <div id="customer-invoices-table" className="hidden sm:block overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50">
@@ -237,7 +334,13 @@ export default function CustomerShow() {
                     </tr>
                   </thead>
                   <tbody>
-                    {invoices.map((s, idx) => {
+                    {invoices.filter(s => {
+                      if (!dateFrom && !dateTo) return true;
+                      const d = new Date(s.document_date);
+                      if (dateFrom && d < new Date(dateFrom)) return false;
+                      if (dateTo && d > new Date(dateTo)) return false;
+                      return true;
+                    }).map((s, idx) => {
                       const canAct = s.status !== 'cancelled' && s.status !== 'returned';
                       const canPay = canAct && s.payment_status !== 'paid';
                       const canReturn = canAct && s.status === 'confirmed';
@@ -296,7 +399,13 @@ export default function CustomerShow() {
 
               {/* Mobile Cards */}
               <div className="sm:hidden divide-y divide-gray-100">
-                {invoices.map((s) => {
+                {invoices.filter(s => {
+                  if (!dateFrom && !dateTo) return true;
+                  const d = new Date(s.document_date);
+                  if (dateFrom && d < new Date(dateFrom)) return false;
+                  if (dateTo && d > new Date(dateTo)) return false;
+                  return true;
+                }).map((s) => {
                   const canAct = s.status !== 'cancelled' && s.status !== 'returned';
                   const canPay = canAct && s.payment_status !== 'paid';
                   const canReturn = canAct && s.status === 'confirmed';
@@ -347,8 +456,15 @@ export default function CustomerShow() {
       {/* Returns Tab */}
       {activeTab === 'returns' && (
         <div>
+          <DateFilterBar tableId="customer-returns-table" title="Customer Returns" />
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-            <span className="text-sm text-gray-500">{returns.length} return{returns.length !== 1 ? 's' : ''}</span>
+            <span className="text-sm text-gray-500">{returns.filter(r => {
+              if (!dateFrom && !dateTo) return true;
+              const d = new Date(r.return_date);
+              if (dateFrom && d < new Date(dateFrom)) return false;
+              if (dateTo && d > new Date(dateTo)) return false;
+              return true;
+            }).length} return(s)</span>
             <button onClick={() => navigate('/sale-returns/create')} className="px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">+ New Return</button>
           </div>
           {loadingTab ? <div className="py-8 text-center text-gray-500 text-sm">Loading...</div> : returns.length === 0 ? (
@@ -356,7 +472,7 @@ export default function CustomerShow() {
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
               {/* Desktop Table */}
-              <div className="hidden sm:block overflow-x-auto">
+              <div id="customer-returns-table" className="hidden sm:block overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50">
@@ -371,7 +487,13 @@ export default function CustomerShow() {
                     </tr>
                   </thead>
                   <tbody>
-                    {returns.map((r, idx) => {
+                    {returns.filter(r => {
+                      if (!dateFrom && !dateTo) return true;
+                      const d = new Date(r.return_date);
+                      if (dateFrom && d < new Date(dateFrom)) return false;
+                      if (dateTo && d > new Date(dateTo)) return false;
+                      return true;
+                    }).map((r, idx) => {
                       const canEdit = r.status !== 'cancelled' && r.status !== 'returned';
                       const canDelete = r.status !== 'cancelled' && r.status !== 'returned';
 
@@ -431,7 +553,13 @@ export default function CustomerShow() {
 
               {/* Mobile Cards */}
               <div className="sm:hidden divide-y divide-gray-100">
-                {returns.map((r) => {
+                {returns.filter(r => {
+                  if (!dateFrom && !dateTo) return true;
+                  const d = new Date(r.return_date);
+                  if (dateFrom && d < new Date(dateFrom)) return false;
+                  if (dateTo && d > new Date(dateTo)) return false;
+                  return true;
+                }).map((r) => {
                   const canEdit = r.status !== 'cancelled' && r.status !== 'returned';
                   const canDelete = r.status !== 'cancelled' && r.status !== 'returned';
 
@@ -490,11 +618,29 @@ export default function CustomerShow() {
         </div>
       )}
 
+      {/* Products Tab */}
+      {activeTab === 'products' && (
+        <div>
+          {loadingTab ? (
+            <div className="py-8 text-center text-gray-500 text-sm">Loading...</div>
+          ) : (
+            <ProductsTab products={products} />
+          )}
+        </div>
+      )}
+
       {/* Payments Tab */}
       {activeTab === 'payments' && (
         <div>
+          <DateFilterBar tableId="customer-payments-table" title="Customer Payments" />
           <div className="mb-3">
-            <span className="text-sm text-gray-500">{payments.length} payment(s)</span>
+            <span className="text-sm text-gray-500">{payments.filter(p => {
+              if (!dateFrom && !dateTo) return true;
+              const d = new Date(p.created_at);
+              if (dateFrom && d < new Date(dateFrom)) return false;
+              if (dateTo && d > new Date(dateTo)) return false;
+              return true;
+            }).length} payment(s)</span>
           </div>
           {loadingTab ? (
             <div className="py-8 text-center text-gray-500 text-sm">Loading...</div>
@@ -503,7 +649,7 @@ export default function CustomerShow() {
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
               {/* Desktop Table */}
-              <div className="hidden sm:block overflow-x-auto">
+              <div id="customer-payments-table" className="hidden sm:block overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50">
@@ -515,7 +661,13 @@ export default function CustomerShow() {
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map((p, idx) => (
+                    {payments.filter(p => {
+                      if (!dateFrom && !dateTo) return true;
+                      const d = new Date(p.created_at);
+                      if (dateFrom && d < new Date(dateFrom)) return false;
+                      if (dateTo && d > new Date(dateTo)) return false;
+                      return true;
+                    }).map((p, idx) => (
                       <tr key={p.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50`}>
                         <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">
                           {new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -540,7 +692,13 @@ export default function CustomerShow() {
 
               {/* Mobile Cards */}
               <div className="sm:hidden divide-y divide-gray-100">
-                {payments.map((p) => (
+                {payments.filter(p => {
+                  if (!dateFrom && !dateTo) return true;
+                  const d = new Date(p.created_at);
+                  if (dateFrom && d < new Date(dateFrom)) return false;
+                  if (dateTo && d > new Date(dateTo)) return false;
+                  return true;
+                }).map((p) => (
                   <div key={p.id} className="p-4 space-y-3 hover:bg-gray-50/50 transition-colors">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
