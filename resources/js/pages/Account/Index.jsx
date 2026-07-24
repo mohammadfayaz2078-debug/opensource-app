@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import TransferModal from '../../components/TransferModal';
 
 const generatePageNumbers = (current, total) => {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
@@ -32,6 +33,8 @@ export default function AccountIndex() {
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({ name: '', type: 'cash', description: '' });
   const [copiedId, setCopiedId] = useState(null);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferWalletId, setTransferWalletId] = useState('');
 
   const fetchAccounts = async (page = 1, perPageOverride) => {
     setLoading(true);
@@ -180,7 +183,7 @@ export default function AccountIndex() {
                       <button onClick={() => navigate(`/accounts/${account.id}`)} className="p-1.5 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors" title="View">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                       </button>
-                      <button onClick={() => navigate(`/accounts/transfer?wallet_id=${account.id}`)} className="p-1.5 rounded hover:bg-cyan-50 text-gray-400 hover:text-cyan-600 transition-colors" title="Transfer">
+                      <button onClick={() => { setTransferWalletId(account.id.toString()); setTransferModalOpen(true); }} className="p-1.5 rounded hover:bg-cyan-50 text-gray-400 hover:text-cyan-600 transition-colors" title="Transfer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                       </button>
                       <button onClick={() => openEditModal(account)} className="p-1.5 rounded hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 transition-colors" title="Edit">
@@ -275,6 +278,12 @@ export default function AccountIndex() {
           </div>
         </div>
       )}
+
+      <TransferModal
+        open={transferModalOpen}
+        walletId={transferWalletId}
+        onClose={() => setTransferModalOpen(false)}
+      />
     </div>
   );
 }
