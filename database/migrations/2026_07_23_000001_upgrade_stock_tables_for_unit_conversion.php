@@ -9,6 +9,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Add unit_category_id and fifo_layers columns
+        Schema::table('stock_balances', function (Blueprint $table) {
+            $table->foreignId('unit_category_id')->nullable()->constrained('unit_categories')->nullOnDelete();
+            $table->json('fifo_layers')->nullable();
+        });
+
         // Disable FK checks to allow index restructure
         DB::statement('SET FOREIGN_KEY_CHECKS = 0');
 

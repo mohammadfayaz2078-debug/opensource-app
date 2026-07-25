@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import SuperAdminSidebar from '../components/SuperAdminSidebar';
 import api from '../plugins/axios';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 const SuperAdminLayout = () => {
   const navigate = useNavigate();
@@ -10,15 +11,14 @@ const SuperAdminLayout = () => {
   // State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('superAdminSidebarCollapsed');
-    return saved ? JSON.parse(saved) : false;
+    return saved === 'true';
   });
+
+  // ... rest of state declarations
   
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [headerCollapsed, setHeaderCollapsed] = useState(() => {
     const saved = localStorage.getItem('superAdminHeaderCollapsed');
-    return saved ? JSON.parse(saved) : false;
+    return saved === 'true';
   });
   
   const [user, setUser] = useState({
@@ -27,8 +27,9 @@ const SuperAdminLayout = () => {
   });
   
   const [currentLanguage, setCurrentLanguage] = useState('en');
-  const [isRTL, setIsRTL] = useState(false);
-  
+const [isRTL, setIsRTL] = useState(false);
+  const { isInstallable, isInstalled, install } = useInstallPrompt();
+
   const userButtonRef = useRef(null);
   const dropdownRef = useRef(null);
 
@@ -85,10 +86,13 @@ const SuperAdminLayout = () => {
       document.documentElement.lang = lang;
 
       // Update localStorage
-      const userData = JSON.parse(localStorage.getItem('user'));
-      userData.language = lang;
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+      const stored = localStorage.getItem('user');
+      const userData = stored ? JSON.parse(stored) : null;
+      if (userData) {
+        userData.language = lang;
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      }
 
     } catch (e) {
       console.error('Language change failed', e);
@@ -117,7 +121,7 @@ const SuperAdminLayout = () => {
       setSidebarCollapsed(true);
     } else if (newWidth >= 1280) {
       const saved = localStorage.getItem('superAdminSidebarCollapsed');
-      setSidebarCollapsed(saved ? JSON.parse(saved) : false);
+      setSidebarCollapsed(saved === 'true');
     }
 
     if (newWidth >= 1024) {
@@ -311,6 +315,23 @@ const SuperAdminLayout = () => {
                   <div className="hidden sm:block px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
                     Super Admin
                   </div>
+
+                  {/* Download App */}
+                  <button
+                    onClick={install}
+                    disabled={isInstalled}
+                    className={`relative p-2 rounded-lg transition-colors
+                      ${isInstalled
+                        ? 'text-green-500 cursor-default'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      }
+                    `}
+                    title={isInstalled ? 'App Installed' : 'Download App'}
+                  >
+                    <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </button>
 
                   {/* Language selector */}
                   <div className="relative">

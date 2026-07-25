@@ -26,13 +26,6 @@ const renderRoutes = (routes) => {
 
 function App() {
   useEffect(() => {
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-      });
-    }
-
     // Prevent pull-to-refresh on mobile
     let lastTouchY = 0;
     const preventPullToRefresh = (e) => {

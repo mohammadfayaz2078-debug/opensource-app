@@ -25,29 +25,34 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const caToken = localStorage.getItem('ca_token');
-      if (caToken) {
-        localStorage.setItem('api_token', caToken);
-        localStorage.setItem('user', localStorage.getItem('ca_user'));
-        localStorage.setItem('user_type', localStorage.getItem('ca_user_type'));
+      // Don't redirect if already on the login page (login failures are handled by the Login component)
+      const isOnLoginPage = window.location.pathname === '/login';
+
+      if (!isOnLoginPage) {
+        const caToken = localStorage.getItem('ca_token');
+        if (caToken) {
+          localStorage.setItem('api_token', caToken);
+          localStorage.setItem('user', localStorage.getItem('ca_user') || '');
+          localStorage.setItem('user_type', localStorage.getItem('ca_user_type') || '');
+          localStorage.removeItem('ca_token');
+          localStorage.removeItem('ca_user');
+          localStorage.removeItem('ca_user_type');
+          localStorage.removeItem('impersonating_branch');
+          localStorage.removeItem('permissions');
+          window.location.href = '/company-admin/dashboard';
+          return Promise.reject(error);
+        }
+
+        localStorage.removeItem('api_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('user_type');
+        localStorage.removeItem('permissions');
         localStorage.removeItem('ca_token');
         localStorage.removeItem('ca_user');
         localStorage.removeItem('ca_user_type');
         localStorage.removeItem('impersonating_branch');
-        localStorage.removeItem('permissions');
-        window.location.href = '/company-admin/dashboard';
-        return Promise.reject(error);
+        window.location.href = '/login';
       }
-
-      localStorage.removeItem('api_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('user_type');
-      localStorage.removeItem('permissions');
-      localStorage.removeItem('ca_token');
-      localStorage.removeItem('ca_user');
-      localStorage.removeItem('ca_user_type');
-      localStorage.removeItem('impersonating_branch');
-      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

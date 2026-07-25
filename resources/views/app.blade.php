@@ -26,14 +26,15 @@
     <meta property="og:theme_color" content="#007c89">
 
     <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.svg">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.svg">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
 
     <!-- Apple Splash Screens -->
-    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.svg">
+    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png">
 
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
     <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.svg">
     <link rel="manifest" href="/build/manifest.webmanifest">
 

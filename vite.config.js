@@ -17,7 +17,8 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'prompt',
-            includeAssets: ['icons/*.svg', 'favicon.ico'],
+            scope: '/',
+            includeAssets: ['icons/*.svg', 'icons/*.png', 'favicon.ico'],
             manifest: {
                 name: 'BazarNet - Business Management',
                 short_name: 'BazarNet',
@@ -31,46 +32,46 @@ export default defineConfig({
                 categories: ['business', 'finance', 'productivity'],
                 icons: [
                     {
-                        src: '/icons/icon-72x72.svg',
+                        src: '/icons/icon-72x72.png',
                         sizes: '72x72',
-                        type: 'image/svg+xml',
+                        type: 'image/png',
                     },
                     {
-                        src: '/icons/icon-96x96.svg',
+                        src: '/icons/icon-96x96.png',
                         sizes: '96x96',
-                        type: 'image/svg+xml',
+                        type: 'image/png',
                     },
                     {
-                        src: '/icons/icon-128x128.svg',
+                        src: '/icons/icon-128x128.png',
                         sizes: '128x128',
-                        type: 'image/svg+xml',
+                        type: 'image/png',
                     },
                     {
-                        src: '/icons/icon-144x144.svg',
+                        src: '/icons/icon-144x144.png',
                         sizes: '144x144',
-                        type: 'image/svg+xml',
+                        type: 'image/png',
                     },
                     {
-                        src: '/icons/icon-192x192.svg',
+                        src: '/icons/icon-192x192.png',
                         sizes: '192x192',
-                        type: 'image/svg+xml',
+                        type: 'image/png',
                     },
                     {
-                        src: '/icons/icon-384x384.svg',
+                        src: '/icons/icon-384x384.png',
                         sizes: '384x384',
-                        type: 'image/svg+xml',
+                        type: 'image/png',
                     },
                     {
-                        src: '/icons/maskable-icon-512x512.svg',
+                        src: '/icons/icon-512x512.png',
                         sizes: '512x512',
-                        type: 'image/svg+xml',
-                        purpose: 'maskable',
-                    },
-                    {
-                        src: '/icons/maskable-icon-512x512.svg',
-                        sizes: '512x512',
-                        type: 'image/svg+xml',
+                        type: 'image/png',
                         purpose: 'any',
+                    },
+                    {
+                        src: '/icons/maskable-icon-512x512.png',
+                        sizes: '512x512',
+                        type: 'image/png',
+                        purpose: 'maskable',
                     },
                 ],
             },
@@ -176,5 +177,18 @@ export default defineConfig({
     },
     css: {
         postcss: './postcss.config.js',
+    },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['react', 'react-dom', 'react-router-dom', 'react-is'],
+                    charts: ['chart.js', 'recharts'],
+                    ui: ['@headlessui/react', '@heroicons/react', 'lucide-react'],
+                    utils: ['axios', 'js-cookie', 'i18next', 'react-i18next'],
+                    pkg: ['html2canvas', 'sweetalert2'],
+                },
+            },
+        },
     },
 });
