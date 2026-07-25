@@ -1,6 +1,41 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../plugins/axios';
+import api from '../../plugins/axios';
+import {
+  Heart,
+  MessageCircle,
+  ShoppingCart,
+  MapPin,
+  X,
+  Search,
+  User,
+  Phone,
+  Mail,
+  Home,
+  Navigation,
+  AlertCircle,
+  Check,
+  ArrowRight,
+  ThumbsUp,
+  Send,
+  Loader2,
+  ShoppingBag,
+  Package,
+  CreditCard,
+  Store,
+  LogIn,
+  Sparkles,
+  MapPinned,
+  Users,
+  Clock,
+  Tag,
+  Star,
+  ChevronRight,
+  Menu,
+  LayoutGrid,
+  List,
+  Grid3x3,
+} from 'lucide-react';
 
 const CATEGORY_META = {
   Electronics: { gradient: 'from-sky-400 via-blue-500 to-indigo-600', emoji: '🎧', soft: '#dbeafe' },
@@ -13,18 +48,18 @@ const CATEGORY_META = {
 const DEFAULT_META = { gradient: 'from-slate-400 via-slate-500 to-slate-700', emoji: '📦', soft: '#e2e8f0' };
 
 const FEATURES = [
-  { label: 'Sales & POS', desc: 'Fast checkout & invoices', icon: '💳', ring: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50' },
-  { label: 'Inventory', desc: 'Real-time stock control', icon: '📦', ring: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50' },
-  { label: 'Wallets', desc: 'Cash, books & ledgers', icon: '📊', ring: 'from-violet-500 to-purple-500', bg: 'bg-violet-50' },
-  { label: 'Multi-branch', desc: 'All locations in one', icon: '🏪', ring: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
+  { label: 'Sales & POS', desc: 'Fast checkout & invoices', icon: ShoppingBag, ring: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50' },
+  { label: 'Inventory', desc: 'Real-time stock control', icon: Package, ring: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50' },
+  { label: 'Wallets', desc: 'Cash, books & ledgers', icon: CreditCard, ring: 'from-violet-500 to-purple-500', bg: 'bg-violet-50' },
+  { label: 'Multi-branch', desc: 'All locations in one', icon: Store, ring: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
 ];
 
 const formatPrice = (price) => {
   const value = Number(price ?? 0);
-  if (Number.isNaN(value)) return '$0.00';
+  if (Number.isNaN(value)) return '0.00 AFN';
   return value.toLocaleString(undefined, {
     style: 'currency',
-    currency: 'USD',
+    currency: 'AFN',
     minimumFractionDigits: 2,
   });
 };
@@ -205,7 +240,6 @@ const ProductCardWithActions = ({ product, index }) => {
   }, []);
 
   const handlePlaceOrder = useCallback(async () => {
-    // Validate: email is required. For new customers, name + phone also required.
     if (!orderForm.customer_email.trim()) return;
     if (!existingCustomer && (!orderForm.customer_name.trim() || !orderForm.customer_phone.trim())) return;
     const validItems = orderForm.items.filter(i => i.product_id);
@@ -357,9 +391,7 @@ const ProductCardWithActions = ({ product, index }) => {
             </h3>
           </button>
           <p className="mt-1.5 text-[11px] sm:text-xs text-slate-500 flex items-center gap-1 truncate">
-            <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-blue-500/70" fill="currentColor" viewBox="0 0 16 16" aria-hidden>
-              <path d="M8 0a5 5 0 0 0-5 5c0 3.5 5 11 5 11s5-7.5 5-11a5 5 0 0 0-5-5zm0 7.5A2.5 2.5 0 1 1 8 2.5a2.5 2.5 0 0 1 0 5z" />
-            </svg>
+            <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-blue-500/70" />
             <span className="truncate">{location}</span>
           </p>
           {product.description && (
@@ -380,15 +412,11 @@ const ProductCardWithActions = ({ product, index }) => {
                 ${liked ? 'text-rose-500 bg-rose-50/60 hover:bg-rose-50' : 'text-slate-500 hover:bg-white hover:text-rose-500'}`}
               aria-label={liked ? 'Unlike' : 'Like'}
             >
-              <svg
+              <Heart
                 className={`w-4 h-4 transition-transform duration-300 ${likeAnimating ? 'scale-125' : ''}`}
-                viewBox="0 0 24 24"
                 fill={liked ? 'currentColor' : 'none'}
-                stroke="currentColor"
                 strokeWidth={liked ? 0 : 1.8}
-              >
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
+              />
               <span className="hidden min-[380px]:inline">{likeCount > 0 ? likeCount : 'Like'}</span>
               <span className="min-[380px]:hidden">{likeCount > 0 ? likeCount : ''}</span>
             </button>
@@ -400,9 +428,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 font-bold text-slate-500 hover:bg-white hover:text-blue-600 transition-all duration-200"
               aria-label="Comments"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+              <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
               <span className="hidden min-[380px]:inline">{commentsCount > 0 ? commentsCount : 'Comment'}</span>
               <span className="min-[380px]:hidden">{commentsCount > 0 ? commentsCount : ''}</span>
             </button>
@@ -414,9 +440,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 font-bold text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-all duration-200"
               aria-label="Order"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-              </svg>
+              <ShoppingCart className="w-4 h-4" strokeWidth={1.8} />
               <span className="hidden min-[380px]:inline">{initialOrders > 0 ? initialOrders : 'Order'}</span>
               <span className="min-[380px]:hidden">{initialOrders > 0 ? initialOrders : ''}</span>
             </button>
@@ -473,9 +497,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     text-white flex items-center justify-center backdrop-blur-sm transition shadow-lg"
                   aria-label="Close"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" strokeWidth={2} />
                 </button>
 
                 {/* Price badge on image */}
@@ -493,9 +515,7 @@ const ProductCardWithActions = ({ product, index }) => {
 
                 <div className="flex flex-wrap items-center gap-3 mt-2">
                   <span className="flex items-center gap-1 text-xs sm:text-sm text-slate-500 font-medium">
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500/70" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M8 0a5 5 0 0 0-5 5c0 3.5 5 11 5 11s5-7.5 5-11a5 5 0 0 0-5-5zm0 7.5A2.5 2.5 0 1 1 8 2.5a2.5 2.5 0 0 1 0 5z" />
-                    </svg>
+                    <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500/70" />
                     {location}
                   </span>
                   {product.barcode && (
@@ -554,10 +574,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-rose-500'
                   }`}
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'}
-                  stroke="currentColor" strokeWidth={liked ? 0 : 1.8}>
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
+                <Heart className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.8} />
                 {likeCount > 0 ? likeCount : 'Like'}
               </button>
               <button
@@ -566,9 +583,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 className="flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-sm font-bold
                   bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-blue-600 transition"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+                <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
                 {commentsCount > 0 ? commentsCount : 'Comment'}
               </button>
               <div className="flex-1" />
@@ -579,9 +594,7 @@ const ProductCardWithActions = ({ product, index }) => {
                   bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25
                   hover:from-blue-600 hover:to-blue-700 active:scale-[0.97] transition"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
+                <ShoppingCart className="w-4 h-4" strokeWidth={1.8} />
                 Order Now
               </button>
             </div>
@@ -628,16 +641,14 @@ const ProductCardWithActions = ({ product, index }) => {
                   bg-slate-100 hover:bg-slate-200 text-slate-600 transition shrink-0"
                 aria-label="Close"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" strokeWidth={2} />
               </button>
             </div>
 
             <div ref={commentsListRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5">
               {loadingComments ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-7 h-7 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin" />
+                  <Loader2 className="w-7 h-7 text-blue-500 animate-spin" />
                 </div>
               ) : comments.length === 0 ? (
                 <div className="text-center py-12">
@@ -716,11 +727,9 @@ const ProductCardWithActions = ({ product, index }) => {
                   aria-label="Send comment"
                 >
                   {submittingComment ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
+                    <Send className="w-4 h-4" strokeWidth={2.5} />
                   )}
                 </button>
               </div>
@@ -755,9 +764,7 @@ const ProductCardWithActions = ({ product, index }) => {
                   bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
                 aria-label="Close"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" strokeWidth={2} />
               </button>
             </div>
 
@@ -798,7 +805,7 @@ const ProductCardWithActions = ({ product, index }) => {
                       disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     {checkingEmail ? (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       'Check'
                     )}
@@ -811,9 +818,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+                      <User className="w-5 h-5" strokeWidth={2} />
                     </div>
                     <div>
                       <p className="text-sm font-bold text-emerald-800">
@@ -898,9 +903,9 @@ const ProductCardWithActions = ({ product, index }) => {
                       <button type="button" onClick={handleGetLocation} disabled={locating}
                         className={`${getLocBtnClass(!!(orderForm.gps_lat && orderForm.gps_lng))} disabled:opacity-50`}>
                         {locating ? (
-                          <><div className="w-3.5 h-3.5 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" /> Detecting…</>
+                          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Detecting…</>
                         ) : (
-                          <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          <><Navigation className="w-3.5 h-3.5" strokeWidth={2} />
                             {orderForm.gps_lat && orderForm.gps_lng ? '📍 Located' : '📍 Get Location'}
                           </>
                         )}
@@ -991,14 +996,12 @@ const ProductCardWithActions = ({ product, index }) => {
               >
                 {ordering ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Placing…
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Check className="w-4 h-4" strokeWidth={2.2} />
                     Place Order
                   </>
                 )}
@@ -1222,9 +1225,7 @@ const Welcome = () => {
               border border-slate-200/80 focus-within:border-blue-300
               focus-within:ring-4 focus-within:ring-blue-500/10
               rounded-2xl px-4 h-11 transition-all shadow-sm">
-              <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
-              </svg>
+              <Search className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={2.2} />
               <input
                 type="search"
                 value={search}
@@ -1240,9 +1241,7 @@ const Welcome = () => {
                   className="text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100 transition"
                   aria-label="Clear search"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.7 6.7a1 1 0 011.4 0L10 8.6l1.9-1.9a1 1 0 111.4 1.4L11.4 10l1.9 1.9a1 1 0 01-1.4 1.4L10 11.4l-1.9 1.9a1 1 0 01-1.4-1.4L8.6 10 6.7 8.1a1 1 0 010-1.4z" clipRule="evenodd" />
-                  </svg>
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -1256,9 +1255,7 @@ const Welcome = () => {
                 aria-label="Toggle search"
                 aria-expanded={mobileSearchOpen}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
-                </svg>
+                <Search className="w-5 h-5" strokeWidth={2.2} />
               </button>
 
               <button
@@ -1285,9 +1282,7 @@ const Welcome = () => {
           {mobileSearchOpen && (
             <div className="md:hidden pb-3">
               <div className="flex items-center bg-white border border-slate-200 rounded-2xl px-3.5 h-11 shadow-sm">
-                <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
-                </svg>
+                <Search className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={2.2} />
                 <input
                   type="search"
                   value={search}
@@ -1372,24 +1367,27 @@ const Welcome = () => {
 
             {/* Feature glass cards */}
             <div className="grid grid-cols-2 gap-3 sm:gap-3.5 w-full max-w-md mx-auto lg:mx-0 lg:max-w-sm xl:max-w-md">
-              {FEATURES.map((item, i) => (
-                <div
-                  key={item.label}
-                  className="group/feat relative bg-white/70 backdrop-blur-xl rounded-2xl p-4 sm:p-5
-                    border border-white/80 shadow-[0_8px_30px_rgba(15,23,42,0.06)]
-                    hover:shadow-[0_16px_40px_rgba(15,23,42,0.1)] hover:-translate-y-1
-                    transition-all duration-300"
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
-                  <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${item.bg}
-                    flex items-center justify-center text-xl sm:text-2xl mb-3
-                    ring-1 ring-black/5 shadow-sm group-hover/feat:scale-110 transition-transform`}>
-                    {item.icon}
+              {FEATURES.map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    className="group/feat relative bg-white/70 backdrop-blur-xl rounded-2xl p-4 sm:p-5
+                      border border-white/80 shadow-[0_8px_30px_rgba(15,23,42,0.06)]
+                      hover:shadow-[0_16px_40px_rgba(15,23,42,0.1)] hover:-translate-y-1
+                      transition-all duration-300"
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${item.bg}
+                      flex items-center justify-center text-xl sm:text-2xl mb-3
+                      ring-1 ring-black/5 shadow-sm group-hover/feat:scale-110 transition-transform`}>
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />
+                    </div>
+                    <p className="text-sm sm:text-[15px] font-extrabold text-slate-900 leading-tight">{item.label}</p>
+                    <p className="text-[11px] sm:text-xs text-slate-500 mt-1 font-medium leading-snug">{item.desc}</p>
                   </div>
-                  <p className="text-sm sm:text-[15px] font-extrabold text-slate-900 leading-tight">{item.label}</p>
-                  <p className="text-[11px] sm:text-xs text-slate-500 mt-1 font-medium leading-snug">{item.desc}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

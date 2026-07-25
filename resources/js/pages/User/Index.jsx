@@ -17,6 +17,11 @@ const UsersIndex = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [roles, setRoles] = useState([]);
   const [branches, setBranches] = useState([]);
+
+
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserType = localStorage.getItem('user_type');
+  const isBranchUser = currentUserType === 'user' && currentUser.branch_id;
   
   const fetchRoles = useCallback(async () => {
     try {
@@ -247,6 +252,7 @@ useEffect(() => {
             ))}
           </select>
           
+          {!isBranchUser && (
           <select
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
@@ -259,6 +265,7 @@ useEffect(() => {
               </option>
             ))}
           </select>
+          )}
           
           <select
             value={statusFilter}
@@ -323,7 +330,9 @@ useEffect(() => {
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Email</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Role</th>
+                {!isBranchUser && (
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Branch</th>
+                )}
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -337,9 +346,6 @@ useEffect(() => {
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-[#007c89] to-[#005d66] flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                            {(user.first_name?.charAt(0) || user.name?.charAt(0) || 'U').toUpperCase()}
-                          </div>
                           <div className="text-sm font-medium text-gray-900">
                             {user.first_name} {user.last_name}
                           </div>
@@ -353,9 +359,11 @@ useEffect(() => {
                           {user.role?.role_name || user.position?.position || '-'}
                         </span>
                       </td>
+                    {!isBranchUser && (
                       <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
                         {user.branch?.branch_name || '-'}
                       </td>
+                    )}
                       <td className="px-4 py-2.5 whitespace-nowrap">
                         <button
                           onClick={() => toggleStatus(user.id, user.status, `${user.first_name} ${user.last_name}`)}

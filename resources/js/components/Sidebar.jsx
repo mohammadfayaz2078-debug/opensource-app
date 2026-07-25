@@ -242,7 +242,6 @@ const Sidebar = ({
       children: [
         { name: 'Roles', to: '/roles', translation_key: 'Roles' },
         { name: 'Users', to: '/users', translation_key: 'Users' },
-        { name: 'Branches', to: '/branches', translation_key: 'sidebar_branches' },
         { name: 'Settings', to: '/settings', translation_key: 'sidebar_settings' },
         { name: 'Profile', to: '/profile', translation_key: 'sidebar_profile' }
       ]

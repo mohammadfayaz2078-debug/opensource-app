@@ -22,6 +22,11 @@ const RoleIndex = () => {
     from: 0,
     to: 0
   });
+
+
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserType = localStorage.getItem('user_type');
+  const isBranchUser = currentUserType === 'user' && currentUser.branch_id;
   
   const getUserType = useCallback(() => {
     const type = localStorage.getItem('user_type');
@@ -252,11 +257,10 @@ useEffect(() => {
                 <tr className="bg-gray-50">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ID</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Role Name</th>
-                  {isSuperAdmin && (
+                  {!isBranchUser && (
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Branch</th>
                   )}
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Permissions</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Users</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Created</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -270,17 +274,12 @@ useEffect(() => {
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-[#007c89] to-[#005d66] flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                          </div>
                           <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getRoleBadgeColor(role.role_name)}`}>
                             {role.role_name}
                           </span>
                         </div>
                       </td>
-                      {isSuperAdmin && (
+                       {!isBranchUser && (
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
                           {role.branch ? role.branch.branch_name : 'Global'}
                         </td>
@@ -296,9 +295,6 @@ useEffect(() => {
                           </svg>
                           View
                         </button>
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
-                        {role.users_count || 0}
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
                         {role.created_at ? new Date(role.created_at).toLocaleDateString() : 'N/A'}
