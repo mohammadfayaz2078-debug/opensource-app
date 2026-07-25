@@ -421,7 +421,8 @@ const [isRTL, setIsRTL] = useState(false);
           className={`flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 transition-all duration-300 ${headerCollapsed ? 'pt-12' : 'pt-14 sm:pt-16'}`}
           style={{
             scrollbarWidth: 'thin',
-            scrollbarColor: '#cbd5e1 transparent'
+            scrollbarColor: '#cbd5e1 transparent',
+            overscrollBehavior: 'contain'
           }}
         >
           <div className="py-2">
