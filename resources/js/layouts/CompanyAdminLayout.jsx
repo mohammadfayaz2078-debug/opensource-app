@@ -397,7 +397,9 @@ const CompanyAdminLayout = () => {
         {/* Page content */}
         <main
           className={`flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 transition-all duration-300 ${headerCollapsed ? 'pt-12' : 'pt-14 sm:pt-16'}`}
-          style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}
+          style={{ scrollbarWidth: 'thin',
+             scrollbarColor: '#cbd5e1 transparent'}
+            }
         >
           <div className="py-2">
             <div className={`mx-auto px-2 w-full max-w-full ${sidebarCollapsed && windowWidth >= 1024 ? '' : 'xl:max-w-7xl'}`}>

@@ -26,15 +26,8 @@ const renderRoutes = (routes) => {
 
 function App() {
   useEffect(() => {
-    // Prevent pull-to-refresh on mobile
-    let lastTouchY = 0;
-    const preventPullToRefresh = (e) => {
-      if (document.scrollingElement.scrollTop === 0 && e.touches[0].clientY > lastTouchY) {
-        e.preventDefault();
-      }
-    };
-    document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
-    return () => document.removeEventListener('touchmove', preventPullToRefresh);
+    // Prevent pull-to-refresh on mobile using CSS instead of JS blocking
+    // overscroll-behavior: contain on scroll containers handles this natively
   }, []);
 
   return (
