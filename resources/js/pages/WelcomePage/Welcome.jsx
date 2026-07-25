@@ -1,6 +1,41 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../plugins/axios';
+import api from '../../plugins/axios';
+import {
+  Heart,
+  MessageCircle,
+  ShoppingCart,
+  MapPin,
+  X,
+  Search,
+  User,
+  Phone,
+  Mail,
+  Home,
+  Navigation,
+  AlertCircle,
+  Check,
+  ArrowRight,
+  ThumbsUp,
+  Send,
+  Loader2,
+  ShoppingBag,
+  Package,
+  CreditCard,
+  Store,
+  LogIn,
+  Sparkles,
+  MapPinned,
+  Users,
+  Clock,
+  Tag,
+  Star,
+  ChevronRight,
+  Menu,
+  LayoutGrid,
+  List,
+  Grid3x3,
+} from 'lucide-react';
 
 const CATEGORY_META = {
   Electronics: { gradient: 'from-sky-400 via-blue-500 to-indigo-600', emoji: '🎧', soft: '#dbeafe' },
@@ -13,18 +48,18 @@ const CATEGORY_META = {
 const DEFAULT_META = { gradient: 'from-slate-400 via-slate-500 to-slate-700', emoji: '📦', soft: '#e2e8f0' };
 
 const FEATURES = [
-  { label: 'Sales & POS', desc: 'Fast checkout & invoices', icon: '💳', ring: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50' },
-  { label: 'Inventory', desc: 'Real-time stock control', icon: '📦', ring: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50' },
-  { label: 'Wallets', desc: 'Cash, books & ledgers', icon: '📊', ring: 'from-violet-500 to-purple-500', bg: 'bg-violet-50' },
-  { label: 'Multi-branch', desc: 'All locations in one', icon: '🏪', ring: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
+  { label: 'Sales & POS', desc: 'Fast checkout & invoices', icon: ShoppingBag, ring: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50' },
+  { label: 'Inventory', desc: 'Real-time stock control', icon: Package, ring: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50' },
+  { label: 'Wallets', desc: 'Cash, books & ledgers', icon: CreditCard, ring: 'from-violet-500 to-purple-500', bg: 'bg-violet-50' },
+  { label: 'Multi-branch', desc: 'All locations in one', icon: Store, ring: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
 ];
 
 const formatPrice = (price) => {
   const value = Number(price ?? 0);
-  if (Number.isNaN(value)) return '$0.00';
+  if (Number.isNaN(value)) return '0.00 AFN';
   return value.toLocaleString(undefined, {
     style: 'currency',
-    currency: 'USD',
+    currency: 'AFN',
     minimumFractionDigits: 2,
   });
 };
@@ -375,15 +410,11 @@ const ProductCardWithActions = ({ product, index }) => {
                 ${liked ? 'text-[#F0284A] bg-red-50/60 hover:bg-red-50' : 'text-gray-500 hover:bg-white hover:text-[#F0284A]'}`}
               aria-label={liked ? 'Unlike' : 'Like'}
             >
-              <svg
+              <Heart
                 className={`w-4 h-4 transition-transform duration-300 ${likeAnimating ? 'scale-125' : ''}`}
-                viewBox="0 0 24 24"
                 fill={liked ? 'currentColor' : 'none'}
-                stroke="currentColor"
                 strokeWidth={liked ? 0 : 1.8}
-              >
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
+              />
               <span className="hidden min-[380px]:inline">{likeCount > 0 ? likeCount : 'Like'}</span>
               <span className="min-[380px]:hidden">{likeCount > 0 ? likeCount : ''}</span>
             </button>
@@ -395,9 +426,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 font-semibold text-gray-500 hover:bg-white hover:text-[#1877F2] transition-all duration-150"
               aria-label="Comments"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+              <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
               <span className="hidden min-[380px]:inline">{commentsCount > 0 ? commentsCount : 'Comment'}</span>
               <span className="min-[380px]:hidden">{commentsCount > 0 ? commentsCount : ''}</span>
             </button>
@@ -409,9 +438,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 font-semibold text-[#1877F2] hover:bg-blue-50 active:bg-blue-100 transition-all duration-150"
               aria-label="Order"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-              </svg>
+              <ShoppingCart className="w-4 h-4" strokeWidth={1.8} />
               <span className="hidden min-[380px]:inline">{initialOrders > 0 ? initialOrders : 'Order'}</span>
               <span className="min-[380px]:hidden">{initialOrders > 0 ? initialOrders : ''}</span>
             </button>
@@ -463,9 +490,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     text-white flex items-center justify-center backdrop-blur-sm transition shadow-lg"
                   aria-label="Close"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" strokeWidth={2} />
                 </button>
 
                 <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md text-gray-900
@@ -539,10 +564,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-[#F0284A]'
                   }`}
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'}
-                  stroke="currentColor" strokeWidth={liked ? 0 : 1.8}>
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
+                <Heart className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.8} />
                 {likeCount > 0 ? likeCount : 'Like'}
               </button>
               <button
@@ -551,9 +573,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 className="flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg text-sm font-semibold
                   bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-[#1877F2] transition"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+                <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
                 {commentsCount > 0 ? commentsCount : 'Comment'}
               </button>
               <div className="flex-1" />
@@ -564,9 +584,7 @@ const ProductCardWithActions = ({ product, index }) => {
                   bg-[#1877F2] text-white shadow-lg shadow-[#1877F2]/25
                   hover:bg-[#166FE5] active:scale-[0.97] transition"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
+                <ShoppingCart className="w-4 h-4" strokeWidth={1.8} />
                 Order Now
               </button>
             </div>
@@ -613,9 +631,7 @@ const ProductCardWithActions = ({ product, index }) => {
                   bg-gray-100 hover:bg-gray-200 text-gray-600 transition shrink-0"
                 aria-label="Close"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" strokeWidth={2} />
               </button>
             </div>
 
@@ -701,11 +717,9 @@ const ProductCardWithActions = ({ product, index }) => {
                   aria-label="Send comment"
                 >
                   {submittingComment ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
+                    <Send className="w-4 h-4" strokeWidth={2.5} />
                   )}
                 </button>
               </div>
@@ -740,9 +754,7 @@ const ProductCardWithActions = ({ product, index }) => {
                   bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
                 aria-label="Close"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" strokeWidth={2} />
               </button>
             </div>
 
@@ -782,7 +794,7 @@ const ProductCardWithActions = ({ product, index }) => {
                       disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     {checkingEmail ? (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       'Check'
                     )}
@@ -794,9 +806,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+                      <User className="w-5 h-5" strokeWidth={2} />
                     </div>
                     <div>
                       <p className="text-sm font-bold text-emerald-800">
@@ -849,38 +859,51 @@ const ProductCardWithActions = ({ product, index }) => {
                       <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                         Phone <span className="text-rose-500">*</span>
                       </label>
-                      <input type="tel" value={orderForm.customer_phone}
+                      <input 
+                        type="tel" 
+                        value={orderForm.customer_phone}
                         onChange={(e) => setOrderForm((p) => ({ ...p, customer_phone: e.target.value }))}
                         placeholder="Phone number"
                         className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 transition"
-                        required />
+                        required 
+                      />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Province</label>
-                      <input type="text" value={orderForm.province}
+                      <input 
+                        type="text" 
+                        value={orderForm.province}
                         onChange={(e) => setOrderForm((p) => ({ ...p, province: e.target.value }))}
                         placeholder="Province / State"
-                        className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 transition" />
+                        className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 transition" 
+                      />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Delivery Address</label>
-                    <textarea value={orderForm.customer_address}
+                    <textarea 
+                      value={orderForm.customer_address}
                       onChange={(e) => setOrderForm((p) => ({ ...p, customer_address: e.target.value }))}
-                      rows={2} placeholder="Street, city, area..."
-                      className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 resize-none transition" />
+                      rows={2} 
+                      placeholder="Street, city, area..."
+                      className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 resize-none transition" 
+                    />
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">GPS Location</label>
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={handleGetLocation} disabled={locating}
-                        className={`${getLocBtnClass(!!(orderForm.gps_lat && orderForm.gps_lng))} disabled:opacity-50`}>
+                      <button 
+                        type="button" 
+                        onClick={handleGetLocation} 
+                        disabled={locating}
+                        className={`${getLocBtnClass(!!(orderForm.gps_lat && orderForm.gps_lng))} disabled:opacity-50`}
+                      >
                         {locating ? (
-                          <><div className="w-3.5 h-3.5 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" /> Detecting…</>
+                          <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Detecting…</>
                         ) : (
-                          <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          <><Navigation className="w-3.5 h-3.5" strokeWidth={2} />
                             {orderForm.gps_lat && orderForm.gps_lng ? '📍 Located' : '📍 Get Location'}
                           </>
                         )}
@@ -897,10 +920,13 @@ const ProductCardWithActions = ({ product, index }) => {
 
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Notes</label>
-                <textarea value={orderForm.notes}
+                <textarea 
+                  value={orderForm.notes}
                   onChange={(e) => setOrderForm((p) => ({ ...p, notes: e.target.value }))}
-                  rows={1} placeholder="Any special requests?"
-                  className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 resize-none transition" />
+                  rows={1} 
+                  placeholder="Any special requests?"
+                  className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 resize-none transition" 
+                />
               </div>
 
               <div>
@@ -924,13 +950,17 @@ const ProductCardWithActions = ({ product, index }) => {
                           <div className="text-[10px] text-gray-400">{formatPrice(product.sale_price)} each</div>
                         </td>
                         <td className="px-2 py-1.5 text-center">
-                          <input type="number" min="1" value={orderForm.items[0]?.quantity || '1'}
+                          <input 
+                            type="number" 
+                            min="1" 
+                            value={orderForm.items[0]?.quantity || '1'}
                             onChange={(e) => {
                               const items = [...orderForm.items];
                               items[0] = { ...items[0], quantity: e.target.value };
                               setOrderForm(prev => ({ ...prev, items }));
                             }}
-                            className="w-16 px-2 py-1.5 text-xs text-center bg-white border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-[#1877F2]" />
+                            className="w-16 px-2 py-1.5 text-xs text-center bg-white border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-[#1877F2]" 
+                          />
                         </td>
                         <td className="px-3 py-1.5 text-right text-xs text-gray-600">{formatPrice(product.sale_price)}</td>
                         <td className="px-3 py-1.5 text-right text-xs font-semibold text-gray-800">{formatPrice((parseFloat(product.sale_price) || 0) * (parseInt(orderForm.items[0]?.quantity) || 0))}</td>
@@ -970,14 +1000,12 @@ const ProductCardWithActions = ({ product, index }) => {
               >
                 {ordering ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Placing…
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Check className="w-4 h-4" strokeWidth={2.2} />
                     Place Order
                   </>
                 )}
@@ -1140,9 +1168,7 @@ const Welcome = () => {
             <div className="hidden md:flex items-center flex-1 max-w-md mx-4">
               <div className="flex items-center w-full bg-[#f0f2f5] rounded-full px-4 h-10
                 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1877F2]/30 focus-within:shadow-sm transition-all">
-                <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
-                </svg>
+                <Search className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={2.2} />
                 <input
                   type="search"
                   value={search}
@@ -1158,9 +1184,7 @@ const Welcome = () => {
                     className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition"
                     aria-label="Clear search"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.7 6.7a1 1 0 011.4 0L10 8.6l1.9-1.9a1 1 0 111.4 1.4L11.4 10l1.9 1.9a1 1 0 01-1.4 1.4L10 11.4l-1.9 1.9a1 1 0 01-1.4-1.4L8.6 10 6.7 8.1a1 1 0 010-1.4z" clipRule="evenodd" />
-                    </svg>
+                    <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -1175,9 +1199,7 @@ const Welcome = () => {
                 aria-label="Toggle search"
                 aria-expanded={mobileSearchOpen}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
-                </svg>
+                <Search className="w-5 h-5" strokeWidth={2.2} />
               </button>
 
               <button
@@ -1204,9 +1226,7 @@ const Welcome = () => {
           {mobileSearchOpen && (
             <div className="md:hidden pb-3">
               <div className="flex items-center bg-[#f0f2f5] rounded-full px-4 h-10">
-                <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
-                </svg>
+                <Search className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={2.2} />
                 <input
                   type="search"
                   value={search}
@@ -1216,6 +1236,16 @@ const Welcome = () => {
                   className="bg-transparent border-0 outline-none text-sm ml-2 w-full text-gray-800 placeholder:text-gray-400"
                   aria-label="Search products"
                 />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition"
+                    aria-label="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -1283,25 +1313,29 @@ const Welcome = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto lg:mx-0 lg:max-w-sm xl:max-w-md">
-              {FEATURES.map((item, i) => (
-                <div
-                  key={item.label}
-                  className="group/feat relative bg-white rounded-xl p-4
-                    border border-gray-200 shadow-sm
-                    hover:shadow-md hover:-translate-y-0.5
-                    transition-all duration-200"
-                  style={{ animationDelay: `${i * 60}ms` }}
-                >
-                  <div className={`w-10 h-10 rounded-xl ${item.bg}
-                    flex items-center justify-center text-xl mb-2.5
-                    group-hover/feat:scale-110 transition-transform`}>
-                    {item.icon}
+            {/* Feature glass cards */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-3.5 w-full max-w-md mx-auto lg:mx-0 lg:max-w-sm xl:max-w-md">
+              {FEATURES.map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    className="group/feat relative bg-white/70 backdrop-blur-xl rounded-2xl p-4 sm:p-5
+                      border border-white/80 shadow-[0_8px_30px_rgba(15,23,42,0.06)]
+                      hover:shadow-[0_16px_40px_rgba(15,23,42,0.1)] hover:-translate-y-1
+                      transition-all duration-300"
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${item.bg}
+                      flex items-center justify-center text-xl sm:text-2xl mb-3
+                      ring-1 ring-black/5 shadow-sm group-hover/feat:scale-110 transition-transform`}>
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />
+                    </div>
+                    <p className="text-sm sm:text-[15px] font-extrabold text-slate-900 leading-tight">{item.label}</p>
+                    <p className="text-[11px] sm:text-xs text-slate-500 mt-1 font-medium leading-snug">{item.desc}</p>
                   </div>
-                  <p className="text-sm font-bold text-gray-900 leading-tight">{item.label}</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{item.desc}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

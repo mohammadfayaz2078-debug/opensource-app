@@ -5,7 +5,7 @@ import Seeder from './pages/CompanyAdmin/Seeder';
 // Auth Pages
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
-import Welcome from './pages/Welcome';
+import Welcome from './pages/WelcomePage/Welcome';
 
 // Branch Pages
 import BranchIndex from './pages/Branch/Index';
