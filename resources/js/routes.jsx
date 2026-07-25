@@ -55,6 +55,9 @@ import ProfitLossReport from './pages/Report/ProfitLossReport';
 import AccountIndex from './pages/Account/Index';
 import AccountShow from './pages/Account/Show';
 import AccountTransactions from './pages/AccountTransaction/Index';
+import AccountTransferIndex from './pages/AccountTransfer/Index';
+import AccountTransferCreate from './pages/AccountTransfer/Create';
+import AccountTransferShow from './pages/AccountTransfer/Show';
 
 // Expense Pages
 import ExpenseIndex from './pages/Expense/Index';
@@ -266,8 +269,11 @@ const routes = [
 
 
       { path: 'accounts', element: <AccountIndex /> },
+      { path: 'accounts/transfer', element: <AccountTransferCreate /> },
       { path: 'accounts/:id', element: <AccountShow /> },
       { path: 'account-transactions', element: <AccountTransactions /> },
+      { path: 'account-transfers', element: <AccountTransferIndex /> },
+      { path: 'account-transfers/:id', element: <AccountTransferShow /> },
       
       // Company admin can view their own company details
       { path: 'company', element: <CompanyShow /> },
@@ -394,6 +400,9 @@ export const routeNames = {
   ACCOUNT_INDEX: '/accounts',
   ACCOUNT_SHOW: (id) => `/accounts/${id}/show`,
   ACCOUNT_TRANSACTIONS_INDEX: '/account-transactions',
+  ACCOUNT_TRANSFER_INDEX: '/account-transfers',
+  ACCOUNT_TRANSFER_CREATE: '/account-transfers/create',
+  ACCOUNT_TRANSFER_SHOW: (id) => `/account-transfers/${id}`,
   
   // Branch routes
   BRANCHES_INDEX: '/branches',

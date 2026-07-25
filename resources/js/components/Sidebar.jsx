@@ -138,9 +138,8 @@ const Sidebar = ({
       'sidebar_unit_categories': 'Unit Category',
       'sidebar_units': 'Product Units',
       'sidebar_accounts': 'Wallets',
-      'sidebar_publication': 'Publication',
-      'sidebar_analytics': 'Analytics',
       'sidebar_account_transactions': 'Wallet Transactions',
+      'sidebar_account_transfers': 'Transfers',
     };
     return translations[key] || key;
   };
@@ -197,6 +196,7 @@ const Sidebar = ({
       children: [
         { name: 'Wallets', to: '/accounts', translation_key: 'sidebar_accounts' },
         { name: 'Wallet Transactions', to: '/account-transactions', translation_key: 'sidebar_account_transactions' },
+        { name: 'Transfers', to: '/account-transfers', translation_key: 'sidebar_account_transfers' },
       ]
     },
     {

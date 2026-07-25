@@ -18,47 +18,67 @@ const Login = () => {
     'Request failed with status code 500': 'خطای سرور - لطفاً بعداً تلاش کنید',
   };
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+const submit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      const res = await api.post('/login', {
-        email: email,
-        password: password,
-      });
+  try {
+    const res = await api.post('/login', {
+      email: email,
+      password: password,
+    });
 
-      const token = res.data.token;
-      const user = res.data.user;
-      const userType = res.data.user_type;
-
-      localStorage.setItem('api_token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('user_type', userType);
-
-      if (rememberMe) {
-        localStorage.setItem('remember_email', email);
-      } else {
-        localStorage.removeItem('remember_email');
-      }
-
-      if (res.data.permissions) {
-        localStorage.setItem('permissions', JSON.stringify(res.data.permissions));
-      }
-
-      if (userType === 'company_admin') {
-        navigate('/company-admin/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Login failed';
-      setError(errorTranslations[msg] || msg);
-    } finally {
-      setLoading(false);
+    // Safe check for response data
+    if (!res || !res.data) {
+      throw new Error('No response from server');
     }
-  };
+
+    const { token, user, user_type, permissions } = res.data;
+
+    if (!token || !user) {
+      throw new Error('Invalid response from server');
+    }
+
+    // Store data safely
+    localStorage.setItem('api_token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('user_type', user_type);
+
+    if (permissions) {
+      localStorage.setItem('permissions', JSON.stringify(permissions));
+    }
+
+    if (rememberMe) {
+      localStorage.setItem('remember_email', email);
+    } else {
+      localStorage.removeItem('remember_email');
+    }
+
+    // Navigate based on user type
+    if (user_type === 'company_admin') {
+      navigate('/company-admin/dashboard');
+    } else {
+      navigate('/dashboard');
+    }
+  } catch (err) {
+    console.error('Login error:', err);
+    
+    // Extract error message safely
+    let msg = 'Login failed';
+    if (err.response?.data?.message) {
+      msg = err.response.data.message;
+    } else if (err.response?.data?.error) {
+      msg = err.response.data.error;
+    } else if (err.message) {
+      msg = err.message;
+    }
+    
+    setError(msg);
+  } finally {
+    setLoading(false);
+  }
+};
 
   React.useEffect(() => {
     const rememberedEmail = localStorage.getItem('remember_email');

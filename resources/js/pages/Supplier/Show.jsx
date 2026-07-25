@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../plugins/axios';
+import ProductsTab from './tabs/ProductsTab';
 
 export default function SupplierShow() {
   const { id } = useParams();
@@ -13,9 +14,14 @@ export default function SupplierShow() {
   const [purchases, setPurchases] = useState([]);
   const [returns, setReturns] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [products, setProducts] = useState([]);
   const [paymentMeta, setPaymentMeta] = useState(null);
   const [paymentPage, setPaymentPage] = useState(1);
   const [loadingTab, setLoadingTab] = useState(false);
+
+  // Date filter state for all tabs
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Add these state variables
   const [showPayModal, setShowPayModal] = useState(false);
@@ -35,6 +41,57 @@ export default function SupplierShow() {
     finally { setLoading(false); }
   };
 
+  const handlePrint = (tableId, title) => {
+    const printContent = document.getElementById(tableId);
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: #f3f4f6; font-weight: 600; text-align: left; padding: 8px; border: 1px solid #ddd; }
+            td { padding: 8px; border: 1px solid #ddd; }
+            .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>${title}</h2>
+            <p>${new Date().toLocaleDateString()}</p>
+          </div>
+          ${printContent ? printContent.innerHTML : ''}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const clearDateFilters = () => {
+    setDateFrom('');
+    setDateTo('');
+  };
+
+  const DateFilterBar = ({ tableId, title }) => (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+      <div className="flex items-center gap-2">
+        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+          className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]" />
+        <span className="text-xs text-gray-400">to</span>
+        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+          className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]" />
+        <button onClick={clearDateFilters} className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors">Clear</button>
+      </div>
+      <button onClick={() => handlePrint(tableId, title)}
+        className="inline-flex items-center px-2.5 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+        <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+        Print
+      </button>
+    </div>
+  );
+
   const fetchTabData = async (tab) => {
     setLoadingTab(true);
     try {
@@ -49,6 +106,38 @@ export default function SupplierShow() {
         setPayments(res.data.data || []);
         setPaymentMeta(res.data);
         setPaymentPage(1);
+      } else if (tab === 'products') {
+        const res = await api.get('/purchases', { params: { supplier_id: id, per_page: 100 } });
+        const purchases = res.data?.data || [];
+        // Extract unique products from purchase items
+        const productMap = {};
+        purchases.forEach(purchase => {
+          if (purchase.items) {
+            purchase.items.forEach(item => {
+              const productId = item.product_id;
+              if (productId) {
+                if (!productMap[productId]) {
+                  productMap[productId] = {
+                    id: productId,
+                    name: item.product?.name || item.name || '—',
+                    barcode: item.product?.barcode || '',
+                    unit_price: item.unit_price,
+                    total_quantity: 0,
+                    total_cost: 0,
+                    last_purchase: purchase.purchase_date,
+                  };
+                }
+                productMap[productId].total_quantity += parseFloat(item.quantity) || 0;
+                productMap[productId].total_cost += parseFloat(item.total) || 0;
+                // Update last purchase date if newer
+                if (purchase.purchase_date && new Date(purchase.purchase_date) > new Date(productMap[productId].last_purchase)) {
+                  productMap[productId].last_purchase = purchase.purchase_date;
+                }
+              }
+            });
+          }
+        });
+        setProducts(Object.values(productMap));
       }
     } catch (err) { console.error(err); }
     finally { setLoadingTab(false); }
@@ -149,6 +238,7 @@ const handlePay = async () => {
   const tabs = [
     { id: 'info', label: 'Info' },
     { id: 'purchases', label: 'Bills' },
+    { id: 'products', label: 'Products' },
     { id: 'returns', label: 'Returns' },
     { id: 'payments', label: 'Payments' },
   ];
@@ -235,8 +325,15 @@ const handlePay = async () => {
 
       {activeTab === 'purchases' && (
         <div>
+          <DateFilterBar tableId="supplier-bills-table" title="Supplier Bills" />
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm text-gray-500">{purchases.length} bill(s)</span>
+            <span className="text-sm text-gray-500">{purchases.filter(p => {
+              if (!dateFrom && !dateTo) return true;
+              const d = new Date(p.purchase_date);
+              if (dateFrom && d < new Date(dateFrom)) return false;
+              if (dateTo && d > new Date(dateTo)) return false;
+              return true;
+            }).length} bill(s)</span>
             <button onClick={() => navigate(`/purchases/create?supplier_id=${id}`)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
@@ -248,7 +345,7 @@ const handlePay = async () => {
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
               {/* Desktop Table */}
-              <div className="hidden sm:block overflow-x-auto">
+              <div id="supplier-bills-table" className="hidden sm:block overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50">
@@ -264,7 +361,13 @@ const handlePay = async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {purchases.map((p, idx) => {
+                    {purchases.filter(p => {
+                      if (!dateFrom && !dateTo) return true;
+                      const d = new Date(p.purchase_date);
+                      if (dateFrom && d < new Date(dateFrom)) return false;
+                      if (dateTo && d > new Date(dateTo)) return false;
+                      return true;
+                    }).map((p, idx) => {
                       const canAct = p.refund_status !== 'full';
                       const canPay = canAct && p.payment_status !== 'paid';
                       const canEdit = canAct && p.payment_status === 'unpaid';
@@ -318,7 +421,13 @@ const handlePay = async () => {
 
               {/* Mobile Cards */}
               <div className="sm:hidden divide-y divide-gray-100">
-                {purchases.map((p) => {
+                {purchases.filter(p => {
+                  if (!dateFrom && !dateTo) return true;
+                  const d = new Date(p.purchase_date);
+                  if (dateFrom && d < new Date(dateFrom)) return false;
+                  if (dateTo && d > new Date(dateTo)) return false;
+                  return true;
+                }).map((p) => {
                   const canAct = p.refund_status !== 'full';
                   const canPay = canAct && p.payment_status !== 'paid';
                   const canEdit = canAct && p.payment_status === 'unpaid';
@@ -362,10 +471,28 @@ const handlePay = async () => {
         </div>
       )}
 
+      {/* Products Tab */}
+      {activeTab === 'products' && (
+        <div>
+          {loadingTab ? (
+            <div className="py-8 text-center text-gray-500 text-sm">Loading...</div>
+          ) : (
+            <ProductsTab products={products} />
+          )}
+        </div>
+      )}
+
 {activeTab === 'returns' && (
   <div>
+    <DateFilterBar tableId="supplier-returns-table" title="Supplier Returns" />
     <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-      <span className="text-sm text-gray-500">{returns.length} return(s)</span>
+      <span className="text-sm text-gray-500">{returns.filter(r => {
+        if (!dateFrom && !dateTo) return true;
+        const d = new Date(r.return_date);
+        if (dateFrom && d < new Date(dateFrom)) return false;
+        if (dateTo && d > new Date(dateTo)) return false;
+        return true;
+      }).length} return(s)</span>
       <button onClick={() => navigate(`/purchase-returns/create?supplier_id=${id}`)}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors w-fit">
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
@@ -377,7 +504,7 @@ const handlePay = async () => {
     ) : (
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         {/* Desktop Table */}
-        <div className="hidden sm:block overflow-x-auto">
+        <div id="supplier-returns-table" className="hidden sm:block overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-gray-50">
@@ -391,7 +518,13 @@ const handlePay = async () => {
               </tr>
             </thead>
             <tbody>
-              {returns.map((r, idx) => {
+              {returns.filter(r => {
+                if (!dateFrom && !dateTo) return true;
+                const d = new Date(r.return_date);
+                if (dateFrom && d < new Date(dateFrom)) return false;
+                if (dateTo && d > new Date(dateTo)) return false;
+                return true;
+              }).map((r, idx) => {
                 const refundStatus = r.purchase?.refund_status || 'none';
                 const getStatusBadge = () => {
                   const c = refundStatus === 'full' ? 'bg-purple-100 text-purple-700' : refundStatus === 'partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700';
@@ -424,7 +557,13 @@ const handlePay = async () => {
 
         {/* Mobile Cards */}
         <div className="sm:hidden divide-y divide-gray-100">
-          {returns.map((r) => {
+          {returns.filter(r => {
+            if (!dateFrom && !dateTo) return true;
+            const d = new Date(r.return_date);
+            if (dateFrom && d < new Date(dateFrom)) return false;
+            if (dateTo && d > new Date(dateTo)) return false;
+            return true;
+          }).map((r) => {
             const refundStatus = r.purchase?.refund_status || 'none';
             const c = refundStatus === 'full' ? 'bg-purple-100 text-purple-700' : refundStatus === 'partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700';
             return (
@@ -457,6 +596,7 @@ const handlePay = async () => {
 
       {activeTab === 'payments' && (
         <div>
+          <DateFilterBar tableId="supplier-payments-table" title="Supplier Payments" />
           {loadingTab ? (
             <div className="py-8 text-center text-gray-500 text-sm">Loading...</div>
           ) : payments.length === 0 ? (
@@ -464,7 +604,7 @@ const handlePay = async () => {
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
               {/* Desktop Table */}
-              <div className="hidden sm:block overflow-x-auto">
+              <div id="supplier-payments-table" className="hidden sm:block overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50">
@@ -478,7 +618,13 @@ const handlePay = async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map((p, idx) => (
+                    {payments.filter(p => {
+                      if (!dateFrom && !dateTo) return true;
+                      const d = new Date(p.created_at);
+                      if (dateFrom && d < new Date(dateFrom)) return false;
+                      if (dateTo && d > new Date(dateTo)) return false;
+                      return true;
+                    }).map((p, idx) => (
                       <tr key={p.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50`}>
                         <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                         <td className="px-4 py-2.5"><span className="text-gray-900">{p.account?.name || '—'}</span></td>
@@ -500,7 +646,13 @@ const handlePay = async () => {
 
               {/* Mobile Cards */}
               <div className="sm:hidden divide-y divide-gray-100">
-                {payments.map((p) => (
+                {payments.filter(p => {
+                  if (!dateFrom && !dateTo) return true;
+                  const d = new Date(p.created_at);
+                  if (dateFrom && d < new Date(dateFrom)) return false;
+                  if (dateTo && d > new Date(dateTo)) return false;
+                  return true;
+                }).map((p) => (
                   <div key={p.id} className="p-4 space-y-3 hover:bg-gray-50/50 transition-colors">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">

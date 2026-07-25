@@ -15,7 +15,7 @@ class Account extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'company_id', 'branch_id', 'name', 'type',
+        'company_id', 'branch_id', 'name', 'wallet_number', 'type',
         'description', 'is_active',
     ];
 
@@ -48,6 +48,27 @@ class Account extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(AccountTransaction::class)->latest();
+    }
+
+    public function sentTransfers(): HasMany
+    {
+        return $this->hasMany(AccountTransfer::class, 'sender_account_id')->latest();
+    }
+
+    public function receivedTransfers(): HasMany
+    {
+        return $this->hasMany(AccountTransfer::class, 'receiver_account_id')->latest();
+    }
+
+    public static function generateWalletNumber(): string
+    {
+        $lastAccount = static::orderByDesc('id')->first();
+        $nextNumber = 1;
+        if ($lastAccount && $lastAccount->wallet_number) {
+            $numericPart = (int) str_replace('WLT-', '', $lastAccount->wallet_number);
+            $nextNumber = $numericPart + 1;
+        }
+        return 'WLT-' . str_pad($nextNumber, 12, '0', STR_PAD_LEFT);
     }
 
     public function scopeForCompany(Builder $query, ?int $companyId): Builder

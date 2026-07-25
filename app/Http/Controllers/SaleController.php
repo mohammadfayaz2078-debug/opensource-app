@@ -38,7 +38,13 @@ class SaleController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $query = Sale::with(['customer', 'creator'])
+        // Include items.product when filtering by customer_id (for Products tab)
+        $withRelations = ['customer', 'creator'];
+        if ($request->filled('customer_id')) {
+            $withRelations[] = 'items.product';
+        }
+
+        $query = Sale::with($withRelations)
             ->where('company_id', $companyId)
             ->where('branch_id', $branchId);
 
