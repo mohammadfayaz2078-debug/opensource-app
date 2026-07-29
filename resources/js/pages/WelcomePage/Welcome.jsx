@@ -1161,7 +1161,7 @@ const Welcome = () => {
                 <span className="text-white font-extrabold text-xl">B</span>
               </div>
               <span className="hidden sm:block text-[#1877F2] font-extrabold text-2xl tracking-tight">
-                bazarnet
+                BazarNet
               </span>
             </Link>
 
@@ -1449,7 +1449,7 @@ const Welcome = () => {
               </div>
               <div>
                 <p className="font-extrabold text-gray-900 text-sm leading-none">
-                  bazarnet
+                  BazarNet
                 </p>
                 <p className="text-[10px] text-gray-400 mt-0.5 font-medium">ERP for modern businesses</p>
               </div>

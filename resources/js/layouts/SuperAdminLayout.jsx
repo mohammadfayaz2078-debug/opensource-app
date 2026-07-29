@@ -334,7 +334,7 @@ const [isRTL, setIsRTL] = useState(false);
                   </button>
 
                   {/* Language selector */}
-                  <div className="relative">
+                  {/* <div className="relative">
                     <select
                       value={currentLanguage}
                       onChange={(e) => changeLanguage(e.target.value)}
@@ -345,7 +345,7 @@ const [isRTL, setIsRTL] = useState(false);
                       <option value="fa">دری</option>
                       <option value="ps">پښتو</option>
                     </select>
-                  </div>
+                  </div> */}
 
                   {/* User dropdown */}
                   <div className="relative">

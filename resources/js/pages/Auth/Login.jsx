@@ -136,7 +136,7 @@ const submit = async (e) => {
               </div>
             </div>
             <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900">
-              bazar<span className="text-blue-600">net</span>
+              Bazar<span className="text-blue-600">Net</span>
             </span>
           </Link>
           <Link

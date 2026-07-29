@@ -821,7 +821,7 @@ const userTypeDisplay = getUserTypeDisplay();
                   </div>
 
                   {/* Language selector */}
-                  <div className="relative">
+                  {/* <div className="relative">
                     <select
                       value={currentLanguage}
                       onChange={(e) => changeLanguage(e.target.value)}
@@ -832,7 +832,7 @@ const userTypeDisplay = getUserTypeDisplay();
                       <option value="fa">دری</option>
                       <option value="ps">پښتو</option>
                     </select>
-                  </div>
+                  </div> */}
 
                   {/* User dropdown */}
                   <div className="relative">
