@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 
@@ -15,6 +15,8 @@ const formatPrice = (price) => {
 
 export default function AccountTransferCreate() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/company-admin') ? '/company-admin' : '';
   const [searchParams] = useSearchParams();
   const preselectedWalletId = searchParams.get('wallet_id') || '';
   const isLockedSource = !!searchParams.get('wallet_id');
@@ -142,7 +144,7 @@ export default function AccountTransferCreate() {
       });
 
       const transferId = res.data?.data?.id;
-      navigate(`/account-transfers/${transferId}`);
+      navigate(`${basePath}/account-transfers/${transferId}`);
     } catch (err) {
       if (err.response?.status === 422) {
         const responseErrors = err.response.data.errors || {};

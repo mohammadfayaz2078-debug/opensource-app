@@ -16,6 +16,9 @@ export default defineConfig({
         }),
         react(),
         VitePWA({
+            // Laravel publishes Vite assets below /build, while the app itself
+            // is served from /. Keep generated PWA URLs aligned with that path.
+            buildBase: '/build/',
             registerType: 'prompt',
             scope: '/',
             includeAssets: ['icons/*.svg', 'icons/*.png', 'favicon.ico'],
@@ -77,6 +80,11 @@ export default defineConfig({
             },
             workbox: {
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot}'],
+                // offline.html lives in Laravel's public root, outside Vite's
+                // build directory, so it must be explicitly precached.
+                additionalManifestEntries: [
+                    { url: '/offline.html', revision: null },
+                ],
                 navigateFallback: '/offline.html',
                 navigateFallbackDenylist: [/^\/api\//, /^\/login/, /^\/company-admin/],
                 runtimeCaching: [

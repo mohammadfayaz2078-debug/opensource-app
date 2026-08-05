@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Role extends Model
@@ -34,6 +35,11 @@ class Role extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function branches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class, 'branch_role');
+    }
+
     /**
      * Get the users with this role
      */
@@ -53,7 +59,10 @@ class Role extends Model
         }
 
         // For branch users, show only roles from their branch
-        return $query->where('branch_id', $user->branch_id);
+        return $query->where(function ($query) use ($user) {
+            $query->whereHas('branches', fn ($branches) => $branches->whereKey($user->branch_id))
+                ->orWhere('branch_id', $user->branch_id);
+        });
     }
 
     /**
@@ -70,7 +79,10 @@ class Role extends Model
     public function scopeBranchSpecific($query, $branchId = null)
     {
         if ($branchId) {
-            return $query->where('branch_id', $branchId);
+            return $query->where(function ($query) use ($branchId) {
+                $query->whereHas('branches', fn ($branches) => $branches->whereKey($branchId))
+                    ->orWhere('branch_id', $branchId);
+            });
         }
         return $query->whereNotNull('branch_id');
     }

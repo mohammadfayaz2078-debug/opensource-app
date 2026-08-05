@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Helpers\AuthHelper;
 use App\Models\Account;
 use App\Models\AccountTransaction;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
 {
@@ -51,9 +53,16 @@ class AccountController extends Controller
             return response()->json([]);
         }
 
-        $query = Account::forCompany($companyId)
-            ->forBranch($branchId)
+        $query = Account::accessibleTo(Auth::user())
+            ->forCompany($companyId)
             ->latest();
+
+        if ($branchId && !AuthHelper::isBranchUser()) {
+            $query->where(function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId)
+                    ->orWhereHas('users', fn ($users) => $users->where('users.branch_id', $branchId));
+            });
+        }
 
         if ($request->boolean('active_only', false)) {
             $query->active();
@@ -61,13 +70,17 @@ class AccountController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+            $query->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('wallet_number', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
         }
 
-        $accounts = $query->get();
+        $accounts = $query->with('users:id,first_name,last_name,email,branch_id')
+            ->paginate($request->integer('per_page', 20));
 
-        return response()->json(['data' => $accounts]);
+        return response()->json($accounts);
     }
 
     public function listOptions(Request $request): JsonResponse
@@ -75,8 +88,8 @@ class AccountController extends Controller
         $branchId  = $this->resolveBranchId($request);
         $companyId = $this->resolveCompanyId($request);
 
-        $accounts = Account::where('company_id', $companyId)
-            ->where('branch_id', $branchId)
+        $accounts = Account::accessibleTo(Auth::user())
+            ->where('company_id', $companyId)
             ->active()
             ->orderBy('name')
             ->get(['id', 'name', 'wallet_number', 'type', 'balance']);
@@ -107,7 +120,17 @@ class AccountController extends Controller
             'type' => ['nullable', 'in:cash,bank,other'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
+            'user_ids' => ['sometimes', 'array'],
+            'user_ids.*' => ['integer', 'distinct', 'exists:users,id'],
         ]);
+
+        $userIds = $this->resolveAssignedUserIds($request, $companyId);
+        if ($userIds === null) {
+            return response()->json(['message' => 'One or more selected users are unauthorized.'], 403);
+        }
+
+        $assignedBranchIds = User::whereIn('id', $userIds)->pluck('branch_id')->unique()->values();
+        $branchId = $assignedBranchIds->count() === 1 ? (int) $assignedBranchIds->first() : $branchId;
 
         $account = Account::create([
             'company_id' => $companyId,
@@ -119,8 +142,10 @@ class AccountController extends Controller
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
+        $account->users()->sync($userIds);
+
         return response()->json([
-            'data'    => $account,
+            'data'    => $account->load('users:id,first_name,last_name,email,branch_id'),
             'message' => 'Account created successfully.',
         ], 201);
     }
@@ -130,9 +155,9 @@ class AccountController extends Controller
         $companyId = $this->resolveCompanyId($request);
         $branchId = $this->resolveBranchId($request);
 
-        $account = Account::forCompany($companyId)->forBranch($branchId)->findOrFail($id);
+        $account = Account::accessibleTo(Auth::user())->forCompany($companyId)->findOrFail($id);
 
-        return response()->json(['data' => $account]);
+        return response()->json(['data' => $account->load('users:id,first_name,last_name,email,branch_id')]);
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -140,7 +165,7 @@ class AccountController extends Controller
         $companyId = $this->resolveCompanyId($request);
         $branchId = $this->resolveBranchId($request);
 
-        $account = Account::forCompany($companyId)->forBranch($branchId)->findOrFail($id);
+        $account = Account::accessibleTo(Auth::user())->forCompany($companyId)->findOrFail($id);
 
         $validated = $request->validate([
             'name' => [
@@ -154,12 +179,27 @@ class AccountController extends Controller
             'type' => ['nullable', 'in:cash,bank,other'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
+            'user_ids' => ['sometimes', 'array'],
+            'user_ids.*' => ['integer', 'distinct', 'exists:users,id'],
         ]);
 
-        $account->update($validated);
+        $userIds = null;
+        if ($request->has('user_ids')) {
+            $userIds = $this->resolveAssignedUserIds($request, $companyId);
+            if ($userIds === null) {
+                return response()->json(['message' => 'One or more selected users are unauthorized.'], 403);
+            }
+        }
+
+        DB::transaction(function () use ($account, $validated, $userIds) {
+            $account->update(collect($validated)->except('user_ids')->all());
+            if ($userIds !== null) {
+                $account->users()->sync($userIds);
+            }
+        });
 
         return response()->json([
-            'data'    => $account,
+            'data'    => $account->load('users:id,first_name,last_name,email,branch_id'),
             'message' => 'Account updated successfully.',
         ]);
     }
@@ -169,7 +209,7 @@ class AccountController extends Controller
         $companyId = $this->resolveCompanyId($request);
         $branchId = $this->resolveBranchId($request);
 
-        $account = Account::forCompany($companyId)->forBranch($branchId)->findOrFail($id);
+        $account = Account::accessibleTo(Auth::user())->forCompany($companyId)->findOrFail($id);
 
         if ($account->transactions()->exists()) {
             return response()->json([
@@ -187,7 +227,7 @@ class AccountController extends Controller
         $companyId = $this->resolveCompanyId($request);
         $branchId = $this->resolveBranchId($request);
 
-        $account = Account::forCompany($companyId)->forBranch($branchId)->findOrFail($id);
+        $account = Account::accessibleTo(Auth::user())->forCompany($companyId)->findOrFail($id);
 
         $transactions = $account->transactions()
             ->with('reference')
@@ -207,12 +247,7 @@ class AccountController extends Controller
         }
 
         $query = AccountTransaction::with(['account', 'reference'])
-            ->whereHas('account', function ($q) use ($companyId, $branchId) {
-                $q->where('company_id', $companyId);
-                if ($branchId) {
-                    $q->where('branch_id', $branchId);
-                }
-            })
+            ->whereHas('account', fn ($q) => $q->accessibleTo(Auth::user())->where('company_id', $companyId))
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('type')) {
@@ -245,5 +280,34 @@ class AccountController extends Controller
         $transactions = $query->paginate($perPage);
 
         return response()->json($transactions);
+    }
+
+    public function assignableUsers(): JsonResponse
+    {
+        if (!AuthHelper::isCompanyAdmin() && !(Auth::user() instanceof \App\Models\SuperAdmin)) {
+            return response()->json(['data' => []]);
+        }
+
+        $query = User::with('branch:id,branch_name')->where('status', true)->orderBy('first_name');
+        if (AuthHelper::isCompanyAdmin() && !(Auth::user() instanceof \App\Models\SuperAdmin)) {
+            $query->where('company_id', AuthHelper::getCompanyId());
+        }
+
+        return response()->json(['data' => $query->get(['id', 'company_id', 'branch_id', 'first_name', 'last_name', 'email'])]);
+    }
+
+    private function resolveAssignedUserIds(Request $request, int $companyId): ?array
+    {
+        if (AuthHelper::isBranchUser()) {
+            return [Auth::id()];
+        }
+
+        $userIds = array_values(array_unique(array_map('intval', $request->input('user_ids', []))));
+        $query = User::whereIn('id', $userIds);
+        if (!(Auth::user() instanceof \App\Models\SuperAdmin)) {
+            $query->where('company_id', $companyId);
+        }
+
+        return $query->count() === count($userIds) ? $userIds : null;
     }
 }

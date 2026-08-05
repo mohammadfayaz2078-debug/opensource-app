@@ -90,12 +90,11 @@ const Register = () => {
       return;
     }
     
-    // Filter roles based on branch_id
-    // A role can be:
-    // 1. Assigned to a specific branch (branch_id matches)
-    // 2. Global role (branch_id is null)
-    const filtered = roles.filter(role => 
-      role.branch_id === parseInt(branchId) || role.branch_id === null
+    const selectedBranchId = parseInt(branchId);
+    const filtered = roles.filter(role =>
+      role.branch_id === null ||
+      role.branch_id === selectedBranchId ||
+      role.branches?.some(branch => Number(branch.id) === selectedBranchId)
     );
     
     setFilteredRoles(filtered);

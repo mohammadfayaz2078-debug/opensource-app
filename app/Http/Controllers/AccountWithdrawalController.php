@@ -7,14 +7,18 @@ use App\Models\AccountWithdrawal;
 use App\Models\AccountTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class AccountWithdrawalController extends Controller
 {
     public function index()
     {
-        return AccountWithdrawal::with('account')
+        $withdrawals = AccountWithdrawal::with('account')
+            ->whereHas('account', fn ($accounts) => $accounts->accessibleTo(auth()->user()))
             ->latest()
             ->get();
+
+        return response()->json(['data' => $withdrawals]);
     }
 
     public function store(Request $request)
@@ -27,7 +31,7 @@ class AccountWithdrawalController extends Controller
 
         DB::transaction(function () use ($validated, &$withdrawal) {
 
-            $account = Account::findOrFail($validated['account_id']);
+            $account = Account::accessibleTo(auth()->user())->lockForUpdate()->findOrFail($validated['account_id']);
             
             // Get the current balance before withdrawal
             $balanceBefore = $account->balance;
@@ -43,7 +47,7 @@ class AccountWithdrawalController extends Controller
                 'account_id'  => $account->id,
                 'amount'      => $amount,
                 'description' => $validated['description'] ?? null,
-                'created_by'  => auth()->id(),
+                'created_by'  => auth()->user() instanceof User ? auth()->id() : null,
             ]);
 
             // Create transaction log
@@ -55,7 +59,7 @@ class AccountWithdrawalController extends Controller
                 'description' => $validated['description'] ?? 'Withdrawal made',
                 'reference_id' => $withdrawal->id,
                 'reference_type' => AccountWithdrawal::class,
-                'created_by' => auth()->id(),
+                'created_by' => auth()->user() instanceof User ? auth()->id() : null,
             ]);
 
             // Update account balance
@@ -70,6 +74,10 @@ class AccountWithdrawalController extends Controller
 
     public function show(AccountWithdrawal $accountWithdrawal)
     {
+        abort_unless(
+            Account::accessibleTo(auth()->user())->whereKey($accountWithdrawal->account_id)->exists(),
+            404
+        );
         return $accountWithdrawal->load('account');
     }
 

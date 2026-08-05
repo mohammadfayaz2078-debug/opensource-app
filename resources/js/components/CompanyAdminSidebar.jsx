@@ -31,6 +31,11 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
     </svg>
   ),
+  wallet: () => (
+    <svg className="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a3 3 0 000 6h14v8H5a3 3 0 010-6h14m-2 2h.01" />
+    </svg>
+  ),
 };
 
 const CompanyAdminSidebar = ({
@@ -78,6 +83,8 @@ const CompanyAdminSidebar = ({
         { name: 'Branches', to: '/company-admin/branches', icon: 'building', translation_key: 'branches' },
         { name: 'Roles', to: '/company-admin/roles', icon: 'shield', translation_key: 'roles' },
         { name: 'Users', to: '/company-admin/users', icon: 'users', translation_key: 'users' },
+        { name: 'Wallets', to: '/company-admin/accounts', icon: 'wallet', translation_key: 'wallets' },
+        { name: 'Transfers', to: '/company-admin/account-transfers', icon: 'wallet', translation_key: 'transfers' },
       ]
     },
     {
@@ -103,6 +110,8 @@ const CompanyAdminSidebar = ({
       'management': 'Management',
       'branches': 'Branches',
       'users': 'Users',
+      'wallets': 'Wallets',
+      'transfers': 'Transfers',
       'roles': 'Roles',
     };
     return translations[key] || key;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
+import { CheckSquare, SquareX } from 'lucide-react';
 
 const RoleCreate = () => {
   const navigate = useNavigate();
@@ -23,10 +24,10 @@ const RoleCreate = () => {
   const [branches, setBranches] = useState([]);
   const [collapsed, setCollapsed] = useState({});
 
-  // Form state - auto-set branch_id for branch users
+  // Branch users remain limited to their own branch.
   const [form, setForm] = useState({
     role_name: '',
-    branch_id: isBranchUser ? user.branch_id : '',
+    branch_ids: isBranchUser ? [Number(user.branch_id)] : [],
     permissions: {}
   });
 
@@ -70,7 +71,7 @@ const RoleCreate = () => {
     }
   }, []);
 
-  // Fetch branches - Remove form.branch_id from dependency array
+  // Fetch branches available to the current administrator.
   const fetchBranches = useCallback(async () => {
     setLoadingBranches(true);
     try {
@@ -93,10 +94,6 @@ const RoleCreate = () => {
       
       setBranches(branchesData);
       
-      // Auto-select first branch if available and no branch selected
-      if (branchesData.length > 0 && !form.branch_id) {
-        setForm(prev => ({ ...prev, branch_id: branchesData[0].id }));
-      }
     } catch (err) {
       console.error('Failed to fetch branches', err);
       setBranches([]);
@@ -104,7 +101,7 @@ const RoleCreate = () => {
     } finally {
       setLoadingBranches(false);
     }
-  }, []); // Remove form.branch_id from dependencies
+  }, []);
 
   // Initialize form permissions when modules load
   useEffect(() => {
@@ -177,7 +174,7 @@ const RoleCreate = () => {
   const resetForm = () => {
     setForm({
       role_name: '',
-      branch_id: branches.length > 0 ? branches[0]?.id : '',
+      branch_ids: isBranchUser ? [Number(user.branch_id)] : [],
       permissions: { ...form.permissions }
     });
     // Reset permissions to false
@@ -201,8 +198,8 @@ const RoleCreate = () => {
       return;
     }
 
-    if (!form.branch_id && !isBranchUser) {
-      setFormErrors({ branch_id: ['Please select a branch for this role'] });
+    if (form.branch_ids.length === 0) {
+      setFormErrors({ branch_ids: ['Please select at least one branch for this role'] });
       return;
     }
 
@@ -219,7 +216,7 @@ const RoleCreate = () => {
       const payload = {
         role_name: form.role_name,
         permissions: form.permissions,
-        branch_id: form.branch_id
+        branch_ids: form.branch_ids
       };
       
       const res = await api.post('/roles', payload);
@@ -358,9 +355,29 @@ const RoleCreate = () => {
             {/* Branch selection - Only show for company admin / super admin */}
             {!isBranchUser ? (
               <div className="border rounded-lg bg-gray-50 p-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Branch <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Branches <span className="text-red-500">*</span>
+                  </label>
+                  {branches.length > 0 && !loadingBranches && (
+                    <button
+                      type="button"
+                      title={form.branch_ids.length === branches.length ? 'Clear all branches' : 'Select all branches'}
+                      onClick={() => {
+                        const allSelected = form.branch_ids.length === branches.length;
+                        setForm(prev => ({
+                          ...prev,
+                          branch_ids: allSelected ? [] : branches.map(branch => Number(branch.id)),
+                        }));
+                        if (!allSelected) clearError('branch_ids');
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-[#007c89] hover:text-[#006d77]"
+                    >
+                      {form.branch_ids.length === branches.length ? <SquareX className="h-4 w-4" /> : <CheckSquare className="h-4 w-4" />}
+                      {form.branch_ids.length === branches.length ? 'Clear all' : 'Select all'}
+                    </button>
+                  )}
+                </div>
                 
                 {loadingBranches ? (
                   <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -379,33 +396,39 @@ const RoleCreate = () => {
                   </div>
                 ) : (
                   <>
-                    <select
-                      value={form.branch_id}
-                      onChange={(e) => {
-                        setForm({ ...form, branch_id: e.target.value });
-                        clearError('branch_id');
-                      }}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#007c89] focus:border-[#007c89] bg-white ${
-                        formErrors.branch_id ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                      required
-                    >
-                      <option value="">Select a branch</option>
-                      {Array.isArray(branches) && branches.map((branch) => (
-                        <option key={branch.id} value={branch.id}>
-                          {branch.branch_name} - {branch.branch_province || branch.city}
-                        </option>
-                      ))}
-                    </select>
+                    <div className={`grid gap-2 sm:grid-cols-2 border rounded-lg bg-white p-3 ${formErrors.branch_ids ? 'border-red-300' : 'border-gray-300'}`}>
+                      {Array.isArray(branches) && branches.map((branch) => {
+                        const branchId = Number(branch.id);
+                        return (
+                          <label key={branch.id} className="flex items-start gap-2 rounded border p-2 cursor-pointer hover:bg-gray-50">
+                            <input
+                              type="checkbox"
+                              checked={form.branch_ids.includes(branchId)}
+                              onChange={(e) => {
+                                setForm(prev => ({
+                                  ...prev,
+                                  branch_ids: e.target.checked
+                                    ? [...prev.branch_ids, branchId]
+                                    : prev.branch_ids.filter(id => id !== branchId),
+                                }));
+                                clearError('branch_ids');
+                              }}
+                              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#007c89] focus:ring-[#007c89]"
+                            />
+                            <span className="text-sm text-gray-700">{branch.branch_name} - {branch.branch_province || branch.city}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                     <p className="text-xs text-gray-500 mt-2">
-                      The role will be created for the selected branch
+                      The same role and permissions will be available in every selected branch.
                     </p>
                   </>
                 )}
                 
-                {formErrors.branch_id && (
+                {formErrors.branch_ids && (
                   <p className="text-xs text-red-600 mt-1">
-                    {formErrors.branch_id[0]}
+                    {formErrors.branch_ids[0]}
                   </p>
                 )}
               </div>

@@ -13,7 +13,7 @@ const formatPrice = (price) => {
   });
 };
 
-export default function TransferModal({ open, walletId, onClose }) {
+export default function TransferModal({ open, walletId, onClose, basePath = '' }) {
   const navigate = useNavigate();
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -152,7 +152,7 @@ export default function TransferModal({ open, walletId, onClose }) {
 
       const transferId = res.data?.data?.id;
       onClose();
-      navigate(`/account-transfers/${transferId}`);
+      navigate(`${basePath}/account-transfers/${transferId}`);
     } catch (err) {
       if (err.response?.status === 422) {
         const responseErrors = err.response.data.errors || {};

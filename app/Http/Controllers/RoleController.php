@@ -20,7 +20,7 @@ class RoleController extends Controller
     {
         Gate::authorize('perm', ['roles', 'view']);
 
-        $query = Role::with('branch');
+        $query = Role::with(['branch', 'branches']);
 
         // Apply branch filtering based on authenticated user type
         if (AuthHelper::isCompanyAdmin()) {
@@ -32,8 +32,9 @@ class RoleController extends Controller
             
             // Show roles from these branches OR global roles (branch_id = null)
             $query->where(function($q) use ($branchIds) {
-                $q->whereNull('branch_id') // Global roles
-                  ->orWhereIn('branch_id', $branchIds); // Company branch roles
+                $q->whereNull('branch_id')
+                  ->orWhereIn('branch_id', $branchIds)
+                  ->orWhereHas('branches', fn ($branches) => $branches->whereIn('branches.id', $branchIds));
             });
 
         } 
@@ -42,6 +43,7 @@ class RoleController extends Controller
             $branchId = AuthHelper::getBranchId();
             $query->where(function($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
+                  ->orWhereHas('branches', fn ($branches) => $branches->where('branches.id', $branchId))
                   ->orWhereNull('branch_id'); // Also include global roles
             });
         }
@@ -59,7 +61,10 @@ class RoleController extends Controller
 
         // Filter by branch (only for super admin)
         if ($request->filled('branch_id') && !AuthHelper::isCompanyAdmin() && !AuthHelper::isBranchUser()) {
-            $query->where('branch_id', $request->branch_id);
+            $query->where(function ($query) use ($request) {
+                $query->where('branch_id', $request->branch_id)
+                    ->orWhereHas('branches', fn ($branches) => $branches->where('branches.id', $request->branch_id));
+            });
         }
 
         // Filter by global roles only
@@ -106,45 +111,17 @@ class RoleController extends Controller
         $validator = Validator::make($request->all(), [
             'role_name' => 'required|string|max:191|unique:roles,role_name',
             'permissions' => 'nullable|array',
-            'branch_id' => 'required|integer|exists:branches,id'
+            'branch_ids' => 'required|array|min:1',
+            'branch_ids.*' => 'required|integer|distinct|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Determine branch_id based on user type
-        $branchId = null;
-        
-        if (AuthHelper::isCompanyAdmin()) {
-            // Company admin: verify the branch belongs to their company
-            $companyId = AuthHelper::getCompanyId();
-            $branch = Branch::where('id', $request->branch_id)
-                ->where('company_id', $companyId)
-                ->first();
-            
-            if (!$branch) {
-                return response()->json([
-                    'message' => 'You can only create roles for branches belonging to your company'
-                ], 403);
-            }
-            
-            $branchId = $request->branch_id;
-        } 
-        elseif (AuthHelper::isBranchUser()) {
-            // Branch user: can only create roles for their own branch
-            $branchId = AuthHelper::getBranchId();
-            
-            // Verify the requested branch matches their branch
-            if ($request->branch_id != $branchId) {
-                return response()->json([
-                    'message' => 'You can only create roles for your own branch'
-                ], 403);
-            }
-        }
-        else {
-            // Super admin - can create for any branch
-            $branchId = $request->branch_id;
+        $branchIds = $this->authorizedBranchIds($request->branch_ids);
+        if ($branchIds === null) {
+            return response()->json(['message' => 'One or more selected branches are unauthorized'], 403);
         }
 
         // Prepare permissions
@@ -154,14 +131,18 @@ class RoleController extends Controller
         }
 
         // Create role
-        $role = Role::create([
-            'role_name' => $request->role_name,
-            'branch_id' => $branchId,
-            'permissions' => $permissions
-        ]);
+        $role = DB::transaction(function () use ($request, $branchIds, $permissions) {
+            $role = Role::create([
+                'role_name' => $request->role_name,
+                'branch_id' => $branchIds[0],
+                'permissions' => $permissions,
+            ]);
+            $role->branches()->sync($branchIds);
+            return $role;
+        });
 
         // Load branch relationship
-        $role->load('branch');
+        $role->load(['branch', 'branches']);
 
         return response()->json([
             'success' => true,
@@ -177,27 +158,11 @@ class RoleController extends Controller
     {
         Gate::authorize('perm', ['roles', 'view']);
 
-        // Check if user has access to this role
-        if (AuthHelper::isCompanyAdmin()) {
-            $companyId = AuthHelper::getCompanyId();
-            $branchIds = Branch::where('company_id', $companyId)->pluck('id')->toArray();
-            
-            // Allow if role is global or belongs to company's branches
-            if ($role->branch_id !== null && !in_array($role->branch_id, $branchIds)) {
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
-        } 
-        elseif (AuthHelper::isBranchUser()) {
-            $branchId = AuthHelper::getBranchId();
-            
-            // Allow if role is global or belongs to user's branch
-            if ($role->branch_id !== null && $role->branch_id !== $branchId) {
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
+        if (!$this->canAccessRole($role, true)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
-        // Super admin can access any role
 
-        $role->load('branch');
+        $role->load(['branch', 'branches']);
 
         return response()->json([
             'success' => true,
@@ -212,40 +177,15 @@ class RoleController extends Controller
     {
         Gate::authorize('perm', ['roles', 'edit']);
 
-        // Check if user has access to this role
-        if (AuthHelper::isCompanyAdmin()) {
-            $companyId = AuthHelper::getCompanyId();
-            $branchIds = Branch::where('company_id', $companyId)->pluck('id')->toArray();
-            
-            // Prevent editing if role doesn't belong to company's branches
-            if ($role->branch_id !== null && !in_array($role->branch_id, $branchIds)) {
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
-            
-            // Prevent editing admin role
-            if ($role->role_name === 'admin') {
-                return response()->json(['message' => 'Cannot modify admin role'], 403);
-            }
-        } 
-        elseif (AuthHelper::isBranchUser()) {
-            $branchId = AuthHelper::getBranchId();
-            
-            // Allow only if role belongs to user's branch
-            if ($role->branch_id !== $branchId) {
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
-            
-            // Prevent editing admin role
-            if ($role->role_name === 'admin') {
-                return response()->json(['message' => 'Cannot modify admin role'], 403);
-            }
+        if (!$this->canAccessRole($role) || ((AuthHelper::isCompanyAdmin() || AuthHelper::isBranchUser()) && $role->role_name === 'admin')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
-        // Super admin can edit any role
 
         $validator = Validator::make($request->all(), [
             'role_name' => 'sometimes|required|string|max:191|unique:roles,role_name,' . $role->id,
             'permissions' => 'nullable|array',
-            'branch_id' => 'nullable|integer|exists:branches,id'
+            'branch_ids' => 'sometimes|required|array|min:1',
+            'branch_ids.*' => 'required|integer|distinct|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -260,12 +200,13 @@ class RoleController extends Controller
             $updateData['role_name'] = $request->role_name;
         }
 
-        // Handle branch_id update (only for super admin)
-        if ($request->has('branch_id') && !AuthHelper::isCompanyAdmin() && !AuthHelper::isBranchUser()) {
-            // Don't allow changing admin role's branch_id
-            if ($role->role_name !== 'admin') {
-                $updateData['branch_id'] = $request->branch_id;
+        $branchIds = null;
+        if ($request->has('branch_ids')) {
+            $branchIds = $this->authorizedBranchIds($request->branch_ids);
+            if ($branchIds === null) {
+                return response()->json(['message' => 'One or more selected branches are unauthorized'], 403);
             }
+            $updateData['branch_id'] = $branchIds[0];
         }
 
         // Update permissions if provided
@@ -274,12 +215,17 @@ class RoleController extends Controller
         }
 
         // Update role if there are changes
-        if (!empty($updateData)) {
-            $role->update($updateData);
-        }
+        DB::transaction(function () use ($role, $updateData, $branchIds) {
+            if (!empty($updateData)) {
+                $role->update($updateData);
+            }
+            if ($branchIds !== null) {
+                $role->branches()->sync($branchIds);
+            }
+        });
 
         // Reload branch relationship
-        $role->load('branch');
+        $role->load(['branch', 'branches']);
 
         return response()->json([
             'success' => true,
@@ -295,35 +241,9 @@ class RoleController extends Controller
     {
         Gate::authorize('perm', ['roles', 'delete']);
 
-        // Check if user has access to this role
-        if (AuthHelper::isCompanyAdmin()) {
-            $companyId = AuthHelper::getCompanyId();
-            $branchIds = Branch::where('company_id', $companyId)->pluck('id')->toArray();
-            
-            // Prevent deleting if role doesn't belong to company's branches
-            if ($role->branch_id !== null && !in_array($role->branch_id, $branchIds)) {
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
-            
-            // Prevent deleting admin role
-            if ($role->role_name === 'admin') {
-                return response()->json(['message' => 'Cannot delete admin role'], 403);
-            }
-        } 
-        elseif (AuthHelper::isBranchUser()) {
-            $branchId = AuthHelper::getBranchId();
-            
-            // Allow only if role belongs to user's branch
-            if ($role->branch_id !== $branchId) {
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
-            
-            // Prevent deleting admin role
-            if ($role->role_name === 'admin') {
-                return response()->json(['message' => 'Cannot delete admin role'], 403);
-            }
+        if (!$this->canAccessRole($role) || ((AuthHelper::isCompanyAdmin() || AuthHelper::isBranchUser()) && $role->role_name === 'admin')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
-        // Super admin can delete any role
 
         // Check if role is assigned to any users
         $userCount = \App\Models\User::where('role_id', $role->id)->count();
@@ -368,7 +288,10 @@ class RoleController extends Controller
     {
         Gate::authorize('perm', ['roles', 'view']);
 
-        $roles = Role::where('branch_id', $branch->id)
+        $roles = Role::with('branches:id,branch_name')->where(function ($query) use ($branch) {
+            $query->where('branch_id', $branch->id)
+                ->orWhereHas('branches', fn ($branches) => $branches->where('branches.id', $branch->id));
+        })
             ->orWhereNull('branch_id')
             ->get(['id', 'role_name', 'branch_id']);
 
@@ -392,7 +315,8 @@ class RoleController extends Controller
             
             $query->where(function($q) use ($branchIds) {
                 $q->whereNull('branch_id')
-                  ->orWhereIn('branch_id', $branchIds);
+                  ->orWhereIn('branch_id', $branchIds)
+                  ->orWhereHas('branches', fn ($branches) => $branches->whereIn('branches.id', $branchIds));
             });
         } 
         elseif (AuthHelper::isBranchUser()) {
@@ -400,6 +324,7 @@ class RoleController extends Controller
             $branchId = AuthHelper::getBranchId();
             $query->where(function($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
+                  ->orWhereHas('branches', fn ($branches) => $branches->where('branches.id', $branchId))
                   ->orWhereNull('branch_id');
             });
         }
@@ -409,7 +334,7 @@ class RoleController extends Controller
             $query->whereNotIn('role_name', ['admin', 'superadmin']);
         }
 
-        $roles = $query->get(['id', 'role_name']);
+        $roles = $query->with('branches:id,branch_name')->get(['id', 'role_name', 'branch_id']);
 
         return response()->json([
             'success' => true,
@@ -460,6 +385,7 @@ class RoleController extends Controller
             'branch_id' => $request->branch_id,
             'permissions' => $role->permissions
         ]);
+        $newRole->branches()->sync([$request->branch_id]);
 
         return response()->json([
             'success' => true,
@@ -519,5 +445,43 @@ class RoleController extends Controller
         }
 
         return $formattedPermissions;
+    }
+
+    private function authorizedBranchIds(array $requestedBranchIds): ?array
+    {
+        $branchIds = array_values(array_unique(array_map('intval', $requestedBranchIds)));
+
+        if (AuthHelper::isBranchUser()) {
+            return $branchIds === [AuthHelper::getBranchId()] ? $branchIds : null;
+        }
+
+        $query = Branch::whereIn('id', $branchIds);
+        if (AuthHelper::isCompanyAdmin()) {
+            $query->where('company_id', AuthHelper::getCompanyId());
+        }
+
+        return $query->count() === count($branchIds) ? $branchIds : null;
+    }
+
+    private function canAccessRole(Role $role, bool $allowGlobal = false): bool
+    {
+        if (!AuthHelper::isCompanyAdmin() && !AuthHelper::isBranchUser()) {
+            return true;
+        }
+
+        if ($allowGlobal && $role->branch_id === null) {
+            return true;
+        }
+
+        $allowedBranchIds = AuthHelper::isBranchUser()
+            ? [AuthHelper::getBranchId()]
+            : Branch::where('company_id', AuthHelper::getCompanyId())->pluck('id')->all();
+
+        if (AuthHelper::isCompanyAdmin() && $role->branches()->whereNotIn('branches.id', $allowedBranchIds)->exists()) {
+            return false;
+        }
+
+        return in_array($role->branch_id, $allowedBranchIds, true)
+            || $role->branches()->whereIn('branches.id', $allowedBranchIds)->exists();
     }
 }

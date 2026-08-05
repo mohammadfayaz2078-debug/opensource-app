@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 use Exception;
@@ -33,6 +34,24 @@ class Account extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'account_user');
+    }
+
+    public function scopeAccessibleTo(Builder $query, $actor): Builder
+    {
+        if ($actor instanceof SuperAdmin) {
+            return $query;
+        }
+
+        if ($actor instanceof Company) {
+            return $query->where('company_id', $actor->id);
+        }
+
+        return $query->whereHas('users', fn (Builder $users) => $users->whereKey($actor->id));
     }
 
     public function deposits(): HasMany

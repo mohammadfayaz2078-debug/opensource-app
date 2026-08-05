@@ -1,6 +1,6 @@
 // pages/Account/Show.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import DepositModal from './components/DepositModal';
@@ -25,6 +25,8 @@ const generatePageNumbers = (current, total) => {
 const AccountShow = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/company-admin') ? '/company-admin' : '';
   
   const [account, setAccount] = useState(null);
   const [deposits, setDeposits] = useState([]);
@@ -64,7 +66,7 @@ const AccountShow = () => {
     } catch (err) {
       console.error('Failed to fetch data:', err);
       Swal.fire('Error', 'Failed to load account data', 'error');
-      navigate('/accounts');
+      navigate(`${basePath}/accounts`);
     } finally {
       setLoading(false);
     }
@@ -227,7 +229,7 @@ const AccountShow = () => {
         <div className="text-center">
           <p className="text-gray-600">Wallet not found</p>
           <button
-            onClick={() => navigate('/accounts')}
+            onClick={() => navigate(`${basePath}/accounts`)}
             className="mt-2 text-blue-600 hover:underline"
           >
             Go back to wallets
@@ -242,7 +244,7 @@ const AccountShow = () => {
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => navigate('/accounts')}
+          onClick={() => navigate(`${basePath}/accounts`)}
           className="mb-4 inline-flex items-center text-sm text-gray-600 hover:text-gray-800 transition-colors"
         >
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

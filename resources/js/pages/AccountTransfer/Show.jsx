@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
@@ -23,6 +23,8 @@ const statusColors = {
 export default function AccountTransferReceipt() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/company-admin') ? '/company-admin' : '';
   const [searchParams] = useSearchParams();
   const receiptRef = useRef();
   const [transfer, setTransfer] = useState(null);
@@ -40,7 +42,7 @@ export default function AccountTransferReceipt() {
     } catch (err) {
       console.error(err);
       Swal.fire('Error', 'Failed to load transfer details', 'error');
-      navigate('/accounts');
+      navigate(`${basePath}/accounts`);
     } finally {
       setLoading(false);
     }
@@ -154,7 +156,7 @@ export default function AccountTransferReceipt() {
       <div className="w-[380px] mb-3 print:hidden">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => navigate('/accounts')}
+            onClick={() => navigate(`${basePath}/accounts`)}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

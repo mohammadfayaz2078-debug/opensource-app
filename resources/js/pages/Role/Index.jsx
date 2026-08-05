@@ -281,7 +281,9 @@ useEffect(() => {
                       </td>
                        {!isBranchUser && (
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
-                          {role.branch ? role.branch.branch_name : 'Global'}
+                          {role.branches?.length
+                            ? role.branches.map(branch => branch.branch_name).join(', ')
+                            : (role.branch ? role.branch.branch_name : 'Global')}
                         </td>
                       )}
                       <td className="px-4 py-2.5 whitespace-nowrap">

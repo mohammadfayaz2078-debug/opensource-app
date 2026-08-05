@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
@@ -37,6 +37,8 @@ const statusColors = {
 
 export default function AccountTransferIndex() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/company-admin') ? '/company-admin' : '';
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -326,7 +328,7 @@ export default function AccountTransferIndex() {
                     <tr key={transfer.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <button
-                          onClick={() => navigate(`/account-transfers/${transfer.id}`)}
+                          onClick={() => navigate(`${basePath}/account-transfers/${transfer.id}`)}
                           className="text-sm font-medium text-[#007c89] hover:underline"
                         >
                           {transfer.reference_number}
@@ -397,7 +399,7 @@ export default function AccountTransferIndex() {
                   <div className="flex items-start justify-between">
                     <div>
                       <button
-                        onClick={() => navigate(`/account-transfers/${transfer.id}`)}
+                        onClick={() => navigate(`${basePath}/account-transfers/${transfer.id}`)}
                         className="text-sm font-medium text-[#007c89] hover:underline"
                       >
                         {transfer.reference_number}

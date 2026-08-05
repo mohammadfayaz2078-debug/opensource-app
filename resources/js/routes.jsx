@@ -228,6 +228,12 @@ const routes = [
       { path: 'roles/create', element: <RoleCreate /> },
       { path: 'roles/:id/edit', element: <RoleEdit /> },
 
+      { path: 'accounts', element: <AccountIndex /> },
+      { path: 'accounts/transfer', element: <AccountTransferCreate /> },
+      { path: 'accounts/:id', element: <AccountShow /> },
+      { path: 'account-transfers', element: <AccountTransferIndex /> },
+      { path: 'account-transfers/:id', element: <AccountTransferShow /> },
+
       { path: 'seeder', element: <Seeder /> },
     ]
   },

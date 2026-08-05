@@ -7,14 +7,18 @@ use App\Models\AccountDeposit;
 use App\Models\AccountTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class AccountDepositController extends Controller
 {
     public function index()
     {
-        return AccountDeposit::with('account')
+        $deposits = AccountDeposit::with('account')
+            ->whereHas('account', fn ($accounts) => $accounts->accessibleTo(auth()->user()))
             ->latest()
             ->get();
+
+        return response()->json(['data' => $deposits]);
     }
 
     public function store(Request $request)
@@ -27,7 +31,7 @@ class AccountDepositController extends Controller
 
         DB::transaction(function () use ($validated, &$deposit) {
 
-            $account = Account::findOrFail($validated['account_id']);
+            $account = Account::accessibleTo(auth()->user())->lockForUpdate()->findOrFail($validated['account_id']);
             
             // Get the current balance before deposit
             $balanceBefore = $account->balance;
@@ -39,7 +43,7 @@ class AccountDepositController extends Controller
                 'account_id'  => $account->id,
                 'amount'      => $amount,
                 'description' => $validated['description'] ?? null,
-                'created_by'  => auth()->id(),
+                'created_by'  => auth()->user() instanceof User ? auth()->id() : null,
             ]);
 
             // Create transaction log
@@ -51,7 +55,7 @@ class AccountDepositController extends Controller
                 'description' => $validated['description'] ?? 'Deposit made',
                 'reference_id' => $deposit->id,
                 'reference_type' => AccountDeposit::class,
-                'created_by' => auth()->id(),
+                'created_by' => auth()->user() instanceof User ? auth()->id() : null,
             ]);
 
             // Update account balance
@@ -66,6 +70,10 @@ class AccountDepositController extends Controller
 
     public function show(AccountDeposit $accountDeposit)
     {
+        abort_unless(
+            Account::accessibleTo(auth()->user())->whereKey($accountDeposit->account_id)->exists(),
+            404
+        );
         return $accountDeposit->load('account');
     }
 

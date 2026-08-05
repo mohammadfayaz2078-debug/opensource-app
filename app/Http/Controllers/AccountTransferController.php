@@ -12,6 +12,7 @@ use App\Http\Requests\ReverseTransferRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use App\Models\User;
 
 class AccountTransferController extends Controller
 {
@@ -49,11 +50,9 @@ class AccountTransferController extends Controller
         }
 
         $query = AccountTransfer::with(['senderAccount', 'receiverAccount', 'createdBy'])
-            ->whereHas('senderAccount', function ($q) use ($companyId, $branchId) {
-                $q->where('company_id', $companyId);
-                if ($branchId) {
-                    $q->where('branch_id', $branchId);
-                }
+            ->where(function ($query) use ($companyId) {
+                $query->whereHas('senderAccount', fn ($accounts) => $accounts->accessibleTo(auth()->user())->where('company_id', $companyId))
+                    ->orWhereHas('receiverAccount', fn ($accounts) => $accounts->accessibleTo(auth()->user())->where('company_id', $companyId));
             })
             ->orderBy('created_at', 'desc');
 
@@ -130,7 +129,10 @@ class AccountTransferController extends Controller
             'receiverAccount',
             'createdBy',
             'originalTransfer',
-        ])->findOrFail($id);
+        ])->where(function ($query) {
+            $query->whereHas('senderAccount', fn ($accounts) => $accounts->accessibleTo(auth()->user()))
+                ->orWhereHas('receiverAccount', fn ($accounts) => $accounts->accessibleTo(auth()->user()));
+        })->findOrFail($id);
 
         // Load related transactions
         $transactions = \App\Models\AccountTransaction::where('reference_type', AccountTransfer::class)
@@ -178,12 +180,19 @@ class AccountTransferController extends Controller
     public function store(StoreTransferRequest $request): JsonResponse
     {
         try {
+            $sender = Account::accessibleTo(auth()->user())->find($request->sender_account_id);
+            if (!$sender) {
+                throw ValidationException::withMessages([
+                    'sender_account_id' => 'You are not assigned to this source wallet.',
+                ]);
+            }
+
             $transfer = AccountTransferService::transfer(
                 senderAccountId: (int) $request->sender_account_id,
                 recipientWalletNumber: strtoupper(trim($request->recipient_wallet_number)),
                 amount: (float) $request->amount,
                 note: $request->note,
-                createdBy: auth()->id()
+                createdBy: auth()->user() instanceof User ? auth()->id() : null
             );
 
             return response()->json([
@@ -204,9 +213,19 @@ class AccountTransferController extends Controller
     public function reverse(ReverseTransferRequest $request): JsonResponse
     {
         try {
+            $accessible = AccountTransfer::whereKey($request->transfer_id)
+                ->where(function ($query) {
+                    $query->whereHas('senderAccount', fn ($accounts) => $accounts->accessibleTo(auth()->user()))
+                        ->orWhereHas('receiverAccount', fn ($accounts) => $accounts->accessibleTo(auth()->user()));
+                })->exists();
+
+            if (!$accessible) {
+                throw ValidationException::withMessages(['transfer' => 'Transfer not found or unauthorized.']);
+            }
+
             $transfer = AccountTransferService::reverse(
                 transferId: (int) $request->transfer_id,
-                reversedBy: auth()->id()
+                reversedBy: auth()->user() instanceof User ? auth()->id() : null
             );
 
             return response()->json([
@@ -233,8 +252,8 @@ class AccountTransferController extends Controller
             return response()->json(['data' => []]);
         }
 
-        $accounts = Account::where('company_id', $companyId)
-            ->where('branch_id', $branchId)
+        $accounts = Account::accessibleTo(auth()->user())
+            ->where('company_id', $companyId)
             ->active()
             ->orderBy('name')
             ->get(['id', 'name', 'wallet_number', 'type', 'balance']);

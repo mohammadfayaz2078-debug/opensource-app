@@ -100,6 +100,13 @@ public function register(Request $request)
             ], 422);
         }
 
+        if (!$this->roleIsAvailableForBranch((int) $request->role_id, (int) $branchId)) {
+            return response()->json([
+                'message' => 'The selected role is not available for this branch',
+                'errors' => ['role_id' => ['The selected role is not assigned to this branch']],
+            ], 422);
+        }
+
         // Check if branch exists and validate user limit
         if ($branch) {
             // Check if branch is active
@@ -480,6 +487,13 @@ public function updateUser(Request $request, $id)
         }
     }
 
+    if (!$this->roleIsAvailableForBranch((int) $request->role_id, (int) $branchId)) {
+        return response()->json([
+            'message' => 'The selected role is not available for this branch',
+            'errors' => ['role_id' => ['The selected role is not assigned to this branch']],
+        ], 422);
+    }
+
     // Update user
     $user->first_name = $request->first_name;
     $user->last_name = $request->last_name;
@@ -665,14 +679,18 @@ public function updateUser(Request $request, $id)
         if (AuthHelper::isBranchUser()) {
             // Branch user - show only roles from their branch
             $branchId = AuthHelper::getBranchId();
-            $query->where('branch_id', $branchId);
+            $query->where(function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId)
+                    ->orWhereHas('branches', fn ($branches) => $branches->where('branches.id', $branchId));
+            });
         } elseif (AuthHelper::isCompanyAdmin()) {
             // Company admin - show roles from their company's branches
             $companyId = AuthHelper::getCompanyId();
             $branchIds = Branch::where('company_id', $companyId)->pluck('id')->toArray();
             $query->where(function($q) use ($branchIds) {
                 $q->whereNull('branch_id')
-                  ->orWhereIn('branch_id', $branchIds);
+                  ->orWhereIn('branch_id', $branchIds)
+                  ->orWhereHas('branches', fn ($branches) => $branches->whereIn('branches.id', $branchIds));
             });
         }
 
@@ -681,7 +699,7 @@ public function updateUser(Request $request, $id)
             $query->whereNotIn('role_name', ['admin', 'superadmin']);
         }
 
-        $roles = $query->get(['id', 'role_name']);
+        $roles = $query->with('branches:id,branch_name')->get(['id', 'role_name', 'branch_id']);
 
         $branchQuery = Branch::query();
         
@@ -706,6 +724,17 @@ public function updateUser(Request $request, $id)
             'roles' => $roles,
             'companies' => $companies,
         ]);
+    }
+
+    private function roleIsAvailableForBranch(int $roleId, int $branchId): bool
+    {
+        return Role::whereKey($roleId)
+            ->where(function ($query) use ($branchId) {
+                $query->whereNull('branch_id')
+                    ->orWhere('branch_id', $branchId)
+                    ->orWhereHas('branches', fn ($branches) => $branches->where('branches.id', $branchId));
+            })
+            ->exists();
     }
 
     /**

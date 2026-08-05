@@ -291,6 +291,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('accounts')->group(function () {
         Route::get('/',              [AccountController::class, 'index']);
         Route::get('/list/options',  [AccountController::class, 'listOptions']);
+        Route::get('/assignable-users', [AccountController::class, 'assignableUsers']);
         Route::post('/',             [AccountController::class, 'store']);
         Route::get('/{id}',          [AccountController::class, 'show']);
         Route::put('/{id}',          [AccountController::class, 'update']);
@@ -453,5 +454,4 @@ Route::middleware(['auth:sanctum', 'check.impersonation'])->group(function () {
     Route::get('impersonation/check', [\App\Http\Controllers\API\ImpersonationController::class, 'checkImpersonation']);
     Route::post('impersonation/stop', [\App\Http\Controllers\API\ImpersonationController::class, 'stopImpersonation']);
 });
-
 

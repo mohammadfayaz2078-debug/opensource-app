@@ -48,10 +48,10 @@ const CATEGORY_META = {
 const DEFAULT_META = { gradient: 'from-slate-400 via-slate-500 to-slate-700', emoji: '📦', soft: '#e2e8f0' };
 
 const FEATURES = [
-  { label: 'Sales & POS', desc: 'Fast checkout & invoices', icon: ShoppingBag, ring: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50' },
-  { label: 'Inventory', desc: 'Real-time stock control', icon: Package, ring: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50' },
-  { label: 'Wallets', desc: 'Cash, books & ledgers', icon: CreditCard, ring: 'from-violet-500 to-purple-500', bg: 'bg-violet-50' },
-  { label: 'Multi-branch', desc: 'All locations in one', icon: Store, ring: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
+  { label: 'Sales & POS', desc: 'Fast checkout and clear invoices', icon: ShoppingBag, color: 'text-[#ee5b43]', bg: 'bg-[#fff0ec]' },
+  { label: 'Live inventory', desc: 'Know what is in stock anywhere', icon: Package, color: 'text-[#078b82]', bg: 'bg-[#e7f8f5]' },
+  { label: 'Smart accounts', desc: 'Cash, wallets and ledgers together', icon: CreditCard, color: 'text-[#4d56a5]', bg: 'bg-[#eef0ff]' },
+  { label: 'Every branch', desc: 'One view across every location', icon: Store, color: 'text-[#b47708]', bg: 'bg-[#fff5d9]' },
 ];
 
 const formatPrice = (price) => {
@@ -1085,13 +1085,19 @@ const Welcome = () => {
     });
   }, [products, search, activeCategory]);
 
+  const featuredProducts = useMemo(
+    () => products.filter((product) => getProductImage(product)).slice(0, 3),
+    [products],
+  );
+
   return (
     <div className="fb-page min-h-screen min-h-[100dvh] text-gray-900 antialiased" dir="ltr">
       <style>{`
         .fb-page {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           -webkit-tap-highlight-color: transparent;
-          background: #f0f2f5;
+          background: #f6f7f8;
+          color: #17211f;
         }
 
         .fb-card {
@@ -1143,13 +1149,9 @@ const Welcome = () => {
       `}</style>
 
       {/* ── Header ───────────────────────────────────────────── */}
-      <header
-        className={`sticky top-0 z-40 transition-all duration-200 ${
-          scrolled
-            ? 'bg-white shadow-[0_2px_4px_rgba(0,0,0,0.1)]'
-            : 'bg-white shadow-[0_2px_4px_rgba(0,0,0,0.1)]'
-        }`}
-      >
+      <header className={`sticky top-0 z-40 border-b transition-all duration-300 ${
+        scrolled ? 'bg-white/95 border-gray-200 shadow-sm backdrop-blur-xl' : 'bg-white border-transparent'
+      }`}>
         <div className="max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6">
           <div className="h-14 sm:h-[3.75rem] flex items-center justify-between gap-2 sm:gap-4">
             <Link
@@ -1157,23 +1159,23 @@ const Welcome = () => {
               className="flex items-center gap-2.5 shrink-0 group"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              <div className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 rounded-lg bg-[#17211f] flex items-center justify-center shadow-sm">
                 <span className="text-white font-extrabold text-xl">B</span>
               </div>
-              <span className="hidden sm:block text-[#1877F2] font-extrabold text-2xl tracking-tight">
-                bazarnet
+              <span className="hidden sm:block text-[#17211f] font-black text-xl">
+                Bazar<span className="text-[#ee5b43]">Net</span>
               </span>
             </Link>
 
             <div className="hidden md:flex items-center flex-1 max-w-md mx-4">
-              <div className="flex items-center w-full bg-[#f0f2f5] rounded-full px-4 h-10
-                focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1877F2]/30 focus-within:shadow-sm transition-all">
+              <div className="flex items-center w-full bg-[#f3f5f4] rounded-lg px-4 h-10 border border-transparent
+                focus-within:bg-white focus-within:border-[#078b82] focus-within:ring-4 focus-within:ring-[#078b82]/10 transition-all">
                 <Search className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={2.2} />
                 <input
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search bazarnet"
+                  placeholder="Search products, categories or places"
                   className="bg-transparent border-0 outline-none text-sm ml-2.5 w-full text-gray-800 placeholder:text-gray-400"
                   aria-label="Search products"
                 />
@@ -1206,7 +1208,7 @@ const Welcome = () => {
                 type="button"
                 onClick={() => navigate('/login')}
                 className="hidden sm:inline-flex items-center justify-center h-10 px-5 rounded-full
-                  text-sm font-bold text-white bg-[#1877F2] hover:bg-[#166FE5]
+                  text-sm font-bold text-white bg-[#17211f] hover:bg-[#293633]
                   shadow-sm transition"
               >
                 Log in
@@ -1215,7 +1217,7 @@ const Welcome = () => {
                 type="button"
                 onClick={() => navigate('/login')}
                 className="sm:hidden inline-flex items-center justify-center h-9 px-4 rounded-full
-                  text-xs font-bold text-white bg-[#1877F2] hover:bg-[#166FE5]
+                  text-xs font-bold text-white bg-[#17211f] hover:bg-[#293633]
                   shadow-sm transition"
               >
                 Log in
@@ -1253,59 +1255,56 @@ const Welcome = () => {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative bg-white border-b border-gray-200">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-5 lg:px-6 py-8 sm:py-10 md:py-12">
+      <section className="relative bg-[#eef3f1] border-b border-[#dce5e1] overflow-hidden">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-5 lg:px-6 py-10 sm:py-14 lg:py-16">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 lg:gap-12">
-            <div className="max-w-xl xl:max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
-              <div className="inline-flex items-center gap-2 bg-blue-50 text-[#1877F2]
-                text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full mb-4
-                border border-blue-100">
+            <div className="max-w-xl xl:max-w-2xl text-left mx-auto lg:mx-0">
+              <div className="inline-flex items-center gap-2 text-[#078b82]
+                text-xs font-extrabold uppercase mb-5">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
-                Welcome to BazarNet
+                Local commerce, made simple
               </div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight leading-[1.15]">
-                <span className="text-gray-900">Discover products from</span>{' '}
-                <span className="text-[#1877F2]">local businesses</span>
+              <h1 className="text-[2.35rem] sm:text-5xl lg:text-[4rem] font-black leading-[1.02]">
+                <span className="text-[#17211f]">Buy local. Run your business </span>
+                <span className="text-[#ee5b43]">better.</span>
               </h1>
 
-              <p className="mt-3 sm:mt-4 text-[15px] sm:text-base text-gray-500 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                Browse featured items, compare prices, like & order online — then run your store
-                with one powerful ERP for sales, inventory and accounts.
+              <p className="mt-5 text-base sm:text-lg text-[#52605c] leading-relaxed max-w-xl">
+                Discover products near you, order in a few taps, and manage sales, stock and accounts from one dependable platform.
               </p>
 
               <div className="mt-6 sm:mt-7 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center
-                justify-center lg:justify-start gap-3">
+                justify-start gap-3">
                 <button
                   type="button"
                   onClick={() => navigate('/login')}
-                  className="h-11 sm:h-12 px-7 rounded-full bg-[#1877F2] text-white font-bold text-sm
-                    shadow-lg shadow-[#1877F2]/25 hover:bg-[#166FE5] hover:-translate-y-0.5 active:translate-y-0 transition"
+                  className="h-12 px-6 rounded-lg bg-[#17211f] text-white font-bold text-sm
+                    shadow-lg shadow-black/10 hover:bg-[#293633] hover:-translate-y-0.5 active:translate-y-0 transition inline-flex items-center justify-center gap-2"
                 >
-                  Log in to your account
+                  Open your workspace <ArrowRight className="w-4 h-4" />
                 </button>
                 <a
                   href="#products"
-                  className="h-11 sm:h-12 px-7 rounded-full bg-white
-                    text-gray-800 font-bold text-sm transition inline-flex items-center justify-center
-                    border border-gray-300 hover:bg-gray-50 hover:-translate-y-0.5"
+                  className="h-12 px-6 rounded-lg bg-white text-[#17211f] font-bold text-sm transition inline-flex items-center justify-center gap-2
+                    border border-[#cad6d1] hover:border-[#078b82] hover:text-[#078b82] hover:-translate-y-0.5"
                 >
-                  Browse products ↓
+                  <ShoppingBag className="w-4 h-4" /> Browse marketplace
                 </a>
               </div>
 
-              <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-5 sm:gap-7">
+              <div className="mt-8 flex flex-wrap items-center justify-start gap-6 sm:gap-9">
                 {[
                   { n: loading ? '—' : String(products.length), l: 'Products' },
                   { n: loading ? '—' : String(Math.max(categories.length - 1, 0)), l: 'Categories' },
                   { n: '24/7', l: 'Available' },
                 ].map((s) => (
-                  <div key={s.l} className="text-center lg:text-left min-w-[4.5rem]">
-                    <p className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">{s.n}</p>
-                    <p className="text-[11px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mt-0.5">
+                  <div key={s.l} className="text-left min-w-[4.5rem]">
+                    <p className="text-xl sm:text-2xl font-black text-[#17211f]">{s.n}</p>
+                    <p className="text-[11px] sm:text-xs font-bold text-[#71807b] uppercase mt-1">
                       {s.l}
                     </p>
                   </div>
@@ -1313,41 +1312,52 @@ const Welcome = () => {
               </div>
             </div>
 
-            {/* Feature glass cards */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-3.5 w-full max-w-md mx-auto lg:mx-0 lg:max-w-sm xl:max-w-md">
-              {FEATURES.map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.label}
-                    className="group/feat relative bg-white/70 backdrop-blur-xl rounded-2xl p-4 sm:p-5
-                      border border-white/80 shadow-[0_8px_30px_rgba(15,23,42,0.06)]
-                      hover:shadow-[0_16px_40px_rgba(15,23,42,0.1)] hover:-translate-y-1
-                      transition-all duration-300"
-                    style={{ animationDelay: `${i * 80}ms` }}
-                  >
-                    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${item.bg}
-                      flex items-center justify-center text-xl sm:text-2xl mb-3
-                      ring-1 ring-black/5 shadow-sm group-hover/feat:scale-110 transition-transform`}>
-                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />
-                    </div>
-                    <p className="text-sm sm:text-[15px] font-extrabold text-slate-900 leading-tight">{item.label}</p>
-                    <p className="text-[11px] sm:text-xs text-slate-500 mt-1 font-medium leading-snug">{item.desc}</p>
+            <div className="w-full max-w-lg mx-auto lg:mx-0">
+              <div className="relative aspect-[4/3] bg-[#17211f] rounded-lg p-4 sm:p-6 shadow-2xl shadow-[#17211f]/20 overflow-hidden">
+                <div className="grid grid-cols-2 grid-rows-2 gap-3 h-full">
+                  <div className="row-span-2 rounded-lg overflow-hidden bg-[#dce7e3]">
+                    {featuredProducts[0] ? (
+                      <img src={getProductImage(featuredProducts[0])} alt={featuredProducts[0].name} className="w-full h-full object-cover" />
+                    ) : <div className="h-full flex items-center justify-center"><ShoppingBag className="w-14 h-14 text-[#078b82]" /></div>}
                   </div>
-                );
-              })}
+                  <div className="rounded-lg overflow-hidden bg-[#fee5dd]">
+                    {featuredProducts[1] ? (
+                      <img src={getProductImage(featuredProducts[1])} alt={featuredProducts[1].name} className="w-full h-full object-cover" />
+                    ) : <div className="h-full flex items-center justify-center"><Store className="w-10 h-10 text-[#ee5b43]" /></div>}
+                  </div>
+                  <div className="rounded-lg overflow-hidden bg-[#fff1c9]">
+                    {featuredProducts[2] ? (
+                      <img src={getProductImage(featuredProducts[2])} alt={featuredProducts[2].name} className="w-full h-full object-cover" />
+                    ) : <div className="h-full flex items-center justify-center"><Package className="w-10 h-10 text-[#b47708]" /></div>}
+                  </div>
+                </div>
+                <div className="absolute left-8 bottom-8 bg-white rounded-lg px-4 py-3 shadow-xl flex items-center gap-3 max-w-[220px]">
+                  <span className="w-9 h-9 rounded-full bg-[#e7f8f5] text-[#078b82] flex items-center justify-center shrink-0"><Check className="w-5 h-5" /></span>
+                  <span><strong className="block text-xs sm:text-sm text-[#17211f]">Easy ordering</strong><small className="block text-[10px] sm:text-xs text-[#71807b]">Direct from local sellers</small></span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                {FEATURES.map((item) => {
+                  const Icon = item.icon;
+                  return <div key={item.label} className="bg-white/80 border border-white rounded-lg p-3 flex items-center gap-3 shadow-sm">
+                    <span className={`w-9 h-9 rounded-lg ${item.bg} ${item.color} flex items-center justify-center shrink-0`}><Icon className="w-4 h-4" /></span>
+                    <span className="text-xs sm:text-sm font-bold text-[#17211f]">{item.label}</span>
+                  </div>;
+                })}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── Products ─────────────────────────────────────────── */}
-      <main id="products" className="relative max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6 py-6 sm:py-8 scroll-mt-14">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-4 sm:mb-5">
+      <main id="products" className="relative max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6 py-8 sm:py-12 scroll-mt-14">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-5 sm:mb-6">
           <div className="px-4 sm:px-5 pt-4 pb-1">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-gray-900">Marketplace</h2>
+                <p className="text-[11px] font-extrabold uppercase text-[#ee5b43] mb-1">Discover nearby</p>
+                <h2 className="text-xl sm:text-2xl font-black text-[#17211f]">Fresh from the marketplace</h2>
                 <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
                   {loading
                     ? 'Loading products…'
@@ -1371,7 +1381,7 @@ const Welcome = () => {
                     className={`shrink-0 h-9 px-4 sm:px-5 rounded-full text-xs sm:text-sm font-semibold
                       transition-all duration-150 whitespace-nowrap ${
                       active
-                        ? 'bg-[#1877F2] text-white'
+                        ? 'bg-[#17211f] text-white'
                         : 'bg-[#f0f2f5] text-gray-600 hover:bg-gray-200'
                     }`}
                   >
@@ -1440,29 +1450,29 @@ const Welcome = () => {
       </main>
 
       {/* ── Footer ───────────────────────────────────────────── */}
-      <footer className="bg-white border-t border-gray-200">
+      <footer className="bg-[#17211f] border-t border-[#17211f] text-white">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-5 lg:px-6 py-6 sm:py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#1877F2] flex items-center justify-center">
+              <div className="w-9 h-9 rounded-lg bg-[#ee5b43] flex items-center justify-center">
                 <span className="text-white font-extrabold text-sm">B</span>
               </div>
               <div>
-                <p className="font-extrabold text-gray-900 text-sm leading-none">
-                  bazarnet
+                <p className="font-extrabold text-white text-sm leading-none">
+                  BazarNet
                 </p>
-                <p className="text-[10px] text-gray-400 mt-0.5 font-medium">ERP for modern businesses</p>
+                <p className="text-[10px] text-white/55 mt-0.5 font-medium">Local commerce, connected</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-gray-400">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-white/55">
               {['Sales', 'Inventory', 'Wallets', 'Branches'].map((item, i) => (
                 <React.Fragment key={item}>
                   {i > 0 && <span className="text-gray-300 hidden sm:inline">·</span>}
-                  <span className="hover:text-[#1877F2] transition cursor-default">{item}</span>
+                  <span className="hover:text-white transition cursor-default">{item}</span>
                 </React.Fragment>
               ))}
             </div>
-            <p className="text-xs font-medium text-gray-400">
+            <p className="text-xs font-medium text-white/45">
               © {new Date().getFullYear()} BazarNet. All rights reserved.
             </p>
           </div>

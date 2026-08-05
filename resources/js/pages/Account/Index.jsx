@@ -31,10 +31,13 @@ export default function AccountIndex() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({ name: '', type: 'cash', description: '' });
+  const [form, setForm] = useState({ name: '', type: 'cash', description: '', user_ids: [] });
   const [copiedId, setCopiedId] = useState(null);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferWalletId, setTransferWalletId] = useState('');
+  const [assignableUsers, setAssignableUsers] = useState([]);
+  const isCompanyAdmin = localStorage.getItem('user_type') === 'company_admin';
+  const basePath = isCompanyAdmin ? '/company-admin' : '';
 
   const fetchAccounts = async (page = 1, perPageOverride) => {
     setLoading(true);
@@ -57,10 +60,17 @@ export default function AccountIndex() {
     return () => clearTimeout(t);
   }, [search, perPage]);
 
+  useEffect(() => {
+    if (!isCompanyAdmin) return;
+    api.get('/accounts/assignable-users')
+      .then(res => setAssignableUsers(res.data?.data || []))
+      .catch(err => console.error('Failed to load wallet users', err));
+  }, [isCompanyAdmin]);
+
   const openCreateModal = () => {
     setIsEditing(false);
     setSelectedAccount(null);
-    setForm({ name: '', type: 'cash', description: '' });
+    setForm({ name: '', type: 'cash', description: '', user_ids: [] });
     setErrors({});
     setIsModalOpen(true);
   };
@@ -68,7 +78,12 @@ export default function AccountIndex() {
   const openEditModal = (account) => {
     setIsEditing(true);
     setSelectedAccount(account);
-    setForm({ name: account.name || '', type: account.type || 'cash', description: account.description || '' });
+    setForm({
+      name: account.name || '',
+      type: account.type || 'cash',
+      description: account.description || '',
+      user_ids: account.users?.map(user => Number(user.id)) || [],
+    });
     setErrors({});
     setIsModalOpen(true);
   };
@@ -168,6 +183,11 @@ export default function AccountIndex() {
                       {account.description && (
                         <p className="text-xs text-gray-500 truncate mt-0.5">{account.description}</p>
                       )}
+                      <p className="text-xs text-gray-500 truncate mt-1">
+                        {account.users?.length
+                          ? `${account.users.length} assigned user${account.users.length === 1 ? '' : 's'}`
+                          : 'Admin wallet'}
+                      </p>
                     </div>
                     <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0 ${account.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {account.is_active ? 'Active' : 'Inactive'}
@@ -180,7 +200,7 @@ export default function AccountIndex() {
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${typeColors[account.type] || typeColors.other}`}>{account.type}</span>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => navigate(`/accounts/${account.id}`)} className="p-1.5 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors" title="View">
+                      <button onClick={() => navigate(`${basePath}/accounts/${account.id}`)} className="p-1.5 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors" title="View">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                       </button>
                       <button onClick={() => { setTransferWalletId(account.id.toString()); setTransferModalOpen(true); }} className="p-1.5 rounded hover:bg-cyan-50 text-gray-400 hover:text-cyan-600 transition-colors" title="Transfer">
@@ -269,6 +289,54 @@ export default function AccountIndex() {
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Description</label>
                   <input type="text" name="description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className={inputClass('description')} placeholder="Optional description" />
                 </div>
+                {isCompanyAdmin && (
+                  <div>
+                    <div className="mb-1.5 flex items-center justify-between gap-3">
+                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Assigned users</label>
+                      {assignableUsers.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setForm(prev => ({
+                            ...prev,
+                            user_ids: prev.user_ids.length === assignableUsers.length
+                              ? []
+                              : assignableUsers.map(user => Number(user.id)),
+                          }))}
+                          className="text-xs font-medium text-[#007c89] hover:text-[#006d77]"
+                        >
+                          {form.user_ids.length === assignableUsers.length ? 'Clear all' : 'Select all'}
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-2 space-y-1.5">
+                      {assignableUsers.length === 0 ? (
+                        <p className="text-xs text-gray-500 p-1">No active users available. Leave empty for an admin-only wallet.</p>
+                      ) : assignableUsers.map(user => {
+                        const userId = Number(user.id);
+                        return (
+                          <label key={user.id} className="flex items-start gap-2 rounded bg-white border border-gray-100 p-2 cursor-pointer hover:border-gray-300">
+                            <input
+                              type="checkbox"
+                              checked={form.user_ids.includes(userId)}
+                              onChange={e => setForm(prev => ({
+                                ...prev,
+                                user_ids: e.target.checked
+                                  ? [...prev.user_ids, userId]
+                                  : prev.user_ids.filter(id => id !== userId),
+                              }))}
+                              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#007c89] focus:ring-[#007c89]"
+                            />
+                            <span className="min-w-0 text-xs text-gray-700">
+                              <span className="block font-medium truncate">{user.first_name} {user.last_name}</span>
+                              <span className="block text-gray-500 truncate">{user.email} {user.branch?.branch_name ? `- ${user.branch.branch_name}` : ''}</span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Multiple users can share this wallet. Leave empty for admin access only.</p>
+                  </div>
+                )}
               </div>
               <div className="px-5 py-3 border-t border-gray-200 flex justify-end gap-2">
                 <button type="button" onClick={closeModal} className="px-4 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
@@ -282,6 +350,7 @@ export default function AccountIndex() {
       <TransferModal
         open={transferModalOpen}
         walletId={transferWalletId}
+        basePath={basePath}
         onClose={() => setTransferModalOpen(false)}
       />
     </div>
