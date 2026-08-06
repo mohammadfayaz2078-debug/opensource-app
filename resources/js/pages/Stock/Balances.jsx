@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 const generatePageNumbers = (current, total) => {
@@ -17,6 +18,7 @@ const generatePageNumbers = (current, total) => {
 };
 
 export default function StockBalances() {
+  const { t } = useTranslation();
   const [balances, setBalances] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -89,9 +91,9 @@ export default function StockBalances() {
       <div className="mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Stock Balances</h1>
+            <h1 className="text-xl font-semibold text-gray-900">{t('stock.balances_title')}</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              {total > 0 ? `${total} total record${total !== 1 ? 's' : ''}` : 'Current inventory levels per product'}
+              {total > 0 ? t('stock.balances_total', { count: total }) : t('stock.balances_subtitle')}
             </p>
           </div>
         </div>
@@ -105,7 +107,7 @@ export default function StockBalances() {
           </svg>
           <input
             type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search by product name..."
+            placeholder={t('stock.search_placeholder')}
             className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           />
         </div>
@@ -116,7 +118,7 @@ export default function StockBalances() {
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-            <span className="ml-3 text-gray-700 text-sm">Loading stock balances...</span>
+            <span className="ml-3 text-gray-700 text-sm">{t('stock.loading')}</span>
           </div>
         ) : Object.keys(grouped).length === 0 ? (
           <div className="py-16 text-center">
@@ -124,7 +126,7 @@ export default function StockBalances() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
             <p className="text-sm text-gray-700">
-              {search ? 'No stock balances match your search.' : 'No stock balances found.'}
+              {search ? t('stock.balances_no_results_search') : t('stock.balances_no_results')}
             </p>
           </div>
         ) : (
@@ -135,12 +137,12 @@ export default function StockBalances() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase w-8"></th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
-                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">Avg Cost</th>
-                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">Total Value</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">Last Movement</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">{t('stock.col_product')}</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">{t('stock.col_qty')}</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">{t('stock.col_unit')}</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">{t('stock.col_avg_cost')}</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">{t('stock.col_total_value')}</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">{t('stock.col_last_movement')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -160,7 +162,7 @@ export default function StockBalances() {
                           <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{group.product?.name || '—'}</td>
                           <td className="px-4 py-2.5 text-sm text-gray-900 text-right">{formatNumber(totalQty)}</td>
                           <td className="px-4 py-2.5 text-sm text-gray-500">
-                            {group.categories.length > 1 ? `${group.categories.length} categories` : group.categories[0]?.reference_unit || '—'}
+                            {group.categories.length > 1 ? t('stock.categories_count', { count: group.categories.length }) : group.categories[0]?.reference_unit || '—'}
                           </td>
                           <td className="px-4 py-2.5 text-sm text-gray-600 text-right">{formatNumber(avgCost)}</td>
                           <td className="px-4 py-2.5 text-sm text-gray-900 text-right font-medium">{formatNumber(totalValue)}</td>
@@ -204,28 +206,28 @@ export default function StockBalances() {
                             {group.product?.name || '—'}
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">
-                            {group.categories.length > 1 ? `${group.categories.length} unit categories` : group.categories[0]?.unit_category || '—'}
+                            {group.categories.length > 1 ? t('stock.unit_categories_count', { count: group.categories.length }) : group.categories[0]?.unit_category || '—'}
                           </div>
                         </div>
                         <div className="flex-shrink-0 text-right">
                           <div className="text-sm font-bold text-gray-900">{formatNumber(totalQty)}</div>
-                          <div className="text-[10px] text-gray-500">units</div>
+                          <div className="text-[10px] text-gray-500">{t('stock.units')}</div>
                         </div>
                       </div>
 
                       {/* Summary Row */}
                       <div className="flex items-center justify-between mt-2 px-0">
                         <div className="text-xs text-gray-500">
-                          Avg Cost: <span className="font-medium text-gray-700">{formatNumber(avgCost)}</span>
+                          {t('stock.avg_cost_label')} <span className="font-medium text-gray-700">{formatNumber(avgCost)}</span>
                         </div>
                         <div className="text-xs text-gray-500">
-                          Value: <span className="font-medium text-gray-700">{formatNumber(totalValue)}</span>
+                          {t('stock.value_label')} <span className="font-medium text-gray-700">{formatNumber(totalValue)}</span>
                         </div>
                       </div>
 
                       {/* Last Movement */}
                       <div className="text-[10px] text-gray-400 mt-1">
-                        Last movement: {formatDate(group.last_movement_at)}
+                        {t('stock.last_movement', { date: formatDate(group.last_movement_at) })}
                       </div>
 
                       {/* Expand/Collapse Indicator */}
@@ -234,7 +236,7 @@ export default function StockBalances() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                         <span className="text-[10px] text-gray-400">
-                          {isExpanded ? 'Hide categories' : `${group.categories.length} categor${group.categories.length === 1 ? 'y' : 'ies'}`}
+                          {isExpanded ? t('stock.hide_categories') : t('stock.show_categories', { count: group.categories.length })}
                         </span>
                       </div>
                     </button>
@@ -250,15 +252,15 @@ export default function StockBalances() {
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <div>
-                                <div className="text-[10px] text-gray-500">Qty</div>
+                                <div className="text-[10px] text-gray-500">{t('stock.qty')}</div>
                                 <div className="text-xs font-semibold text-gray-900">{formatNumber(cat.quantity)}</div>
                               </div>
                               <div>
-                                <div className="text-[10px] text-gray-500">Avg Cost</div>
+                                <div className="text-[10px] text-gray-500">{t('stock.avg_cost')}</div>
                                 <div className="text-xs text-gray-700">{formatNumber(cat.avg_cost)}</div>
                               </div>
                               <div>
-                                <div className="text-[10px] text-gray-500">Value</div>
+                                <div className="text-[10px] text-gray-500">{t('stock.value')}</div>
                                 <div className="text-xs font-semibold text-gray-900">{formatNumber(cat.total_value)}</div>
                               </div>
                             </div>
@@ -277,7 +279,7 @@ export default function StockBalances() {
         {totalPages > 1 && (
           <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="text-xs text-gray-500 text-center sm:text-left">
-              Page {currentPage} of {totalPages}
+              {t('stock.page_of', { current: currentPage, total: totalPages })}
             </div>
             <div className="flex items-center justify-center gap-1">
               <button onClick={() => fetchBalances(1)} disabled={currentPage === 1}
@@ -298,7 +300,7 @@ export default function StockBalances() {
                 className="hidden sm:inline-flex px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">⏭</button>
             </div>
             <div className="flex items-center justify-center sm:justify-end gap-2">
-              <span className="text-xs text-gray-500">Show</span>
+              <span className="text-xs text-gray-500">{t('stock.show')}</span>
               <select value={perPage}
                 onChange={(e) => { const v = parseInt(e.target.value); setPerPage(v); setCurrentPage(1); fetchBalances(1, v); }}
                 className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#007c89]">
@@ -307,7 +309,7 @@ export default function StockBalances() {
                 <option value={50}>50</option>
                 <option value={100}>100</option>
               </select>
-              <span className="text-xs text-gray-500">per page</span>
+              <span className="text-xs text-gray-500">{t('stock.per_page')}</span>
             </div>
           </div>
         )}

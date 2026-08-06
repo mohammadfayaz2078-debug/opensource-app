@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
@@ -38,6 +39,7 @@ const statusColors = {
 export default function AccountTransferIndex() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const basePath = location.pathname.startsWith('/company-admin') ? '/company-admin' : '';
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -79,28 +81,28 @@ export default function AccountTransferIndex() {
 
   const handleReverse = async (transfer) => {
     const result = await Swal.fire({
-      title: 'Reverse Transfer?',
+      title: t('accountTransfer.reverse_title'),
       html: `
-        <p>Are you sure you want to reverse this transfer?</p>
+        <p>${t('accountTransfer.reverse_confirm')}</p>
         <p class="mt-2 text-sm text-gray-500">
-          Reference: <strong>${transfer.reference_number}</strong><br/>
-          Amount: <strong>${formatPrice(transfer.amount)}</strong>
+          ${t('accountTransfer.reference')}: <strong>${transfer.reference_number}</strong><br/>
+          ${t('accountTransfer.amount')}: <strong>${formatPrice(transfer.amount)}</strong>
         </p>
       `,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, reverse it',
+      confirmButtonText: t('accountTransfer.yes_reverse'),
     });
 
     if (result.isConfirmed) {
       try {
         await api.post(`/account-transfers/${transfer.id}/reverse`, { transfer_id: transfer.id });
-        Swal.fire('Reversed!', 'Transfer has been reversed.', 'success');
+        Swal.fire(t('accountTransfer.reversed_success'), t('accountTransfer.reversed_msg'), 'success');
         fetchTransfers(currentPage);
       } catch (err) {
-        Swal.fire('Error', err.response?.data?.message || 'Failed to reverse transfer', 'error');
+        Swal.fire(t('accountTransfer.error'), err.response?.data?.message || t('accountTransfer.failed_reverse'), 'error');
       }
     }
   };
@@ -108,10 +110,10 @@ export default function AccountTransferIndex() {
   const handlePrint = async (id) => {
     try {
       const res = await api.get(`/account-transfers/${id}`);
-      const t = res.data.data;
+      const tr = res.data.data;
       const txns = res.data.transactions || [];
 
-      const receiptHtml = buildReceiptHtml(t, txns);
+      const receiptHtml = buildReceiptHtml(tr, txns);
       const iframe = document.createElement('iframe');
       iframe.style.position = 'fixed';
       iframe.style.top = '-9999px';
@@ -137,17 +139,17 @@ export default function AccountTransferIndex() {
       `);
       doc.close();
     } catch (err) {
-      Swal.fire('Error', 'Failed to load transfer details', 'error');
+      Swal.fire(t('accountTransfer.error'), t('accountTransfer.failed_load'), 'error');
     }
   };
 
   const handleDownload = async (id) => {
     try {
       const res = await api.get(`/account-transfers/${id}`);
-      const t = res.data.data;
+      const tr = res.data.data;
       const txns = res.data.transactions || [];
 
-      const receiptHtml = buildReceiptHtml(t, txns);
+      const receiptHtml = buildReceiptHtml(tr, txns);
       const div = document.createElement('div');
       div.style.position = 'fixed';
       div.style.top = '-9999px';
@@ -161,64 +163,64 @@ export default function AccountTransferIndex() {
 
       const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff' });
       const link = document.createElement('a');
-      link.download = `receipt-${t.reference_number}.png`;
+      link.download = `receipt-${tr.reference_number}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
       document.body.removeChild(div);
     } catch (err) {
-      Swal.fire('Error', 'Failed to load transfer details', 'error');
+      Swal.fire(t('accountTransfer.error'), t('accountTransfer.failed_load'), 'error');
     }
   };
 
-  const buildReceiptHtml = (t, txns) => {
-    const d = new Date(t.created_at);
-    const statusBadge = statusColors[t.status] || 'bg-gray-100 text-gray-700';
-    const statusLabel = t.status.charAt(0).toUpperCase() + t.status.slice(1);
+  const buildReceiptHtml = (tr, txns) => {
+    const d = new Date(tr.created_at);
+    const statusBadge = statusColors[tr.status] || 'bg-gray-100 text-gray-700';
+    const statusLabel = t(`accountTransfer.status_${tr.status}`, { defaultValue: tr.status.charAt(0).toUpperCase() + tr.status.slice(1) });
     let html = `
       <div style="font-family:'Courier New',Courier,monospace">
         <div style="text-align:center;margin-bottom:16px">
-          <p style="font-size:18px;font-weight:700;letter-spacing:0.1em;color:#333">TRANSFER RECEIPT</p>
-          <p style="font-size:10px;color:#999;margin-top:2px">${t.reference_number}</p>
+          <p style="font-size:18px;font-weight:700;letter-spacing:0.1em;color:#333">${t('accountTransfer.receipt_title')}</p>
+          <p style="font-size:10px;color:#999;margin-top:2px">${tr.reference_number}</p>
           <span style="display:inline-block;margin-top:6px;padding:2px 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;border-radius:4px;background:${statusBadge.includes('green') ? '#dcfce7' : statusBadge.includes('red') ? '#fee2e2' : statusBadge.includes('amber') ? '#fef3c7' : '#f3f4f6'};color:${statusBadge.includes('green') ? '#15803d' : statusBadge.includes('red') ? '#b91c1c' : statusBadge.includes('amber') ? '#b45309' : '#374151'}">${statusLabel}</span>
         </div>
         <div style="border-top:1px dashed #ccc;margin-bottom:12px"></div>
         <div style="font-size:10px;color:#666;margin-bottom:12px;line-height:1.5">
-          <div style="display:flex;justify-content:space-between"><span>Date</span><span>${d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span></div>
-          <div style="display:flex;justify-content:space-between"><span>Time</span><span>${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>${t('accountTransfer.date')}</span><span>${d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>${t('accountTransfer.time')}</span><span>${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span></div>
         </div>
         <div style="border-top:1px dashed #ccc;margin-bottom:12px"></div>
         <div style="margin-bottom:12px">
-          <p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px">FROM</p>
-          <p style="font-size:12px;font-weight:700;color:#111;margin:0">${t.sender_account?.name || '-'}</p>
-          <p style="font-size:10px;color:#777;margin:2px 0 0">${t.sender_account?.wallet_number || ''}</p>
+          <p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px">${t('accountTransfer.from')}</p>
+          <p style="font-size:12px;font-weight:700;color:#111;margin:0">${tr.sender_account?.name || '-'}</p>
+          <p style="font-size:10px;color:#777;margin:2px 0 0">${tr.sender_account?.wallet_number || ''}</p>
         </div>
         <div style="margin-bottom:12px">
-          <p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px">TO</p>
-          <p style="font-size:12px;font-weight:700;color:#111;margin:0">${t.receiver_account?.name || '-'}</p>
-          <p style="font-size:10px;color:#777;margin:2px 0 0">${t.receiver_account?.wallet_number || ''}</p>
+          <p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px">${t('accountTransfer.to')}</p>
+          <p style="font-size:12px;font-weight:700;color:#111;margin:0">${tr.receiver_account?.name || '-'}</p>
+          <p style="font-size:10px;color:#777;margin:2px 0 0">${tr.receiver_account?.wallet_number || ''}</p>
         </div>
         <div style="border-top:1px dashed #ccc;margin-bottom:12px"></div>
         <div style="text-align:center;margin-bottom:12px">
-          <p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0">Amount</p>
-          <p style="font-size:18px;font-weight:700;color:#111;margin-top:2px">${formatPrice(t.amount)}</p>
+          <p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0">${t('accountTransfer.amount')}</p>
+          <p style="font-size:18px;font-weight:700;color:#111;margin-top:2px">${formatPrice(tr.amount)}</p>
         </div>
     `;
-    if (t.note) {
+    if (tr.note) {
       html += `
         <div style="border-top:1px dashed #ccc;margin-bottom:12px"></div>
         <div style="margin-bottom:12px">
-          <p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 2px">Note</p>
-          <p style="font-size:10px;color:#444;margin:0">${t.note}</p>
+          <p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 2px">${t('accountTransfer.note_label')}</p>
+          <p style="font-size:10px;color:#444;margin:0">${tr.note}</p>
         </div>
       `;
     }
     if (txns.length > 0) {
-      html += `<div style="border-top:1px dashed #ccc;margin-bottom:12px"></div><div style="margin-bottom:12px"><p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 6px">LEDGER</p>`;
+      html += `<div style="border-top:1px dashed #ccc;margin-bottom:12px"></div><div style="margin-bottom:12px"><p style="font-size:9px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 6px">${t('accountTransfer.ledger')}</p>`;
       txns.forEach((txn) => {
         html += `
           <div style="font-size:10px;margin-bottom:6px;line-height:1.25">
             <div style="display:flex;justify-content:space-between;color:#333"><span style="font-weight:700">${txn.account?.name}</span><span style="font-weight:700">${formatPrice(txn.amount)}</span></div>
-            <div style="display:flex;justify-content:space-between;color:#999"><span>${txn.account?.wallet_number || ''}</span><span>Balance: ${formatPrice(txn.balance_after)}</span></div>
+            <div style="display:flex;justify-content:space-between;color:#999"><span>${txn.account?.wallet_number || ''}</span><span>${t('accountTransfer.balance')} ${formatPrice(txn.balance_after)}</span></div>
           </div>
         `;
       });
@@ -227,8 +229,8 @@ export default function AccountTransferIndex() {
     html += `
         <div style="border-top:1px dashed #ccc;margin-bottom:12px"></div>
         <div style="text-align:center;font-size:9px;color:#999">
-          <p style="margin:0 0 2px">Processed by ${t.created_by?.name || 'System'}</p>
-          <p style="margin:0">Computer-generated receipt &bull; No signature required</p>
+          <p style="margin:0 0 2px">${t('accountTransfer.processed_by', { name: tr.created_by?.name || t('accountTransfer.system') })}</p>
+          <p style="margin:0">${t('accountTransfer.comp_gen')}</p>
         </div>
       </div>
     `;
@@ -242,38 +244,38 @@ export default function AccountTransferIndex() {
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Wallet Transfers</h1>
-            <p className="text-sm text-gray-500 mt-1">{total} transfer{total !== 1 ? 's' : ''} total</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('accountTransfer.title')}</h1>
+            <p className="text-sm text-gray-500 mt-1">{t('accountTransfer.total', { count: total })}</p>
           </div>
         </div>
 
         {/* Filters */}
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Search</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">{t('accountTransfer.search')}</label>
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Reference, wallet, name..."
+              placeholder={t('accountTransfer.search_placeholder')}
               className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">{t('accountTransfer.status')}</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className={inputClass}
             >
-              <option value="">All Status</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="reversed">Reversed</option>
+              <option value="">{t('accountTransfer.all_status')}</option>
+              <option value="completed">{t('accountTransfer.status_completed')}</option>
+              <option value="cancelled">{t('accountTransfer.status_cancelled')}</option>
+              <option value="reversed">{t('accountTransfer.status_reversed')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Date From</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">{t('accountTransfer.date_from')}</label>
             <input
               type="date"
               value={dateFrom}
@@ -282,7 +284,7 @@ export default function AccountTransferIndex() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Date To</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">{t('accountTransfer.date_to')}</label>
             <input
               type="date"
               value={dateTo}
@@ -298,14 +300,14 @@ export default function AccountTransferIndex() {
         {loading ? (
           <div className="p-12 text-center">
             <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#007c89] rounded-full animate-spin" />
-            <p className="mt-3 text-sm text-gray-500">Loading transfers...</p>
+            <p className="mt-3 text-sm text-gray-500">{t('accountTransfer.loading')}</p>
           </div>
         ) : transfers.length === 0 ? (
           <div className="p-12 text-center">
             <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
-            <p className="mt-3 text-sm text-gray-500">No transfers found</p>
+            <p className="mt-3 text-sm text-gray-500">{t('accountTransfer.empty')}</p>
           </div>
         ) : (
           <>
@@ -314,13 +316,13 @@ export default function AccountTransferIndex() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">To</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('accountTransfer.reference')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('accountTransfer.date')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('accountTransfer.from')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('accountTransfer.to')}</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('accountTransfer.amount')}</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('accountTransfer.status_col')}</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('accountTransfer.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -350,7 +352,7 @@ export default function AccountTransferIndex() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${statusColors[transfer.status] || 'bg-gray-100 text-gray-700'}`}>
-                          {transfer.status}
+                          {t(`accountTransfer.status_${transfer.status}`, { defaultValue: transfer.status })}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -358,7 +360,7 @@ export default function AccountTransferIndex() {
                           <button
                             onClick={() => handlePrint(transfer.id)}
                             className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100 transition"
-                            title="Print Receipt"
+                            title={t('accountTransfer.print_receipt')}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -367,7 +369,7 @@ export default function AccountTransferIndex() {
                           <button
                             onClick={() => handleDownload(transfer.id)}
                             className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100 transition"
-                            title="Download Receipt"
+                            title={t('accountTransfer.download_receipt')}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -377,7 +379,7 @@ export default function AccountTransferIndex() {
                             <button
                               onClick={() => handleReverse(transfer)}
                               className="p-1.5 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50 transition"
-                              title="Reverse Transfer"
+                              title={t('accountTransfer.reverse')}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -409,7 +411,7 @@ export default function AccountTransferIndex() {
                       </p>
                     </div>
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${statusColors[transfer.status] || 'bg-gray-100 text-gray-700'}`}>
-                      {transfer.status}
+                      {t(`accountTransfer.status_${transfer.status}`, { defaultValue: transfer.status })}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center gap-2 text-sm">
@@ -425,7 +427,7 @@ export default function AccountTransferIndex() {
                       <button
                         onClick={() => handlePrint(transfer.id)}
                         className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md"
-                        title="Print Receipt"
+                        title={t('accountTransfer.print_receipt')}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -434,7 +436,7 @@ export default function AccountTransferIndex() {
                       <button
                         onClick={() => handleDownload(transfer.id)}
                         className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md"
-                        title="Download Receipt"
+                        title={t('accountTransfer.download_receipt')}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -444,7 +446,7 @@ export default function AccountTransferIndex() {
                         <button
                           onClick={() => handleReverse(transfer)}
                           className="p-1.5 text-gray-400 hover:text-red-600 rounded-md"
-                          title="Reverse"
+                          title={t('accountTransfer.reverse')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -464,7 +466,7 @@ export default function AccountTransferIndex() {
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
           <p className="text-sm text-gray-500">
-            Page {currentPage} of {totalPages}
+            {t('accountTransfer.page_of', { current: currentPage, total: totalPages })}
           </p>
           <div className="flex items-center gap-1">
             <button
@@ -472,7 +474,7 @@ export default function AccountTransferIndex() {
               disabled={currentPage === 1}
               className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {t('accountTransfer.previous')}
             </button>
             {generatePageNumbers(currentPage, totalPages).map((page, idx) =>
               page === '...' ? (
@@ -496,7 +498,7 @@ export default function AccountTransferIndex() {
               disabled={currentPage === totalPages}
               className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {t('accountTransfer.next')}
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../plugins/axios';
 import Swal from 'sweetalert2';
 
@@ -15,6 +16,7 @@ const formatPrice = (price) => {
 
 export default function TransferModal({ open, walletId, onClose, basePath = '' }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -62,7 +64,7 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
   const handleVerifyRecipient = useCallback(async () => {
     const walletNumber = form.recipient_wallet_number.trim();
     if (!walletNumber) {
-      setRecipientError('Please enter a wallet number.');
+      setRecipientError(t('accountTransfer.please_enter_wallet'));
       return;
     }
 
@@ -82,9 +84,9 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
       }
     } catch (err) {
       if (err.response?.status === 404) {
-        setRecipientError('Wallet not found or inactive.');
+        setRecipientError(t('accountTransfer.wallet_not_found'));
       } else {
-        setRecipientError(err.response?.data?.message || 'Failed to verify recipient.');
+        setRecipientError(err.response?.data?.message || t('accountTransfer.failed_verify'));
       }
     } finally {
       setVerifying(false);
@@ -103,40 +105,40 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
     setErrors({});
 
     if (!form.sender_account_id) {
-      setErrors({ sender_account_id: ['Please select a source wallet.'] });
+      setErrors({ sender_account_id: [t('accountTransfer.select_source')] });
       return;
     }
 
     if (!recipientVerified) {
-      setRecipientError('Please verify the recipient first.');
+      setRecipientError(t('accountTransfer.please_verify'));
       return;
     }
 
     if (!form.amount || parseFloat(form.amount) <= 0) {
-      setErrors({ amount: ['Please enter a valid amount.'] });
+      setErrors({ amount: [t('accountTransfer.enter_valid_amount')] });
       return;
     }
 
     if (selectedWallet && parseFloat(form.amount) > selectedWallet.balance) {
-      setErrors({ amount: ['Insufficient balance.'] });
+      setErrors({ amount: [t('accountTransfer.insufficient_balance')] });
       return;
     }
 
     const result = await Swal.fire({
-      title: 'Confirm Transfer',
+      title: t('accountTransfer.confirm_title'),
       html: `
         <div class="text-left">
-          <p><strong>From:</strong> ${selectedWallet?.name} (${selectedWallet?.wallet_number})</p>
-          <p><strong>To:</strong> ${recipient?.name} (${recipient?.wallet_number})</p>
-          <p><strong>Amount:</strong> ${formatPrice(form.amount)}</p>
-          ${form.note ? `<p><strong>Note:</strong> ${form.note}</p>` : ''}
+          <p><strong>${t('accountTransfer.from_label')}</strong> ${selectedWallet?.name} (${selectedWallet?.wallet_number})</p>
+          <p><strong>${t('accountTransfer.to_label')}</strong> ${recipient?.name} (${recipient?.wallet_number})</p>
+          <p><strong>${t('accountTransfer.amount_label')}</strong> ${formatPrice(form.amount)}</p>
+          ${form.note ? `<p><strong>${t('accountTransfer.note_label2')}</strong> ${form.note}</p>` : ''}
         </div>
       `,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#007c89',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Confirm Transfer',
+      confirmButtonText: t('accountTransfer.confirm_button'),
     });
 
     if (!result.isConfirmed) return;
@@ -158,10 +160,10 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
         const responseErrors = err.response.data.errors || {};
         setErrors(responseErrors);
         if (err.response.data.message) {
-          Swal.fire('Error', err.response.data.message, 'error');
+          Swal.fire(t('error'), err.response.data.message, 'error');
         }
       } else {
-        Swal.fire('Error', err.response?.data?.message || 'Failed to process transfer', 'error');
+        Swal.fire(t('error'), err.response?.data?.message || t('accountTransfer.failed_process'), 'error');
       }
     } finally {
       setSubmitting(false);
@@ -176,8 +178,8 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
           <div>
-            <h2 className="text-sm font-bold text-gray-900">New Wallet Transfer</h2>
-            <p className="text-[11px] text-gray-500 mt-0.5">Transfer funds using wallet/card number</p>
+            <h2 className="text-sm font-bold text-gray-900">{t('accountTransfer.new_title')}</h2>
+            <p className="text-[11px] text-gray-500 mt-0.5">{t('accountTransfer.subtitle')}</p>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition">
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,11 +192,11 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
           {/* Source Wallet */}
           <div>
             <label className="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">
-              Source Wallet <span className="text-red-500">*</span>
+              {t('accountTransfer.source_wallet')} <span className="text-red-500">*</span>
             </label>
             {walletId ? (
               <div className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-medium">
-                {selectedWallet ? `${selectedWallet.name} (${selectedWallet.wallet_number}) — ${formatPrice(selectedWallet.balance)}` : 'Loading...'}
+                {selectedWallet ? `${selectedWallet.name} (${selectedWallet.wallet_number}) — ${formatPrice(selectedWallet.balance)}` : t('accountTransfer.loading')}
               </div>
             ) : (
               <select
@@ -202,7 +204,7 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
                 onChange={(e) => setForm(prev => ({ ...prev, sender_account_id: e.target.value }))}
                 className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]/20 focus:border-[#007c89] ${errors.sender_account_id ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
               >
-                <option value="">Select a wallet</option>
+                <option value="">{t('accountTransfer.select_wallet')}</option>
                 {wallets.map(w => (
                   <option key={w.id} value={w.id}>{w.name} ({w.wallet_number}) — {formatPrice(w.balance)}</option>
                 ))}
@@ -214,14 +216,14 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
           {/* Recipient */}
           <div>
             <label className="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">
-              Recipient Wallet Number <span className="text-red-500">*</span>
+              {t('accountTransfer.recipient_number')} <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={form.recipient_wallet_number}
                 onChange={(e) => handleWalletNumberChange(e.target.value)}
-                placeholder="WLT-000000000001"
+                placeholder={t('accountTransfer.wallet_placeholder')}
                 className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]/20 focus:border-[#007c89] font-mono uppercase ${recipientError ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
                 maxLength={20}
               />
@@ -234,9 +236,9 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
                 {verifying ? (
                   <span className="flex items-center gap-1.5">
                     <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                    Verify
+                    {t('accountTransfer.verifying')}
                   </span>
-                ) : 'Verify'}
+                ) : t('accountTransfer.verify')}
               </button>
             </div>
             {recipientError && <p className="mt-1 text-[10px] text-red-500">{recipientError}</p>}
@@ -254,7 +256,7 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-green-800">{recipient.name}</span>
-                    <span className="text-[10px] text-green-600">Verified</span>
+                    <span className="text-[10px] text-green-600">{t('accountTransfer.verified')}</span>
                   </div>
                   <p className="text-[10px] text-green-600 truncate">{recipient.wallet_number} &middot; {recipient.type}</p>
                 </div>
@@ -265,7 +267,7 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
           {/* Amount */}
           <div>
             <label className="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">
-              Amount <span className="text-red-500">*</span>
+              {t('accountTransfer.amount')} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -278,19 +280,19 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
             />
             {errors.amount && <p className="mt-1 text-[10px] text-red-500">{errors.amount[0]}</p>}
             {selectedWallet && form.amount && parseFloat(form.amount) > selectedWallet.balance && (
-              <p className="mt-1 text-[10px] text-red-500">Insufficient balance. Available: {formatPrice(selectedWallet.balance)}</p>
+              <p className="mt-1 text-[10px] text-red-500">{t('accountTransfer.insufficient_available', { amount: formatPrice(selectedWallet.balance) })}</p>
             )}
           </div>
 
           {/* Note */}
           <div>
             <label className="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">
-              Note <span className="text-gray-400">(optional)</span>
+              {t('accountTransfer.note_optional')}
             </label>
             <textarea
               value={form.note}
               onChange={(e) => setForm(prev => ({ ...prev, note: e.target.value }))}
-              placeholder="Add a note..."
+              placeholder={t('accountTransfer.add_note')}
               rows={2}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007c89]/20 focus:border-[#007c89] resize-none"
               maxLength={500}
@@ -304,7 +306,7 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
               onClick={onClose}
               className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -314,14 +316,14 @@ export default function TransferModal({ open, walletId, onClose, basePath = '' }
               {submitting ? (
                 <>
                   <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  {t('accountTransfer.processing')}
                 </>
               ) : (
                 <>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
-                  Transfer Funds
+                  {t('accountTransfer.transfer_funds')}
                 </>
               )}
             </button>

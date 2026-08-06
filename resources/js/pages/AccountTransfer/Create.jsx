@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 
@@ -16,6 +17,7 @@ const formatPrice = (price) => {
 export default function AccountTransferCreate() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const basePath = location.pathname.startsWith('/company-admin') ? '/company-admin' : '';
   const [searchParams] = useSearchParams();
   const preselectedWalletId = searchParams.get('wallet_id') || '';
@@ -55,7 +57,7 @@ export default function AccountTransferCreate() {
   const handleVerifyRecipient = useCallback(async () => {
     const walletNumber = form.recipient_wallet_number.trim();
     if (!walletNumber) {
-      setRecipientError('Please enter a wallet number.');
+      setRecipientError(t('accountTransfer.please_enter_wallet'));
       return;
     }
 
@@ -75,9 +77,9 @@ export default function AccountTransferCreate() {
       }
     } catch (err) {
       if (err.response?.status === 404) {
-        setRecipientError('Wallet not found or inactive.');
+        setRecipientError(t('accountTransfer.wallet_not_found'));
       } else {
-        setRecipientError(err.response?.data?.message || 'Failed to verify recipient.');
+        setRecipientError(err.response?.data?.message || t('accountTransfer.failed_verify'));
       }
     } finally {
       setVerifying(false);
@@ -96,40 +98,40 @@ export default function AccountTransferCreate() {
     setErrors({});
 
     if (!form.sender_account_id) {
-      setErrors({ sender_account_id: ['Please select a source wallet.'] });
+      setErrors({ sender_account_id: [t('accountTransfer.select_source')] });
       return;
     }
 
     if (!recipientVerified) {
-      setRecipientError('Please verify the recipient first.');
+      setRecipientError(t('accountTransfer.please_verify'));
       return;
     }
 
     if (!form.amount || parseFloat(form.amount) <= 0) {
-      setErrors({ amount: ['Please enter a valid amount.'] });
+      setErrors({ amount: [t('accountTransfer.enter_valid_amount')] });
       return;
     }
 
     if (selectedWallet && parseFloat(form.amount) > selectedWallet.balance) {
-      setErrors({ amount: ['Insufficient balance.'] });
+      setErrors({ amount: [t('accountTransfer.insufficient_balance')] });
       return;
     }
 
     const result = await Swal.fire({
-      title: 'Confirm Transfer',
+      title: t('accountTransfer.confirm_title'),
       html: `
         <div class="text-left">
-          <p><strong>From:</strong> ${selectedWallet?.name} (${selectedWallet?.wallet_number})</p>
-          <p><strong>To:</strong> ${recipient?.name} (${recipient?.wallet_number})</p>
-          <p><strong>Amount:</strong> ${formatPrice(form.amount)}</p>
-          ${form.note ? `<p><strong>Note:</strong> ${form.note}</p>` : ''}
+          <p><strong>${t('accountTransfer.from_label')}</strong> ${selectedWallet?.name} (${selectedWallet?.wallet_number})</p>
+          <p><strong>${t('accountTransfer.to_label')}</strong> ${recipient?.name} (${recipient?.wallet_number})</p>
+          <p><strong>${t('accountTransfer.amount_label')}</strong> ${formatPrice(form.amount)}</p>
+          ${form.note ? `<p><strong>${t('accountTransfer.note_label2')}</strong> ${form.note}</p>` : ''}
         </div>
       `,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#007c89',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Confirm Transfer',
+      confirmButtonText: t('accountTransfer.confirm_button'),
     });
 
     if (!result.isConfirmed) return;
@@ -150,10 +152,10 @@ export default function AccountTransferCreate() {
         const responseErrors = err.response.data.errors || {};
         setErrors(responseErrors);
         if (err.response.data.message) {
-          Swal.fire('Error', err.response.data.message, 'error');
+          Swal.fire(t('error'), err.response.data.message, 'error');
         }
       } else {
-        Swal.fire('Error', err.response?.data?.message || 'Failed to process transfer', 'error');
+        Swal.fire(t('error'), err.response?.data?.message || t('accountTransfer.failed_process'), 'error');
       }
     } finally {
       setSubmitting(false);
@@ -176,21 +178,21 @@ export default function AccountTransferCreate() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Transfers
+            {t('accountTransfer.back_to_transfers')}
           </button>
-          <h1 className="mt-3 text-2xl font-bold text-gray-900">New Wallet Transfer</h1>
-          <p className="text-sm text-gray-500 mt-1">Transfer funds between wallets using wallet/card number</p>
+          <h1 className="mt-3 text-2xl font-bold text-gray-900">{t('accountTransfer.new_title')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('accountTransfer.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
           {/* Source Wallet */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Source Wallet <span className="text-red-500">*</span>
+              {t('accountTransfer.source_wallet')} <span className="text-red-500">*</span>
             </label>
             {isLockedSource ? (
               <div className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                {selectedWallet ? `${selectedWallet.name} (${selectedWallet.wallet_number}) - ${formatPrice(selectedWallet.balance)}` : 'Loading...'}
+                {selectedWallet ? `${selectedWallet.name} (${selectedWallet.wallet_number}) - ${formatPrice(selectedWallet.balance)}` : t('accountTransfer.loading')}
               </div>
             ) : (
               <select
@@ -198,7 +200,7 @@ export default function AccountTransferCreate() {
                 onChange={(e) => setForm(prev => ({ ...prev, sender_account_id: e.target.value }))}
                 className={inputClass('sender_account_id')}
               >
-                <option value="">Select your wallet</option>
+                <option value="">{t('accountTransfer.select_your_wallet')}</option>
                 {wallets.map(wallet => (
                   <option key={wallet.id} value={wallet.id}>
                     {wallet.name} ({wallet.wallet_number}) - {formatPrice(wallet.balance)}
@@ -214,14 +216,14 @@ export default function AccountTransferCreate() {
           {/* Recipient Wallet Number */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Recipient Wallet/Card Number <span className="text-red-500">*</span>
+              {t('accountTransfer.recipient_number')} <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={form.recipient_wallet_number}
                 onChange={(e) => handleWalletNumberChange(e.target.value)}
-                placeholder="e.g. WLT-000000000001"
+                placeholder={t('accountTransfer.wallet_placeholder')}
                 className={`flex-1 ${inputClass('recipient_wallet_number')} font-mono uppercase`}
                 maxLength={20}
               />
@@ -234,10 +236,10 @@ export default function AccountTransferCreate() {
                 {verifying ? (
                   <span className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                    Verifying
+                    {t('accountTransfer.verifying')}
                   </span>
                 ) : (
-                  'Verify Recipient'
+                  t('accountTransfer.verify')
                 )}
               </button>
             </div>
@@ -256,7 +258,7 @@ export default function AccountTransferCreate() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-green-800">Recipient Verified</p>
+                  <p className="text-sm font-medium text-green-800">{t('accountTransfer.recipient_verified')}</p>
                   <p className="text-sm text-green-700 mt-0.5">
                     <span className="font-semibold">{recipient.name}</span>
                   </p>
@@ -271,7 +273,7 @@ export default function AccountTransferCreate() {
           {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount <span className="text-red-500">*</span>
+              {t('accountTransfer.amount')} <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -287,7 +289,7 @@ export default function AccountTransferCreate() {
             )}
             {selectedWallet && form.amount && parseFloat(form.amount) > selectedWallet.balance && (
               <p className="mt-1 text-xs text-red-500">
-                Insufficient balance. Available: {formatPrice(selectedWallet.balance)}
+                {t('accountTransfer.insufficient_available', { amount: formatPrice(selectedWallet.balance) })}
               </p>
             )}
           </div>
@@ -295,17 +297,17 @@ export default function AccountTransferCreate() {
           {/* Note */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Note (Optional)
+              {t('accountTransfer.note_optional')}
             </label>
             <textarea
               value={form.note}
               onChange={(e) => setForm(prev => ({ ...prev, note: e.target.value }))}
-              placeholder="Transfer note or description..."
+              placeholder={t('accountTransfer.note_placeholder')}
               rows={3}
               className={inputClass('note')}
               maxLength={500}
             />
-            <p className="mt-1 text-xs text-gray-400">{form.note.length}/500 characters</p>
+            <p className="mt-1 text-xs text-gray-400">{t('accountTransfer.characters', { count: form.note.length })}</p>
           </div>
 
           {/* Actions */}
@@ -315,7 +317,7 @@ export default function AccountTransferCreate() {
               onClick={() => navigate(-1)}
               className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -325,14 +327,14 @@ export default function AccountTransferCreate() {
               {submitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  {t('accountTransfer.processing')}
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
-                  Transfer Funds
+                  {t('accountTransfer.transfer_funds')}
                 </>
               )}
             </button>

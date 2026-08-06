@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 
 export default function ExpenseCreate() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -73,23 +75,23 @@ export default function ExpenseCreate() {
       let hasError = false;
 
       if (!masterFields.date) {
-        allErrors['date'] = 'Date is required';
+        allErrors['date'] = t('expense.create.date_required');
         hasError = true;
       }
 
       if (!masterFields.account_id) {
-        allErrors['account_id'] = 'Wallet is required';
+        allErrors['account_id'] = t('expense.create.wallet_required');
         hasError = true;
       }
 
       expenses.forEach((exp, index) => {
         if (!exp.expense_type_id) {
-          allErrors[`${index}_expense_type_id`] = 'Expense type is required';
+          allErrors[`${index}_expense_type_id`] = t('expense.create.type_required');
           hasError = true;
         }
         const parsedAmount = parseFloat(exp.amount);
         if (!exp.amount || isNaN(parsedAmount) || parsedAmount < 0.01) {
-          allErrors[`${index}_amount`] = 'Amount must be at least 0.01';
+          allErrors[`${index}_amount`] = t('expense.create.amount_min');
           hasError = true;
         }
       });
@@ -117,10 +119,10 @@ export default function ExpenseCreate() {
       const errorCount = res.data.error_count || 0;
 
       if (successCount > 0) {
-        alert(`${successCount} expense(s) created successfully.${errorCount > 0 ? ` ${errorCount} failed.` : ''}`);
+        alert(`${t('expense.create.success', { count: successCount })}${errorCount > 0 ? ` ${t('expense.create.success_failed', { failed: errorCount })}` : ''}`);
         navigate('/expenses');
       } else {
-        alert('Failed to create expenses. Check your input.');
+        alert(t('expense.create.failed'));
       }
     } catch (err) {
       console.error('Expense creation error:', err);
@@ -147,7 +149,7 @@ export default function ExpenseCreate() {
       }
 
       if (!errorMsg) {
-        errorMsg = 'Failed to create expenses. Please check your input and try again.';
+        errorMsg = t('expense.create.failed_generic');
       }
 
       alert(errorMsg);
@@ -172,17 +174,17 @@ export default function ExpenseCreate() {
                 </svg>
               </button>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">Record Expenses</h1>
-                <p className="text-xs text-gray-500 mt-0.5">Record multiple expenses at once</p>
+                <h1 className="text-lg font-semibold text-gray-900">{t('expense.create.title')}</h1>
+                <p className="text-xs text-gray-500 mt-0.5">{t('expense.create.subtitle')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className="text-xs text-gray-500">Total</p>
+                <p className="text-xs text-gray-500">{t('expense.create.total')}</p>
                 <p className="text-lg font-bold text-gray-900">{totalAmount.toFixed(2)} AFN</p>
               </div>
               <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">
-                {expenses.length} item{expenses.length > 1 ? 's' : ''}
+                {t('expense.create.items', { count: expenses.length })}
               </span>
             </div>
           </div>
@@ -195,14 +197,14 @@ export default function ExpenseCreate() {
               {/* Account */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Account <span className="text-red-500">*</span>
+                  {t('expense.create.account')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={masterFields.account_id}
                   onChange={(e) => { setMasterFields(prev => ({ ...prev, account_id: e.target.value })); if (errors.account_id) setErrors(prev => { const n = {...prev}; delete n.account_id; return n; }); }}
                   className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors.account_id ? 'border-red-400' : 'border-gray-300'}`}
                 >
-                  <option value="">Select Wallet</option>
+                  <option value="">{t('expense.create.select_wallet')}</option>
                   {accounts.map(a => (
                     <option key={a.id} value={a.id}>
                       {a.name} ({parseFloat(a.balance).toFixed(2)} AFN)
@@ -215,7 +217,7 @@ export default function ExpenseCreate() {
               {/* Date */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Date <span className="text-red-500">*</span>
+                  {t('expense.create.date')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -246,14 +248,14 @@ export default function ExpenseCreate() {
                   {/* Expense Type */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Expense Type <span className="text-red-500">*</span>
+                      {t('expense.create.expense_type')} <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={expense.expense_type_id}
                       onChange={(e) => handleExpenseChange(index, 'expense_type_id', e.target.value)}
                       className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] ${errors[`${index}_expense_type_id`] ? 'border-red-400' : 'border-gray-300'}`}
                     >
-                      <option value="">Select Type</option>
+                      <option value="">{t('expense.create.select_type')}</option>
                       {expenseTypes.map(t => (
                         <option key={t.id} value={t.id}>{t.name}</option>
                       ))}
@@ -266,7 +268,7 @@ export default function ExpenseCreate() {
                   {/* Amount */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Amount (AFN) <span className="text-red-500">*</span>
+                      {t('expense.create.amount')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -283,26 +285,26 @@ export default function ExpenseCreate() {
 
                   {/* Paid To */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Paid To</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{t('expense.create.paid_to')}</label>
                     <input
                       type="text"
                       value={expense.paid_to}
                       onChange={(e) => handleExpenseChange(index, 'paid_to', e.target.value)}
                       className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
-                      placeholder="Vendor name"
+                      placeholder={t('expense.create.vendor_placeholder')}
                     />
                   </div>
                 </div>
 
                 {/* Description */}
                 <div className="mt-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('expense.create.description')}</label>
                   <input
                     type="text"
                     value={expense.description}
                     onChange={(e) => handleExpenseChange(index, 'description', e.target.value)}
                     className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
-                    placeholder="Brief description (optional)"
+                    placeholder={t('expense.create.desc_placeholder')}
                   />
                 </div>
               </div>
@@ -312,23 +314,23 @@ export default function ExpenseCreate() {
           {/* Add More Button */}
           <button type="button" onClick={addExpenseRow}
             className="w-full mt-3 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:text-[#007c89] hover:border-[#007c89] hover:bg-[#007c89]/5 transition-all">
-            + Add Another Expense
+            {t('expense.create.add_another')}
           </button>
 
           {/* Form Actions */}
           <div className="flex gap-3 justify-end mt-6">
             <button type="button" onClick={() => navigate('/expenses')}
               className="px-5 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-              Cancel
+              {t('expense.create.cancel')}
             </button>
             <button type="submit" disabled={saving}
               className="px-5 py-2 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center">
               {saving ? (
                 <>
                   <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating...
+                  {t('expense.create.creating')}
                 </>
-              ) : 'Save Expenses'}
+              ) : t('expense.create.save')}
             </button>
           </div>
         </form>

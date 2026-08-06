@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 import {
   TrendingUp,
   TrendingDown,
@@ -42,6 +43,7 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 
 const SalesReport = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [filterOptions, setFilterOptions] = useState(null);
@@ -184,7 +186,7 @@ const SalesReport = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading report data...</p>
+          <p className="mt-4 text-gray-600 font-medium">{t('sale_report.loading')}</p>
         </div>
       </div>
     );
@@ -221,9 +223,9 @@ const SalesReport = () => {
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-blue-500" />
-              Sales Report
+              {t('sale_report.title')}
             </h1>
-            <p className="text-xs text-gray-500">Comprehensive sales analytics</p>
+            <p className="text-xs text-gray-500">{t('sale_report.subtitle')}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -231,21 +233,21 @@ const SalesReport = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Filter className="w-4 h-4" />
-              {showFilters ? 'Hide Filters' : 'Filters'}
+              {showFilters ? t('report.hide_filters') : t('report.filters')}
             </button>
             <button
               onClick={handleExport}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
             >
               <Download className="w-4 h-4" />
-              Export
+              {t('report.export')}
             </button>
             <button
               onClick={fetchReport}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
-              Refresh
+              {t('report.refresh')}
             </button>
           </div>
         </div>
@@ -255,7 +257,7 @@ const SalesReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">From</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.from')}</label>
                 <input
                   type="date"
                   value={filters.from_date}
@@ -264,7 +266,7 @@ const SalesReport = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">To</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.to')}</label>
                 <input
                   type="date"
                   value={filters.to_date}
@@ -273,7 +275,7 @@ const SalesReport = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Customer</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('sale_report.customer')}</label>
                 <select
                   value={filters.customer_id}
                   onChange={(e) => handleFilterChange('customer_id', e.target.value)}
@@ -286,7 +288,7 @@ const SalesReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Product</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('sale_report.product')}</label>
                 <select
                   value={filters.product_id}
                   onChange={(e) => handleFilterChange('product_id', e.target.value)}
@@ -299,7 +301,7 @@ const SalesReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Status</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('sale_report.status')}</label>
                 <select
                   value={filters.status}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -312,7 +314,7 @@ const SalesReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Payment</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('sale_report.payment')}</label>
                 <select
                   value={filters.payment_status}
                   onChange={(e) => handleFilterChange('payment_status', e.target.value)}
@@ -325,7 +327,7 @@ const SalesReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Salesperson</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('sale_report.salesperson')}</label>
                 <select
                   value={filters.salesperson_id}
                   onChange={(e) => handleFilterChange('salesperson_id', e.target.value)}
@@ -338,7 +340,7 @@ const SalesReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Min Amount</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('sale_report.min_amount')}</label>
                 <input
                   type="number"
                   placeholder="0"
@@ -348,7 +350,7 @@ const SalesReport = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Max Amount</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('sale_report.max_amount')}</label>
                 <input
                   type="number"
                   placeholder="999999"
@@ -358,12 +360,12 @@ const SalesReport = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Search</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.search')}</label>
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder={t('report.search_placeholder')}
                     value={filters.search}
                     onChange={(e) => handleFilterChange('search', e.target.value)}
                     className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -376,7 +378,7 @@ const SalesReport = () => {
                   className="w-full px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
                   <X className="w-3.5 h-3.5 inline mr-1" />
-                  Clear
+                  {t('report.clear')}
                 </button>
               </div>
             </div>
@@ -388,7 +390,7 @@ const SalesReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Revenue</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('sale_report.revenue')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.total_revenue)}</p>
               </div>
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -400,7 +402,7 @@ const SalesReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Sales</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('sale_report.sales')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatNumber(summary.total_sales)}</p>
               </div>
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -412,7 +414,7 @@ const SalesReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Paid</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('report.paid')}</p>
                 <p className="text-lg font-bold text-green-600">{formatCurrency(summary.total_paid)}</p>
               </div>
               <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -424,7 +426,7 @@ const SalesReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Due</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('report.due')}</p>
                 <p className="text-lg font-bold text-red-600">{formatCurrency(summary.total_due)}</p>
               </div>
               <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
@@ -438,11 +440,11 @@ const SalesReport = () => {
         {growthPercentage !== 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500">Sales Growth:</span>
+              <span className="text-xs text-gray-500">{t('sale_report.sales_growth')}</span>
               <span className={`text-sm font-bold ${growthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {growthPercentage >= 0 ? '↑' : '↓'} {Math.abs(growthPercentage).toFixed(1)}%
               </span>
-              <span className="text-xs text-gray-400">from first to last period</span>
+              <span className="text-xs text-gray-400">{t('report.growth_hint')}</span>
             </div>
           </div>
         )}
@@ -457,7 +459,7 @@ const SalesReport = () => {
                 chartTab === 'revenue' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Revenue Trend
+              {t('sale_report.tab_revenue')}
             </button>
             <button
               onClick={() => setChartTab('growth')}
@@ -465,7 +467,7 @@ const SalesReport = () => {
                 chartTab === 'growth' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Growth Analysis
+              {t('report.tab_growth')}
             </button>
             <button
               onClick={() => setChartTab('payment')}
@@ -473,7 +475,7 @@ const SalesReport = () => {
                 chartTab === 'payment' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Payment Breakdown
+              {t('report.tab_payment')}
             </button>
             <div className="ml-auto flex items-center gap-2">
               <select
@@ -481,10 +483,10 @@ const SalesReport = () => {
                 onChange={(e) => handleFilterChange('chart_type', e.target.value)}
                 className="px-2 py-1 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
+                <option value="daily">{t('report.daily')}</option>
+                <option value="weekly">{t('report.weekly')}</option>
+                <option value="monthly">{t('report.monthly')}</option>
+                <option value="yearly">{t('report.yearly')}</option>
               </select>
             </div>
           </div>
@@ -554,7 +556,7 @@ const SalesReport = () => {
                     </ResponsiveContainer>
                   </div>
                   <div className="w-1/2 pl-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Payment Summary</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('report.payment_summary')}</h4>
                     <div className="space-y-2">
                       {paymentData.map((item, index) => (
                         <div key={item.name} className="flex items-center justify-between text-sm">
@@ -578,7 +580,7 @@ const SalesReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Package className="w-4 h-4 text-blue-500" />
-              Top Products
+              {t('report.top_products')}
             </h2>
             <div className="space-y-2">
               {topProducts.slice(0, 5).map((product, index) => (
@@ -587,14 +589,14 @@ const SalesReport = () => {
                     <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                      <p className="text-xs text-gray-500">{formatNumber(product.total_quantity)} units</p>
+                      <p className="text-xs text-gray-500">{t('report.units', { count: formatNumber(product.total_quantity) })}</p>
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(product.total_revenue)}</p>
                 </div>
               ))}
               {topProducts.length === 0 && (
-                <p className="text-center text-gray-400 py-2 text-sm">No products data</p>
+                <p className="text-center text-gray-400 py-2 text-sm">{t('report.no_products_data')}</p>
               )}
             </div>
           </div>
@@ -602,7 +604,7 @@ const SalesReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Users className="w-4 h-4 text-green-500" />
-              Top Customers
+              {t('sale_report.top_customers')}
             </h2>
             <div className="space-y-2">
               {topCustomers.slice(0, 5).map((customer, index) => (
@@ -611,14 +613,14 @@ const SalesReport = () => {
                     <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900 truncate">{customer.customer_name}</p>
-                      <p className="text-xs text-gray-500">{customer.order_count} orders</p>
+                      <p className="text-xs text-gray-500">{t('report.orders', { count: customer.order_count })}</p>
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(customer.total_spent)}</p>
                 </div>
               ))}
               {topCustomers.length === 0 && (
-                <p className="text-center text-gray-400 py-2 text-sm">No customer data</p>
+                <p className="text-center text-gray-400 py-2 text-sm">{t('sale_report.no_customer_data')}</p>
               )}
             </div>
           </div>
@@ -627,9 +629,9 @@ const SalesReport = () => {
         {/* Sales Table - Compact */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-3 py-2 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Transactions</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t('sale_report.transactions')}</h2>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">{pagination.total || 0} records</span>
+              <span className="text-xs text-gray-500">{t('report.records', { count: pagination.total || 0 })}</span>
               <select
                 value={perPage}
                 onChange={(e) => setPerPage(Number(e.target.value))}
@@ -647,14 +649,14 @@ const SalesReport = () => {
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Ref</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Customer</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Total</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Paid</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Due</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">Payment</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">{t('report.col_ref')}</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">{t('report.col_date')}</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">{t('sale_report.col_customer')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('report.col_total')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('report.col_paid')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('report.col_due')}</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">{t('sale_report.col_status')}</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">{t('report.col_payment')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -666,7 +668,7 @@ const SalesReport = () => {
                   </tr>
                 ) : sales.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="text-center py-4 text-gray-400">No records found</td>
+                    <td colSpan="8" className="text-center py-4 text-gray-400">{t('report.no_records')}</td>
                   </tr>
                 ) : (
                   sales.map((sale) => (
@@ -680,7 +682,7 @@ const SalesReport = () => {
                         </button>
                       </td>
                       <td className="px-3 py-2 text-gray-600">{sale.document_date?.split('T')[0] || '—'}</td>
-                      <td className="px-3 py-2 text-gray-600 truncate max-w-[100px]">{sale.customer?.full_name || 'Walk-in'}</td>
+                      <td className="px-3 py-2 text-gray-600 truncate max-w-[100px]">{sale.customer?.full_name || t('sale_report.walk_in')}</td>
                       <td className="px-3 py-2 text-right font-medium text-gray-900">{formatCurrency(sale.total_amount)}</td>
                       <td className="px-3 py-2 text-right text-green-600">{formatCurrency(sale.paid_amount)}</td>
                       <td className="px-3 py-2 text-right text-red-600">{formatCurrency(sale.due_amount)}</td>
@@ -713,7 +715,7 @@ const SalesReport = () => {
                   disabled={currentPage === 1}
                   className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
                 >
-                  Prev
+                  {t('report.prev')}
                 </button>
                 {Array.from({ length: Math.min(3, pagination.last_page) }, (_, i) => {
                   let pageNum = i + 1;
@@ -744,7 +746,7 @@ const SalesReport = () => {
                   disabled={currentPage === pagination.last_page}
                   className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
                 >
-                  Next
+                  {t('report.next')}
                 </button>
               </div>
             </div>

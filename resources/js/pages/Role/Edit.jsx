@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import { CheckSquare, SquareX } from 'lucide-react';
 
 const RoleEdit = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -60,12 +62,12 @@ const RoleEdit = () => {
       if (res.data && res.data.success && res.data.modules) {
         setModules(res.data.modules);
       } else {
-        setErrorMessage(res.data?.message || 'Failed to load permission modules');
+        setErrorMessage(res.data?.message || t('role.load_modules_failed'));
         setModules({});
       }
     } catch (err) {
       console.error('Error fetching modules', err);
-      setErrorMessage(err.response?.data?.message || 'Failed to load modules');
+      setErrorMessage(err.response?.data?.message || t('role.load_failed'));
       setModules({});
     } finally {
       setLoadingModules(false);
@@ -95,7 +97,7 @@ const RoleEdit = () => {
     } catch (err) {
       console.error('Failed to fetch branches', err);
       setBranches([]);
-      setErrorMessage('Failed to load branches. Please refresh the page.');
+      setErrorMessage(t('role.load_branches_failed'));
     } finally {
       setLoadingBranches(false);
     }
@@ -125,7 +127,7 @@ const RoleEdit = () => {
       }
     } catch (err) {
       console.error('Failed to fetch role', err);
-      const message = err.response?.data?.message || 'Failed to load role data';
+      const message = err.response?.data?.message || t('role.load_failed_data');
       setErrorMessage(message);
       Swal.fire('Error', message, 'error');
       setTimeout(() => {
@@ -247,17 +249,17 @@ const RoleEdit = () => {
     e.preventDefault();
     
     if (!form.role_name.trim()) {
-      setFormErrors({ role_name: ['Role name is required'] });
+      setFormErrors({ role_name: [t('role.name_required')] });
       return;
     }
 
     if (form.branch_ids.length === 0) {
-      setFormErrors({ branch_ids: ['Please select at least one branch for this role'] });
+      setFormErrors({ branch_ids: [t('role.branch_required')] });
       return;
     }
 
     if (!Object.keys(modules).length) {
-      setErrorMessage('Cannot update role: No permission modules available');
+      setErrorMessage(t('role.no_modules_update'));
       return;
     }
 
@@ -276,8 +278,8 @@ const RoleEdit = () => {
 
       Swal.fire({
         icon: 'success',
-        title: 'Success!',
-        text: `Role "${res.data.data?.role_name || form.role_name}" updated successfully!`,
+        title: t('role.success'),
+        text: t('role.updated_msg', { name: res.data.data?.role_name || form.role_name }),
         timer: 2000,
         showConfirmButton: false
       });
@@ -290,9 +292,9 @@ const RoleEdit = () => {
       console.error('Error updating role', err);
       if (err.response?.status === 422) {
         setFormErrors(err.response.data.errors || {});
-        Swal.fire('Validation Error', 'Please check the form for errors', 'error');
+        Swal.fire(t('role.validation_error'), t('role.check_form'), 'error');
       } else {
-        const message = err.response?.data?.message || 'Failed to update role. Please try again.';
+        const message = err.response?.data?.message || t('role.update_failed');
         setErrorMessage(message);
         Swal.fire('Error', message, 'error');
       }
@@ -306,7 +308,7 @@ const RoleEdit = () => {
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-t-2 border-b-2 border-[#007c89]"></div>
-          <p className="mt-4 text-gray-600">Loading role data...</p>
+          <p className="mt-4 text-gray-600">{t('role.loading_data')}</p>
         </div>
       </div>
     );
@@ -323,11 +325,11 @@ const RoleEdit = () => {
             </svg>
           </Link>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 truncate">
-            Edit Role
+            {t('role.edit_title')}
           </h1>
         </div>
         <p className="text-xs sm:text-sm text-gray-600">
-          Edit role and configure its permissions
+          {t('role.edit_subtitle')}
         </p>
       </div>
 
@@ -351,9 +353,8 @@ const RoleEdit = () => {
           {/* Name + controls */}
           <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                Role Name <span className="text-red-500">*</span>
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">                  {t('role.name_label')} <span className="text-red-500">*</span>
+                </label>
               <input
                 value={form.role_name}
                 onChange={(e) => {
@@ -361,8 +362,7 @@ const RoleEdit = () => {
                   clearError('role_name');
                 }}
                 type="text"
-                required
-                placeholder="Enter role name (e.g., Manager, Supervisor, Staff)"
+                required                  placeholder={t('role.name_placeholder')}
                 className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#007c89] focus:border-[#007c89] ${
                   formErrors.role_name ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -384,9 +384,8 @@ const RoleEdit = () => {
                 >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  All
-                </button>
+                  </svg>                    {t('role.all')}
+                  </button>
                 <button
                   type="button"
                   onClick={deselectAllPermissions}
@@ -394,9 +393,8 @@ const RoleEdit = () => {
                 >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  None
-                </button>
+                  </svg>                    {t('role.none')}
+                  </button>
               </div>
             </div>
           </div>
@@ -405,13 +403,12 @@ const RoleEdit = () => {
           {!isBranchUser ? (
             <div className="border rounded-lg bg-gray-50 p-4">
               <div className="flex items-center justify-between gap-3 mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Branches <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-sm font-medium text-gray-700">                    {t('role.branches')} <span className="text-red-500">*</span>
+                  </label>
                 {branches.length > 0 && !loadingBranches && (
                   <button
                     type="button"
-                    title={form.branch_ids.length === branches.length ? 'Clear all branches' : 'Select all branches'}
+                    title={form.branch_ids.length === branches.length ? t('role.clear_all_branches') : t('role.select_all_branches')}
                     onClick={() => {
                       const allSelected = form.branch_ids.length === branches.length;
                       setForm(prev => ({
@@ -423,7 +420,7 @@ const RoleEdit = () => {
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-[#007c89] hover:text-[#006d77]"
                   >
                     {form.branch_ids.length === branches.length ? <SquareX className="h-4 w-4" /> : <CheckSquare className="h-4 w-4" />}
-                    {form.branch_ids.length === branches.length ? 'Clear all' : 'Select all'}
+                    {form.branch_ids.length === branches.length ? t('role.clear_all') : t('role.select_all')}
                   </button>
                 )}
               </div>
@@ -434,13 +431,13 @@ const RoleEdit = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
-                  Loading branches...
+                  {t('role.loading_branches')}
                 </div>
               ) : !branches || branches.length === 0 ? (
                 <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded">
-                  No branches available. Please create a branch first.
+                  {t('role.no_branches')}
                   <Link to="../branches/create" className="ml-2 text-[#007c89] hover:underline">
-                    Create Branch
+                    {t('role.create_branch')}
                   </Link>
                 </div>
               ) : (
@@ -470,7 +467,7 @@ const RoleEdit = () => {
                     })}
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    The same role and permissions will be available in every selected branch.
+                    {t('role.same_roles_hint')}
                   </p>
                 </>
               )}
@@ -483,8 +480,8 @@ const RoleEdit = () => {
             </div>
           ) : (
             <div className="border rounded-lg bg-gray-50 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-              <p className="text-sm text-gray-900">{user.branch?.branch_name || 'Your Branch'}</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('role.branch_label')}</label>
+              <p className="text-sm text-gray-900">{user.branch?.branch_name || t('role.your_branch')}</p>
             </div>
           )}
 
@@ -492,10 +489,10 @@ const RoleEdit = () => {
           <div className="border rounded-lg bg-gray-50 p-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1">
               <div className="text-sm text-gray-700">
-                Permissions ({Object.keys(modules).length} Modules)
+                {t('role.permissions_count', { count: Object.keys(modules).length })}
               </div>
               <div className="text-xs text-gray-500 hidden sm:block">
-                Click chevron to expand/collapse
+                {t('role.expand_hint')}
               </div>
             </div>
 
@@ -510,7 +507,7 @@ const RoleEdit = () => {
                         {formatModuleName(module)}
                       </h3>
                       <p className="text-xs text-gray-500">
-                        {Object.keys(modulePermissions).length} permission(s)
+                        {t('role.permission_count', { count: Object.keys(modulePermissions).length })}
                       </p>
                     </div>
 
@@ -592,14 +589,14 @@ const RoleEdit = () => {
                     <div className="mt-2">
                       {Object.values(form.permissions[module] || {}).some(v => v === true) ? (
                         <div className="text-xs text-gray-600 bg-gray-100 p-2 rounded">
-                          <div className="font-medium mb-1">Selected:</div>
+                          <div className="font-medium mb-1">{t('role.selected')}</div>
                           <div className="truncate">
                             {Object.keys(form.permissions[module] || {}).filter(k => form.permissions[module]?.[k]).join(', ')}
                           </div>
                         </div>
                       ) : (
                         <div className="text-xs text-gray-500 italic">
-                          No permissions selected
+                          {t('role.no_permissions_selected')}
                         </div>
                       )}
                     </div>
@@ -616,7 +613,7 @@ const RoleEdit = () => {
               to="../roles"
               className="px-3 sm:px-4 py-2 border rounded text-sm text-gray-700 hover:bg-gray-50 text-center"
             >
-              Cancel
+              {t('role.cancel')}
             </Link>
 
             {/* Action buttons */}
@@ -627,7 +624,7 @@ const RoleEdit = () => {
                 onClick={resetForm}
                 className="px-3 sm:px-4 py-2 border rounded text-sm text-gray-700 hover:bg-gray-50 order-2 xs:order-1"
               >
-                Reset
+                {t('role.reset')}
               </button>
 
               {/* Submit button */}
@@ -646,7 +643,7 @@ const RoleEdit = () => {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
                 )}
-                {processing ? 'Updating...' : 'Update Role'}
+                {processing ? t('role.updating') : t('role.update_btn')}
               </button>
             </div>
           </div>

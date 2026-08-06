@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 
 const RoleIndex = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const initialLoadDone = useRef(false);
   
@@ -88,7 +90,7 @@ const RoleIndex = () => {
       setCurrentPage(page);
     } catch (err) {
       console.error('Fetch error:', err);
-      setError(err.response?.data?.message || 'Failed to fetch roles');
+      setError(err.response?.data?.message || t('role.fetch_failed'));
     } finally {
       setLoading(false);
     }
@@ -108,25 +110,25 @@ const RoleIndex = () => {
   
   const deleteRole = async (id, roleName) => {
     const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: `You won't be able to revert this! Delete ${roleName}?`,
+      title: t('role.delete_title'),
+      text: t('role.delete_text', { name: roleName }),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel'
+      confirmButtonText: t('role.delete_confirm'),
+      cancelButtonText: t('role.cancel')
     });
     
     if (result.isConfirmed) {
       try {
         await api.delete(`/roles/${id}`);
-        Swal.fire('Deleted!', 'Role has been deleted successfully.', 'success');
+        Swal.fire(t('role.deleted'), t('role.deleted_msg'), 'success');
         fetchRoles(currentPage);
       } catch (err) {
         console.error('Failed to delete role:', err);
-        const message = err.response?.data?.message || 'Cannot delete role assigned to users';
-        Swal.fire('Error!', message, 'error');
+        const message = err.response?.data?.message || t('role.delete_failed');
+        Swal.fire(t('role.error'), message, 'error');
       }
     }
   };
@@ -184,9 +186,9 @@ useEffect(() => {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="text-xl font-semibold text-gray-900">Roles</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('role.title')}</h1>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{pagination.total} total</span>
+            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{t('role.total', { count: pagination.total })}</span>
           </div>
         </div>
       </div>
@@ -201,7 +203,7 @@ useEffect(() => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
+            placeholder={t('role.search')}
             className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
           />
         </div>
@@ -223,7 +225,7 @@ useEffect(() => {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            New
+            {t('role.new')}
           </Link>
         </div>
       </div>
@@ -232,7 +234,7 @@ useEffect(() => {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-700 text-sm">Loading roles...</span>
+          <span className="ml-3 text-gray-700 text-sm">{t('role.loading')}</span>
         </div>
       )}
       
@@ -255,14 +257,14 @@ useEffect(() => {
             <table className="min-w-full">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ID</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Role Name</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('role.id')}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('role.name')}</th>
                   {!isBranchUser && (
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Branch</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('role.branch')}</th>
                   )}
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Permissions</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Created</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('role.permissions')}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('role.created')}</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('role.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -283,7 +285,7 @@ useEffect(() => {
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
                           {role.branches?.length
                             ? role.branches.map(branch => branch.branch_name).join(', ')
-                            : (role.branch ? role.branch.branch_name : 'Global')}
+                            : (role.branch ? role.branch.branch_name : t('role.global'))}
                         </td>
                       )}
                       <td className="px-4 py-2.5 whitespace-nowrap">
@@ -295,11 +297,11 @@ useEffect(() => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          View
+                          {t('role.view')}
                         </button>
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
-                        {role.created_at ? new Date(role.created_at).toLocaleDateString() : 'N/A'}
+                        {role.created_at ? new Date(role.created_at).toLocaleDateString() : t('role.na')}
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-right">
                         {role.role_name?.toLowerCase() !== 'admin' && (
@@ -307,7 +309,7 @@ useEffect(() => {
                             <button
                               onClick={() => editRole(role.id)}
                               className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600"
-                              title="Edit"
+                              title={t('role.edit')}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -316,7 +318,7 @@ useEffect(() => {
                             <button
                               onClick={() => deleteRole(role.id, role.role_name)}
                               className="p-1 rounded hover:bg-red-50 text-gray-700 hover:text-red-600"
-                              title="Delete"
+                              title={t('role.delete')}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -333,7 +335,7 @@ useEffect(() => {
                       <svg className="w-10 h-10 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
-                      <p className="text-sm text-gray-700">No roles found</p>
+                      <p className="text-sm text-gray-700">{t('role.empty')}</p>
                       <Link
                         to="create"
                         className="mt-3 inline-flex items-center px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77]"
@@ -341,7 +343,7 @@ useEffect(() => {
                         <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        Create your first role
+                        {t('role.create_first')}
                       </Link>
                     </td>
                   </tr>
@@ -355,8 +357,8 @@ useEffect(() => {
             <div className="px-4 py-3 border-t border-gray-200 bg-gray-50/50">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{pagination.from || 0}</span> to{' '}
-                  <span className="font-medium">{pagination.to || 0}</span> of{' '}
+                  {t('role.showing')} <span className="font-medium">{pagination.from || 0}</span> {t('role.to')}{' '}
+                  <span className="font-medium">{pagination.to || 0}</span> {t('role.of')}{' '}
                   <span className="font-medium">{pagination.total || 0}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -365,7 +367,7 @@ useEffect(() => {
                     disabled={pagination.current_page === 1}
                     className="px-2.5 py-1 text-sm border border-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-gray-700"
                   >
-                    Previous
+                    {t('role.previous')}
                   </button>
                   {pageNumbers.map((page) => (
                     <button
@@ -385,7 +387,7 @@ useEffect(() => {
                     disabled={pagination.current_page === pagination.last_page}
                     className="px-2.5 py-1 text-sm border border-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-gray-700"
                   >
-                    Next
+                    {t('role.next')}
                   </button>
                 </div>
               </div>
@@ -401,7 +403,7 @@ useEffect(() => {
             <div className="text-center">
               <div className="flex items-center justify-between mb-4 border-b pb-3">
                 <h3 className="text-lg font-medium text-gray-900">
-                  Permissions for "{selectedRole.role_name}"
+                  {t('role.permissions_for', { name: selectedRole.role_name })}
                 </h3>
                 <button
                   onClick={() => setShowPermissionsModal(false)}
@@ -430,7 +432,7 @@ useEffect(() => {
                                 : 'bg-gray-100 text-gray-600 border border-gray-200'
                             }`}
                           >
-                            {action}: {hasPermission ? 'Yes' : 'No'}
+                            {action}: {hasPermission ? t('role.yes') : t('role.no')}
                           </span>
                         ))}
                       </div>
@@ -438,7 +440,7 @@ useEffect(() => {
                   ))
                 ) : (
                   <p className="text-center text-gray-500 py-4">
-                    No specific permissions configured.
+                    {t('role.no_permissions')}
                   </p>
                 )}
               </div>
@@ -447,7 +449,7 @@ useEffect(() => {
                 onClick={() => setShowPermissionsModal(false)}
                 className="mt-6 px-6 py-2 bg-[#007c89] text-white rounded-lg hover:bg-[#006d77] transition duration-300"
               >
-                Close
+                {t('role.close')}
               </button>
             </div>
           </div>

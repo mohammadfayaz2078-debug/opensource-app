@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 function generatePageNumbers(current, total) {
@@ -21,6 +22,7 @@ function generatePageNumbers(current, total) {
 
 export default function CustomerIndex() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -79,7 +81,7 @@ export default function CustomerIndex() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this customer? This action cannot be undone.')) return;
+    if (!confirm(t('customer.delete_confirm'))) return;
     try {
       await api.delete(`/customers/${id}`);
       setCustomers(prev => prev.filter(c => c.id !== id));
@@ -89,7 +91,7 @@ export default function CustomerIndex() {
         active_customers: customers.find(c => c.id === id)?.is_active ? prev.active_customers - 1 : prev.active_customers,
       }));
     } catch (err) {
-      alert(err.response?.data?.message || 'Delete failed');
+      alert(err.response?.data?.message || t('customer.delete_failed'));
     }
   };
 
@@ -105,12 +107,12 @@ export default function CustomerIndex() {
         setSummary(prev => ({ ...prev, active_customers: prev.active_customers - 1 }));
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to toggle status');
+      alert(err.response?.data?.message || t('customer.toggle_failed'));
     }
   };
 
   const handleConvertToCustomer = async (id) => {
-    if (!confirm('Convert this lead to a customer?\n\nPending orders will be converted to invoices.')) return;
+    if (!confirm(t('customer.convert_confirm'))) return;
     try {
       const res = await api.post(`/customers/${id}/convert-to-customer`);
       alert(res.data.message);
@@ -121,7 +123,7 @@ export default function CustomerIndex() {
       const refreshRes = await api.get('/customers', { params });
       setCustomers(refreshRes.data.data || []);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to convert lead.');
+      alert(err.response?.data?.message || t('customer.convert_failed'));
     }
   };
 
@@ -140,11 +142,11 @@ export default function CustomerIndex() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="text-xl font-semibold text-gray-900">Customers</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('customer.title')}</h1>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{summary.total_customers} total</span>
-            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{summary.active_customers} active</span>
-            <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{provinces.length} provinces</span>
+            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{t('customer.total', { count: summary.total_customers })}</span>
+            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t('customer.active_count', { count: summary.active_customers })}</span>
+            <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{t('customer.province_count', { count: provinces.length })}</span>
           </div>
         </div>
       </div>
@@ -153,8 +155,8 @@ export default function CustomerIndex() {
       <div className="border-b border-gray-200 mb-4">
         <nav className="flex gap-6">
           {[
-            { id: 'customer', label: 'Customers' },
-            { id: 'lead', label: '🔹 Leads' },
+            { id: 'customer', label: t('customer.tab_customers') },
+            { id: 'lead', label: `🔹 ${t('customer.tab_leads')}` },
           ].map(tab => (
             <button key={tab.id} onClick={() => setFilterStatus(tab.id)}
               className={`py-2.5 px-1 border-b-2 font-medium text-sm transition-colors ${filterStatus === tab.id ? 'border-[#007c89] text-[#007c89]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
@@ -175,7 +177,7 @@ export default function CustomerIndex() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('customer.search_placeholder')}
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
             />
           </div>
@@ -184,16 +186,16 @@ export default function CustomerIndex() {
             onChange={e => setFilterActive(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">{t('customer.all')}</option>
+            <option value="active">{t('customer.active')}</option>
+            <option value="inactive">{t('customer.inactive')}</option>
           </select>
           <select
             value={filterProvince}
             onChange={e => setFilterProvince(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="">All Provinces</option>
+            <option value="">{t('customer.all_provinces')}</option>
             {provinces.map(province => (
               <option key={province.province} value={province.province}>
                 {province.province} ({province.customer_count})
@@ -209,7 +211,7 @@ export default function CustomerIndex() {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Export
+            {t('customer.export')}
           </button>
           <Link
             to="/customers/create"
@@ -218,7 +220,7 @@ export default function CustomerIndex() {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            New
+            {t('customer.new')}
           </Link>
         </div>
       </div>
@@ -227,7 +229,7 @@ export default function CustomerIndex() {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-700 text-sm">Loading customers...</span>
+          <span className="ml-3 text-gray-700 text-sm">{t('customer.loading')}</span>
         </div>
       )}
 
@@ -240,7 +242,7 @@ export default function CustomerIndex() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <p className="text-sm text-gray-700">
-                {search ? 'No customers match your search.' : 'No customers yet. Create your first customer.'}
+                {search ? t('customer.no_results_search') : t('customer.no_results')}
               </p>
             </div>
           ) : (
@@ -249,13 +251,13 @@ export default function CustomerIndex() {
               <table className="hidden lg:table min-w-full">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Customer</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Code</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Contact</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Location</th>
-                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('customer.col_customer')}</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('customer.col_code')}</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('customer.col_contact')}</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('customer.col_location')}</th>
+                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">{t('customer.col_type')}</th>
+                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">{t('customer.col_status')}</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('customer.col_actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -286,7 +288,7 @@ export default function CustomerIndex() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${
                           customer.status === 'lead' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-600'
                         }`}>
-                          {customer.status === 'lead' ? 'Lead' : 'Customer'}
+                          {customer.status === 'lead' ? t('customer.type_lead') : t('customer.type_customer')}
                         </span>
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-center">
@@ -296,21 +298,21 @@ export default function CustomerIndex() {
                             customer.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          {customer.is_active ? 'Active' : 'Inactive'}
+                          {customer.is_active ? t('customer.active') : t('customer.inactive')}
                         </button>
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-1">
                           {customer.status === 'lead' && (
-                            <button onClick={() => handleConvertToCustomer(customer.id)} className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 transition-colors" title="Convert to Customer">
+                            <button onClick={() => handleConvertToCustomer(customer.id)} className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 transition-colors" title={t('customer.convert_title')}>
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                              Convert
+                              {t('customer.convert')}
                             </button>
                           )}
-                          <button onClick={() => navigate(`/customers/${customer.id}/edit`)} className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600" title="Edit">
+                          <button onClick={() => navigate(`/customers/${customer.id}/edit`)} className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600" title={t('customer.edit')}>
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                           </button>
-                          <button onClick={() => handleDelete(customer.id)} className="p-1 rounded hover:bg-red-50 text-gray-700 hover:text-red-600" title="Delete">
+                          <button onClick={() => handleDelete(customer.id)} className="p-1 rounded hover:bg-red-50 text-gray-700 hover:text-red-600" title={t('customer.delete')}>
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
                         </div>
@@ -341,7 +343,7 @@ export default function CustomerIndex() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
                           customer.status === 'lead' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-600'
                         }`}>
-                          {customer.status === 'lead' ? 'Lead' : 'Customer'}
+                          {customer.status === 'lead' ? t('customer.type_lead') : t('customer.type_customer')}
                         </span>
                         <button
                           onClick={() => handleToggleStatus(customer.id, customer.is_active)}
@@ -349,26 +351,26 @@ export default function CustomerIndex() {
                             customer.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          {customer.is_active ? 'Active' : 'Inactive'}
+                          {customer.is_active ? t('customer.active') : t('customer.inactive')}
                         </button>
                       </div>
                     </div>
                     {/* Info rows */}
                     <div className="space-y-1.5 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-400 text-xs">Code</span>
+                        <span className="text-gray-400 text-xs">{t('customer.code_label')}</span>
                         <span className="font-mono text-xs text-gray-700">{customer.user_code || '—'}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-400 text-xs">Phone</span>
+                        <span className="text-gray-400 text-xs">{t('customer.phone_label')}</span>
                         <span className="text-gray-700">{customer.phone || '—'}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-400 text-xs">Email</span>
+                        <span className="text-gray-400 text-xs">{t('customer.email_label')}</span>
                         <span className="text-gray-700 text-right truncate max-w-[55%]">{customer.email || '—'}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-400 text-xs">Location</span>
+                        <span className="text-gray-400 text-xs">{t('customer.location_label')}</span>
                         <span className="text-gray-700">{customer.province || '—'}</span>
                       </div>
                     </div>
@@ -379,21 +381,21 @@ export default function CustomerIndex() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        View
+                        {t('customer.view')}
                       </Link>
                       {customer.status === 'lead' && (
                         <button onClick={() => handleConvertToCustomer(customer.id)} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          Convert
+                          {t('customer.convert')}
                         </button>
                       )}
                       <button onClick={() => navigate(`/customers/${customer.id}/edit`)} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                        Edit
+                        {t('customer.edit')}
                       </button>
                       <button onClick={() => handleDelete(customer.id)} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        Delete
+                        {t('customer.delete')}
                       </button>
                     </div>
                   </div>
@@ -404,12 +406,12 @@ export default function CustomerIndex() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <span className="text-xs text-gray-500 whitespace-nowrap">Page {currentPage} of {totalPages}</span>
+              <span className="text-xs text-gray-500 whitespace-nowrap">{t('customer.page_of', { current: currentPage, total: totalPages })}</span>
               <div className="flex items-center gap-1">
-                <button onClick={() => fetchCustomers(1)} disabled={currentPage === 1} className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="First page">
+                <button onClick={() => fetchCustomers(1)} disabled={currentPage === 1} className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title={t('customer.first_page')}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
                 </button>
-                <button onClick={() => fetchCustomers(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Previous page">
+                <button onClick={() => fetchCustomers(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title={t('customer.previous_page')}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 {generatePageNumbers(currentPage, totalPages).map((p, i) =>
@@ -419,15 +421,15 @@ export default function CustomerIndex() {
                     <button key={p} onClick={() => fetchCustomers(p)} className={`inline-flex items-center justify-center w-8 h-8 text-xs rounded-md font-medium transition-colors ${p === currentPage ? 'bg-[#007c89] text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'}`}>{p}</button>
                   )
                 )}
-                <button onClick={() => fetchCustomers(currentPage + 1)} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Next page">
+                <button onClick={() => fetchCustomers(currentPage + 1)} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title={t('customer.next_page')}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                 </button>
-                <button onClick={() => fetchCustomers(totalPages)} disabled={currentPage === totalPages} className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Last page">
+                <button onClick={() => fetchCustomers(totalPages)} disabled={currentPage === totalPages} className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title={t('customer.last_page')}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
                 </button>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap">
-                <span className="hidden sm:inline">Show</span>
+                <span className="hidden sm:inline">{t('customer.show')}</span>
                 <select value={perPage} onChange={(e) => { setPerPage(parseInt(e.target.value)); setCurrentPage(1); }}
                   className="px-2 py-1 text-xs border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#007c89]">
                   <option value={10}>10</option>
@@ -435,7 +437,7 @@ export default function CustomerIndex() {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                <span className="hidden sm:inline">per page</span>
+                <span className="hidden sm:inline">{t('customer.per_page')}</span>
               </div>
             </div>
           )}

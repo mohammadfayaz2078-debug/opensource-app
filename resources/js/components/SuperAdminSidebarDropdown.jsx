@@ -27,6 +27,8 @@ const Icons = {
 };
 
 const POPUP_WIDTH = 256;
+const POPUP_MAX_HEIGHT = 420;
+const VIEWPORT_GAP = 8;
 
 const SuperAdminSidebarDropdown = ({ 
   isOpen, 
@@ -38,6 +40,7 @@ const SuperAdminSidebarDropdown = ({
 }) => {
   const [panelStyle, setPanelStyle] = useState({});
   const buttonRef = useRef(null);
+  const panelRef = useRef(null);
   const [mounted, setMounted] = useState(false);
 
   const IconComponent = () => {
@@ -56,8 +59,17 @@ const SuperAdminSidebarDropdown = ({
     if (!buttonRef.current) return;
 
     const rect = buttonRef.current.getBoundingClientRect();
-    const top = rect.top;
+    const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
+    const maxPopupHeight = Math.min(POPUP_MAX_HEIGHT, viewportHeight - (VIEWPORT_GAP * 2));
+    const popupHeight = Math.min(
+      panelRef.current?.scrollHeight || panelRef.current?.offsetHeight || 240,
+      maxPopupHeight,
+    );
+    const top = Math.max(
+      VIEWPORT_GAP,
+      Math.min(rect.top, viewportHeight - popupHeight - VIEWPORT_GAP),
+    );
     let left;
 
     if (isRTL) {
@@ -75,7 +87,8 @@ const SuperAdminSidebarDropdown = ({
 
     setPanelStyle({
       top: `${top}px`,
-      left: `${left}px`
+      left: `${left}px`,
+      maxHeight: `${maxPopupHeight}px`,
     });
   };
 
@@ -96,12 +109,14 @@ const SuperAdminSidebarDropdown = ({
     if (isOpen) {
       setMounted(true);
       updatePanelPosition();
+      const frame = requestAnimationFrame(updatePanelPosition);
       
       // Add event listeners
       window.addEventListener('resize', updatePanelPosition);
       window.addEventListener('scroll', updatePanelPosition, true);
       
       return () => {
+        cancelAnimationFrame(frame);
         window.removeEventListener('resize', updatePanelPosition);
         window.removeEventListener('scroll', updatePanelPosition, true);
       };
@@ -125,14 +140,13 @@ const SuperAdminSidebarDropdown = ({
         ref={buttonRef}
         onClick={onToggle}
         className={`w-full flex items-center justify-between px-3 py-2 transition text-base
-          ${isRTL ? 'flex-row-reverse' : ''}
           ${isOpen 
             ? 'text-[#0EA5E9] bg-[#EFF6FF] font-medium' 
             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }
         `}
       >
-        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="flex items-center">
           {/* Icon display */}
           <div className="w-6 h-6 flex items-center justify-center">
             <IconComponent />
@@ -159,8 +173,10 @@ const SuperAdminSidebarDropdown = ({
       {/* Portal dropdown */}
       {isOpen && mounted && createPortal(
         <div
+          ref={panelRef}
           style={panelStyle}
-          className="fixed z-50 w-64 rounded-lg border border-slate-200 bg-white shadow-2xl overflow-hidden"
+          dir={isRTL ? 'rtl' : 'ltr'}
+          className="fixed z-[110] w-64 rounded-lg border border-slate-200 bg-white shadow-2xl overflow-hidden flex flex-col"
         >
           <div className="px-3 py-2 border-b border-slate-200 bg-slate-50">
             <p className="text-sm font-semibold text-slate-700">
@@ -168,7 +184,7 @@ const SuperAdminSidebarDropdown = ({
             </p>
           </div>
 
-          <div className="p-2">
+          <div className="p-2 overflow-y-auto overscroll-contain custom-scrollbar">
             {children}
           </div>
         </div>,

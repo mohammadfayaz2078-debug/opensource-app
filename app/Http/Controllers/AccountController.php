@@ -99,6 +99,11 @@ class AccountController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $actor = Auth::user();
+        if ($request->filled('user_ids')) {
+            return response()->json(['message' => 'Other users can only be assigned after the wallet is created.'], 422);
+        }
+
         $companyId = $this->resolveCompanyId($request);
         $branchId = $this->resolveBranchId($request);
 
@@ -120,29 +125,22 @@ class AccountController extends Controller
             'type' => ['nullable', 'in:cash,bank,other'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
-            'user_ids' => ['sometimes', 'array'],
-            'user_ids.*' => ['integer', 'distinct', 'exists:users,id'],
         ]);
 
-        $userIds = $this->resolveAssignedUserIds($request, $companyId);
-        if ($userIds === null) {
-            return response()->json(['message' => 'One or more selected users are unauthorized.'], 403);
-        }
-
-        $assignedBranchIds = User::whereIn('id', $userIds)->pluck('branch_id')->unique()->values();
-        $branchId = $assignedBranchIds->count() === 1 ? (int) $assignedBranchIds->first() : $branchId;
+        $branchId = $actor instanceof User ? $actor->branch_id : null;
 
         $account = Account::create([
             'company_id' => $companyId,
             'branch_id' => $branchId,
+            'owner_user_id' => $actor instanceof User ? $actor->id : null,
+            'owner_type' => $actor::class,
+            'owner_id' => $actor->id,
             'name' => $validated['name'],
             'wallet_number' => Account::generateWalletNumber(),
             'type' => $validated['type'] ?? 'cash',
             'description' => $validated['description'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
-
-        $account->users()->sync($userIds);
 
         return response()->json([
             'data'    => $account->load('users:id,first_name,last_name,email,branch_id'),
@@ -156,6 +154,10 @@ class AccountController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $account = Account::accessibleTo(Auth::user())->forCompany($companyId)->findOrFail($id);
+
+        if (!$account->isOwnedBy(Auth::user())) {
+            return response()->json(['message' => 'Only the wallet owner can update it or assign users.'], 403);
+        }
 
         return response()->json(['data' => $account->load('users:id,first_name,last_name,email,branch_id')]);
     }
@@ -194,7 +196,8 @@ class AccountController extends Controller
         DB::transaction(function () use ($account, $validated, $userIds) {
             $account->update(collect($validated)->except('user_ids')->all());
             if ($userIds !== null) {
-                $account->users()->sync($userIds);
+                $ownerUserId = $account->owner_type === User::class ? $account->owner_id : null;
+                $account->users()->sync(array_values(array_diff($userIds, [$ownerUserId])));
             }
         });
 
@@ -210,6 +213,10 @@ class AccountController extends Controller
         $branchId = $this->resolveBranchId($request);
 
         $account = Account::accessibleTo(Auth::user())->forCompany($companyId)->findOrFail($id);
+
+        if (!$account->isOwnedBy(Auth::user())) {
+            return response()->json(['message' => 'Only the wallet owner can delete it.'], 403);
+        }
 
         if ($account->transactions()->exists()) {
             return response()->json([
@@ -284,13 +291,10 @@ class AccountController extends Controller
 
     public function assignableUsers(): JsonResponse
     {
-        if (!AuthHelper::isCompanyAdmin() && !(Auth::user() instanceof \App\Models\SuperAdmin)) {
-            return response()->json(['data' => []]);
-        }
-
         $query = User::with('branch:id,branch_name')->where('status', true)->orderBy('first_name');
-        if (AuthHelper::isCompanyAdmin() && !(Auth::user() instanceof \App\Models\SuperAdmin)) {
-            $query->where('company_id', AuthHelper::getCompanyId());
+        $query->where('company_id', AuthHelper::getCompanyId());
+        if (Auth::user() instanceof User) {
+            $query->where('branch_id', AuthHelper::getBranchId());
         }
 
         return response()->json(['data' => $query->get(['id', 'company_id', 'branch_id', 'first_name', 'last_name', 'email'])]);
@@ -298,14 +302,11 @@ class AccountController extends Controller
 
     private function resolveAssignedUserIds(Request $request, int $companyId): ?array
     {
-        if (AuthHelper::isBranchUser()) {
-            return [Auth::id()];
-        }
-
         $userIds = array_values(array_unique(array_map('intval', $request->input('user_ids', []))));
-        $query = User::whereIn('id', $userIds);
-        if (!(Auth::user() instanceof \App\Models\SuperAdmin)) {
-            $query->where('company_id', $companyId);
+        $query = User::whereIn('id', $userIds)
+            ->where('company_id', $companyId);
+        if (Auth::user() instanceof User) {
+            $query->where('branch_id', AuthHelper::getBranchId());
         }
 
         return $query->count() === count($userIds) ? $userIds : null;

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function CustomerCreate() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
@@ -42,7 +44,7 @@ export default function CustomerCreate() {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to create customer.' });
+        setErrors({ general: err.response?.data?.message || t('customer.create_failed') });
       }
     } finally {
       setLoading(false);
@@ -56,13 +58,13 @@ export default function CustomerCreate() {
       {/* Breadcrumb */}
       <div className="mb-3">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-0.5">
-          <button onClick={() => navigate('/customers')} className="hover:text-[#007c89]">Customers</button>
+          <button onClick={() => navigate('/customers')} className="hover:text-[#007c89]">{t('customer.breadcrumb')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">New Customer</span>
+          <span className="text-gray-700">{t('customer.new_customer')}</span>
         </div>
-        <h1 className="text-xl font-semibold text-gray-900">Add Customer</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t('customer.add_customer')}</h1>
       </div>
 
       {errors.general && (
@@ -74,26 +76,26 @@ export default function CustomerCreate() {
           {/* Customer Information */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Customer Information</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('customer.info')}</h2>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Customer Code
+                    {t('customer.code_field')}
                   </label>
                   <input
                     name="user_code"
                     value={form.user_code}
                     onChange={handleChange}
                     className={inputClass('user_code')}
-                    placeholder="Auto-generated if empty"
+                    placeholder={t('customer.code_placeholder')}
                   />
                   {errors.user_code && <p className="text-red-500 text-xs mt-0.5">{errors.user_code[0]}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    First Name *
+                    {t('customer.first_name')} *
                   </label>
                   <input
                     name="first_name"
@@ -106,7 +108,7 @@ export default function CustomerCreate() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Last Name
+                    {t('customer.last_name')}
                   </label>
                   <input
                     name="last_name"
@@ -123,13 +125,13 @@ export default function CustomerCreate() {
           {/* Contact Information */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Contact Information</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('customer.contact_info')}</h2>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Phone
+                    {t('customer.phone_label')}
                   </label>
                   <input
                     name="phone"
@@ -142,7 +144,7 @@ export default function CustomerCreate() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Email
+                    {t('customer.email_label')}
                   </label>
                   <input
                     type="email"
@@ -161,13 +163,13 @@ export default function CustomerCreate() {
           {/* Address & Location */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Address & Location</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('customer.address_location')}</h2>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Street Address
+                    {t('customer.street_address')}
                   </label>
                   <textarea
                     name="street_address"
@@ -175,34 +177,34 @@ export default function CustomerCreate() {
                     onChange={handleChange}
                     rows="1"
                     className={inputClass('street_address')}
-                    placeholder="Street, building, etc."
+                    placeholder={t('customer.street_placeholder')}
                   />
                   {errors.street_address && <p className="text-red-500 text-xs mt-0.5">{errors.street_address[0]}</p>}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      District
+                      {t('customer.district')}
                     </label>
                     <input
                       name="district"
                       value={form.district}
                       onChange={handleChange}
                       className={inputClass('district')}
-                      placeholder="District name"
+                      placeholder={t('customer.district_placeholder')}
                     />
                     {errors.district && <p className="text-red-500 text-xs mt-0.5">{errors.district[0]}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      Province
+                      {t('customer.province')}
                     </label>
                     <input
                       name="province"
                       value={form.province}
                       onChange={handleChange}
                       className={inputClass('province')}
-                      placeholder="Province name"
+                      placeholder={t('customer.province_placeholder')}
                     />
                     {errors.province && <p className="text-red-500 text-xs mt-0.5">{errors.province[0]}</p>}
                   </div>
@@ -210,7 +212,7 @@ export default function CustomerCreate() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      GPS Latitude
+                      {t('customer.gps_lat')}
                     </label>
                     <input
                       type="number"
@@ -224,7 +226,7 @@ export default function CustomerCreate() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      GPS Longitude
+                      {t('customer.gps_lng')}
                     </label>
                     <input
                       type="number"
@@ -239,7 +241,7 @@ export default function CustomerCreate() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Country
+                    {t('customer.country')}
                   </label>
                   <input
                     name="country"
@@ -256,13 +258,13 @@ export default function CustomerCreate() {
           {/* Additional Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Additional Information</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('customer.additional_info')}</h2>
             </div>
             <div className="p-4">
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Notes
+                    {t('customer.notes')}
                   </label>
                   <textarea
                     name="note"
@@ -270,7 +272,7 @@ export default function CustomerCreate() {
                     onChange={handleChange}
                     rows="2"
                     className={inputClass('note')}
-                    placeholder="Any additional information about this customer..."
+                    placeholder={t('customer.notes_placeholder')}
                   />
                   {errors.note && <p className="text-red-500 text-xs mt-0.5">{errors.note[0]}</p>}
                 </div>
@@ -283,7 +285,7 @@ export default function CustomerCreate() {
                     className="h-3.5 w-3.5 text-[#007c89] focus:ring-[#007c89] border-gray-300 rounded"
                   />
                   <label className="text-sm text-gray-700">
-                    Active (available for sales)
+                    {t('customer.active_for_sales')}
                   </label>
                 </div>
               </div>
@@ -300,14 +302,14 @@ export default function CustomerCreate() {
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Creating...
+                  {t('customer.creating')}
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                   </svg>
-                  Create Customer
+                  {t('customer.create_customer')}
                 </>
               )}
             </button>
@@ -316,7 +318,7 @@ export default function CustomerCreate() {
               onClick={() => navigate('/customers')}
               className="inline-flex items-center justify-center px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         </div>

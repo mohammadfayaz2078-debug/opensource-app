@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../plugins/axios';
 import Swal from 'sweetalert2';
+import { useTranslation } from 'react-i18next';
 
 const BranchUsersModal = ({ branch, isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -28,7 +30,7 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
       }
     } catch (err) {
       console.error('Failed to fetch branch users:', err);
-      Swal.fire('Error', err.response?.data?.message || 'Failed to load users', 'error');
+      Swal.fire(t('error'), err.response?.data?.message || t('branch_users.load_failed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -41,14 +43,14 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
 
   const loginAsUser = async (user) => {
     const result = await Swal.fire({
-      title: 'Confirm Impersonation',
-      html: `Are you sure you want to login as <strong>${user.full_name}</strong>?<br><small class="text-gray-500">${user.email}</small>`,
+      title: t('branch_users.confirm_title'),
+      html: `${t('branch_users.confirm_message', { name: user.full_name })}<br><small class="text-gray-500">${user.email}</small>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#007c89',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Login as User',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: t('branch_users.confirm_login'),
+      cancelButtonText: t('cancel'),
     });
 
     if (!result.isConfirmed) return;
@@ -75,7 +77,7 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
         window.location.href = '/dashboard';
       }
     } catch (err) {
-      Swal.fire('Error', err.response?.data?.message || 'Failed to impersonate user', 'error');
+      Swal.fire(t('error'), err.response?.data?.message || t('branch_users.impersonate_failed'), 'error');
     } finally {
       setImpersonatingUserId(null);
     }
@@ -95,10 +97,10 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Branch Users
+                {t('branch_users.title')}
               </h3>
               <p className="text-sm text-gray-500 mt-0.5">
-                {branch?.branch_name} — Select a user to login as
+                {t('branch_users.subtitle', { branch: branch?.branch_name })}
               </p>
             </div>
             <button
@@ -118,14 +120,14 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name or email..."
+                placeholder={t('branch_users.search_placeholder')}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#007c89] focus:border-transparent outline-none"
               />
               <button
                 type="submit"
                 className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
               >
-                Search
+                {t('branch_users.search')}
               </button>
             </form>
           </div>
@@ -135,14 +137,14 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="inline-block animate-spin rounded-full h-7 w-7 border-2 border-[#007c89] border-t-transparent"></div>
-                <span className="ml-3 text-gray-500 text-sm">Loading users...</span>
+                <span className="ml-3 text-gray-500 text-sm">{t('branch_users.loading')}</span>
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-12">
                 <svg className="mx-auto h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
-                <p className="mt-2 text-gray-500 text-sm">No users found in this branch</p>
+                <p className="mt-2 text-gray-500 text-sm">{t('branch_users.empty')}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -170,14 +172,14 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
                       {/* Role Badge */}
                       {user.role && (
                         <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700">
-                          {user.role}
+                          {t(`branch_users.roles.${user.role}`, { defaultValue: user.role })}
                         </span>
                       )}
                       {/* Status Badge */}
                       <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
                         user.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
                       }`}>
-                        {user.is_active ? 'Active' : 'Inactive'}
+                        {user.is_active ? t('active') : t('inactive')}
                       </span>
                       {/* Login Button */}
                       <button
@@ -192,7 +194,7 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                           </svg>
                         )}
-                        Login as User
+                        {t('branch_users.login_as_user')}
                       </button>
                     </div>
                   </div>
@@ -204,13 +206,13 @@ const BranchUsersModal = ({ branch, isOpen, onClose }) => {
           {/* Footer */}
           <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 rounded-b-xl flex items-center justify-between">
             <p className="text-xs text-gray-500">
-              {users.length} user{users.length !== 1 ? 's' : ''} in this branch
+              {t('branch_users.count', { count: users.length })}
             </p>
             <button
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Close
+              {t('branch_users.close')}
             </button>
           </div>
         </div>

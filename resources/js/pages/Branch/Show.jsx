@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import {
@@ -28,6 +29,7 @@ import {
 } from 'lucide-react';
 
 const BranchShow = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
@@ -68,7 +70,7 @@ const BranchShow = () => {
       }
     } catch (err) {
       console.error('Failed to fetch branch:', err);
-      const errorMsg = err.response?.data?.message || 'Failed to load branch details';
+      const errorMsg = err.response?.data?.message || t('branch.load_failed');
       setError(errorMsg);
       Swal.fire('Error', errorMsg, 'error');
       setTimeout(() => {
@@ -89,7 +91,7 @@ const BranchShow = () => {
         <div className="w-full max-w-6xl bg-white rounded-lg shadow-sm">
           <div className="text-center py-12">
             <Loader2 className="inline-block w-8 h-8 text-[#007c89] animate-spin" />
-            <p className="mt-3 text-sm text-gray-600">Loading branch details...</p>
+            <p className="mt-3 text-sm text-gray-600">{t('branch.loading_details')}</p>
           </div>
         </div>
       </div>
@@ -139,7 +141,7 @@ const BranchShow = () => {
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <h1 className="text-lg font-semibold text-gray-900">Branch Details</h1>
+            <h1 className="text-lg font-semibold text-gray-900">{t('branch.details')}</h1>
           </div>
           <div className="flex items-center space-x-2">
             <Link
@@ -147,7 +149,7 @@ const BranchShow = () => {
               className="text-gray-600 hover:text-gray-800 px-3 py-1.5 bg-gray-100 rounded-md text-sm inline-flex items-center"
             >
               <Edit2 className="w-4 h-4 mr-1" />
-              Edit
+              {t('branch.edit')}
             </Link>
             <Link
               to="../branches"
@@ -191,12 +193,12 @@ const BranchShow = () => {
                 ) : (
                   <XCircle className="w-3 h-3 mr-1 text-gray-400" />
                 )}
-                {branch.is_active ? 'Active' : 'Inactive'}
+                {branch.is_active ? t('branch.active') : t('branch.inactive')}
               </span>
             </div>
             {branch.company && (
               <p className="text-xs text-gray-500 mt-2">
-                Company: {branch.company.company_name}
+                {t('branch.company', { name: branch.company.company_name })}
               </p>
             )}
           </div>
@@ -210,7 +212,7 @@ const BranchShow = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs font-medium text-gray-600">Users</span>
+                  <span className="text-xs font-medium text-gray-600">{t('branch.users')}</span>
                 </div>
                 <div className="mt-2">
                   <span className="text-2xl font-bold text-gray-900">{userCount}</span>
@@ -231,7 +233,7 @@ const BranchShow = () => {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {isUserFull ? 'Full capacity' : `${Math.round(userUsagePercent)}% used`}
+                {isUserFull ? t('branch.full_capacity') : t('branch.percent_used', { pct: Math.round(userUsagePercent) })}
               </p>
             </div>
           </div>
@@ -242,7 +244,7 @@ const BranchShow = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <Package className="w-4 h-4 text-green-600" />
-                  <span className="text-xs font-medium text-gray-600">Products</span>
+                  <span className="text-xs font-medium text-gray-600">{t('branch.products')}</span>
                 </div>
                 <div className="mt-2">
                   <span className="text-2xl font-bold text-gray-900">{productCount}</span>
@@ -263,7 +265,7 @@ const BranchShow = () => {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {isProductFull ? 'Full capacity' : `${Math.round(productUsagePercent)}% used`}
+                {isProductFull ? t('branch.full_capacity') : t('branch.percent_used', { pct: Math.round(productUsagePercent) })}
               </p>
             </div>
           </div>
@@ -272,11 +274,11 @@ const BranchShow = () => {
           <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-lg p-4 border border-purple-200">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-purple-600" />
-              <span className="text-xs font-medium text-gray-600">Created</span>
+              <span className="text-xs font-medium text-gray-600">{t('branch.created_label')}</span>
             </div>
             <p className="text-sm text-gray-900 mt-2">{formatDate(branch.created_at)}</p>
             <p className="text-xs text-gray-500 mt-1">
-              Updated: {formatDate(branch.updated_at)}
+              {t('branch.updated', { date: formatDate(branch.updated_at) })}
             </p>
           </div>
         </div>
@@ -293,7 +295,7 @@ const BranchShow = () => {
               }`}
             >
               <Info className="w-4 h-4 mr-2" />
-              Branch Info
+              {t('branch.tab_info')}
             </button>
             <button
               onClick={() => setActiveTab('location')}
@@ -304,7 +306,7 @@ const BranchShow = () => {
               }`}
             >
               <MapPin className="w-4 h-4 mr-2" />
-              Location
+              {t('branch.tab_location')}
             </button>
             <button
               onClick={() => setActiveTab('contact')}
@@ -315,7 +317,7 @@ const BranchShow = () => {
               }`}
             >
               <Phone className="w-4 h-4 mr-2" />
-              Contact
+              {t('branch.tab_contact')}
             </button>
             <button
               onClick={() => setActiveTab('users')}
@@ -326,7 +328,7 @@ const BranchShow = () => {
               }`}
             >
               <Users className="w-4 h-4 mr-2" />
-              Users
+              {t('branch.tab_users')}
               <span className="ml-1 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
                 {users.length}
               </span>
@@ -342,27 +344,27 @@ const BranchShow = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Branch Name
+                    {t('branch.name')}
                   </label>
                   <p className="text-sm text-gray-900 mt-1 font-medium">{branch.branch_name}</p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Branch Slogan
+                    {t('branch.slogan_label')}
                   </label>
-                  <p className="text-sm text-gray-900 mt-1">{branch.branch_slogan || 'Not provided'}</p>
+                  <p className="text-sm text-gray-900 mt-1">{branch.branch_slogan || t('branch.not_provided')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Company
+                    {t('branch.company_label')}
                   </label>
                   <p className="text-sm text-gray-900 mt-1 font-medium">
-                    {branch.company?.company_name || 'N/A'}
+                    {branch.company?.company_name || t('branch.na')}
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t('branch.status_label')}
                   </label>
                   <p className="text-sm text-gray-900 mt-1">
                     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
@@ -370,7 +372,7 @@ const BranchShow = () => {
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-200 text-gray-600'
                     }`}>
-                      {branch.is_active ? 'Active' : 'Inactive'}
+                      {branch.is_active ? t('branch.active') : t('branch.inactive')}
                     </span>
                   </p>
                 </div>
@@ -378,23 +380,23 @@ const BranchShow = () => {
 
               {/* Capacity Settings Section */}
               <div className="border-t border-gray-200 pt-4 mt-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Capacity Settings</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">{t('branch.capacity')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-blue-50/50 rounded-md p-3 border border-blue-100">
                     <div className="flex items-center justify-between">
                       <div>
                         <label className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
                           <Users className="w-3.5 h-3.5" />
-                          Allowed Users
+                          {t('branch.allowed_users')}
                         </label>
                         <p className="text-sm text-gray-900 mt-1 font-medium">
                           {branch.allowed_user_count || 1}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">Current: {userCount}</p>
+                        <p className="text-xs text-gray-500">{t('branch.current', { count: userCount })}</p>
                         <p className={`text-xs font-medium ${isUserFull ? 'text-red-500' : 'text-green-500'}`}>
-                          {isUserFull ? 'Full' : `${Math.round(userUsagePercent)}% used`}
+                          {isUserFull ? t('branch.full') : t('branch.percent_used', { pct: Math.round(userUsagePercent) })}
                         </p>
                       </div>
                     </div>
@@ -404,16 +406,16 @@ const BranchShow = () => {
                       <div>
                         <label className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
                           <Package className="w-3.5 h-3.5" />
-                          Allowed Products
+                          {t('branch.allowed_products')}
                         </label>
                         <p className="text-sm text-gray-900 mt-1 font-medium">
                           {branch.allowed_product_publish_count || 10}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">Current: {productCount}</p>
+                        <p className="text-xs text-gray-500">{t('branch.current', { count: productCount })}</p>
                         <p className={`text-xs font-medium ${isProductFull ? 'text-red-500' : 'text-green-500'}`}>
-                          {isProductFull ? 'Full' : `${Math.round(productUsagePercent)}% used`}
+                          {isProductFull ? t('branch.full') : t('branch.percent_used', { pct: Math.round(productUsagePercent) })}
                         </p>
                       </div>
                     </div>
@@ -429,33 +431,33 @@ const BranchShow = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Province
+                    {t('branch.province')}
                   </label>
-                  <p className="text-sm text-gray-900 mt-1">{branch.branch_province || 'Not provided'}</p>
+                  <p className="text-sm text-gray-900 mt-1">{branch.branch_province || t('branch.not_provided')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    District
+                    {t('branch.district')}
                   </label>
-                  <p className="text-sm text-gray-900 mt-1">{branch.branch_district || 'Not provided'}</p>
+                  <p className="text-sm text-gray-900 mt-1">{branch.branch_district || t('branch.not_provided')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Village
+                    {t('branch.village')}
                   </label>
-                  <p className="text-sm text-gray-900 mt-1">{branch.branch_village || 'Not provided'}</p>
+                  <p className="text-sm text-gray-900 mt-1">{branch.branch_village || t('branch.not_provided')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Country
+                    {t('branch.country')}
                   </label>
-                  <p className="text-sm text-gray-900 mt-1">{branch.branch_country || 'Not provided'}</p>
+                  <p className="text-sm text-gray-900 mt-1">{branch.branch_country || t('branch.not_provided')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3 md:col-span-2">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Street Address
+                    {t('branch.street')}
                   </label>
-                  <p className="text-sm text-gray-900 mt-1">{branch.branch_street_address || 'Not provided'}</p>
+                  <p className="text-sm text-gray-900 mt-1">{branch.branch_street_address || t('branch.not_provided')}</p>
                 </div>
               </div>
             </div>
@@ -467,7 +469,7 @@ const BranchShow = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Phone
+                    {t('branch.phone')}
                   </label>
                   <p className="text-sm text-gray-900 mt-1">
                     {branch.branch_phone ? (
@@ -475,13 +477,13 @@ const BranchShow = () => {
                         {branch.branch_phone}
                       </a>
                     ) : (
-                      'Not provided'
+                      t('branch.not_provided')
                     )}
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Email
+                    {t('branch.email')}
                   </label>
                   <p className="text-sm text-gray-900 mt-1">
                     {branch.branch_email ? (
@@ -489,13 +491,13 @@ const BranchShow = () => {
                         {branch.branch_email}
                       </a>
                     ) : (
-                      'Not provided'
+                      t('branch.not_provided')
                     )}
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3 md:col-span-2">
                   <label className="text-xs text-gray-500 uppercase tracking-wider">
-                    Website
+                    {t('branch.website')}
                   </label>
                   <p className="text-sm text-gray-900 mt-1">
                     {branch.branch_website ? (
@@ -519,13 +521,13 @@ const BranchShow = () => {
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-gray-500" />
                   <span className="text-sm text-gray-600">
-                    {users.length} of {branch.allowed_user_count || 1} users
+                    {t('branch.users_of', { current: users.length, total: branch.allowed_user_count || 1 })}
                   </span>
                 </div>
                 {isUserFull && (
                   <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    User limit reached
+                    {t('branch.limit_reached')}
                   </span>
                 )}
               </div>
@@ -533,7 +535,7 @@ const BranchShow = () => {
               {users.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="w-16 h-16 mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-500 text-sm">No users found for this branch</p>
+                  <p className="text-gray-500 text-sm">{t('branch.no_users')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -557,7 +559,7 @@ const BranchShow = () => {
                             {user.position && (
                               <span className="text-xs text-gray-600 inline-flex items-center">
                                 <Building2 className="w-3 h-3 mr-1" />
-                                {user.position?.position || 'No Position'}
+                                {user.position?.position || t('branch.no_position')}
                               </span>
                             )}
                             {user.phone && (
@@ -579,7 +581,7 @@ const BranchShow = () => {
                               : 'bg-gray-200 text-gray-600'
                           }`}
                         >
-                          {user.is_active ? 'Active' : 'Inactive'}
+                          {user.is_active ? t('branch.active') : t('branch.inactive')}
                         </span>
                       </div>
                     </div>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function ProductCategoryEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
@@ -52,7 +54,7 @@ export default function ProductCategoryEdit() {
           setErrors({ general: err.response.data.message });
         }
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to update product category.' });
+        setErrors({ general: err.response?.data?.message || t('product_category.update_failed') });
       }
     } finally {
       setLoading(false);
@@ -63,7 +65,7 @@ export default function ProductCategoryEdit() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading category...</span>
+        <span className="ml-3 text-gray-600">{t('product_category.loading_category')}</span>
       </div>
     );
   }
@@ -75,7 +77,7 @@ export default function ProductCategoryEdit() {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/product-categories')} className="hover:text-[#007c89]">Product Categories</button>
+          <button onClick={() => navigate('/product-categories')} className="hover:text-[#007c89]">{t('product_category.title')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -85,9 +87,9 @@ export default function ProductCategoryEdit() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">Edit</span>
+          <span className="text-gray-700">{t('edit')}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Edit Product Category</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">{t('product_category.edit_title')}</h1>
       </div>
 
       {errors.general && (
@@ -99,13 +101,13 @@ export default function ProductCategoryEdit() {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Category Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('product_category.category_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Category Name
+                      {t('product_category.category_name').replace(' *', '')}
                     </label>
                     <input
                       name="name"
@@ -118,7 +120,7 @@ export default function ProductCategoryEdit() {
                   
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Description
+                      {t('product_category.description')}
                     </label>
                     <textarea
                       name="description"
@@ -145,14 +147,14 @@ export default function ProductCategoryEdit() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Saving...
+                    {t('product_category.saving')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Changes
+                    {t('product_category.save_changes')}
                   </>
                 )}
               </button>
@@ -161,7 +163,7 @@ export default function ProductCategoryEdit() {
                 onClick={() => navigate(`/product-categories/${id}`)}
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 mt-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>

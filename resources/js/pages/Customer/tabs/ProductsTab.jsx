@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function ProductsTab({ products = [] }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -47,7 +49,7 @@ export default function ProductsTab({ products = [] }) {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Products Purchased</title>
+          <title>${t('customer.products_purchased')}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -58,7 +60,7 @@ export default function ProductsTab({ products = [] }) {
         </head>
         <body>
           <div class="header">
-            <h2>Products Purchased</h2>
+            <h2>${t('customer.products_purchased')}</h2>
             <p>${new Date().toLocaleDateString()}</p>
           </div>
           ${printContent ? printContent.innerHTML : ''}
@@ -72,7 +74,7 @@ export default function ProductsTab({ products = [] }) {
   return (
     <div>
       <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-        <h2 className="text-lg font-medium text-gray-900">Products Purchased</h2>
+        <h2 className="text-lg font-medium text-gray-900">{t('customer.products_purchased')}</h2>
         
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
@@ -82,7 +84,7 @@ export default function ProductsTab({ products = [] }) {
               onChange={(e) => setDateFrom(e.target.value)}
               className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
             />
-            <span className="text-xs text-gray-400">to</span>
+            <span className="text-xs text-gray-400">{t('customer.to')}</span>
             <input
               type="date"
               value={dateTo}
@@ -93,7 +95,7 @@ export default function ProductsTab({ products = [] }) {
               onClick={() => { setDateFrom(''); setDateTo(''); }}
               className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
             >
-              Clear
+              {t('customer.clear')}
             </button>
           </div>
 
@@ -104,7 +106,7 @@ export default function ProductsTab({ products = [] }) {
             <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            Print
+            {t('customer.print')}
           </button>
         </div>
       </div>
@@ -114,7 +116,7 @@ export default function ProductsTab({ products = [] }) {
           <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
-          <p className="text-gray-500">No products purchased by this customer.</p>
+          <p className="text-gray-500">{t('customer.no_products')}</p>
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
@@ -123,12 +125,12 @@ export default function ProductsTab({ products = [] }) {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barcode</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Qty</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spent</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Purchase</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customer.product')}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customer.barcode')}</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customer.unit_price')}</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customer.total_qty')}</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customer.total_spent')}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customer.last_purchase')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -170,20 +172,20 @@ export default function ProductsTab({ products = [] }) {
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-sm">
                   <div>
-                    <span className="text-[10px] text-gray-400 uppercase block">Unit Price</span>
+                    <span className="text-[10px] text-gray-400 uppercase block">{t('customer.unit_price')}</span>
                     <span className="font-medium text-gray-900">{formatCurrency(item.unit_price)}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-gray-400 uppercase block">Qty</span>
+                    <span className="text-[10px] text-gray-400 uppercase block">{t('customer.qty')}</span>
                     <span className="font-medium text-gray-900">{item.total_quantity?.toFixed(2) || 0}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-gray-400 uppercase block">Total</span>
+                    <span className="text-[10px] text-gray-400 uppercase block">{t('customer.total_short')}</span>
                     <span className="font-semibold text-gray-900">{formatCurrency(item.total_spent)}</span>
                   </div>
                 </div>
                 <div className="text-xs text-gray-500">
-                  Last purchase: {formatDate(item.last_purchase)}
+                  {t('customer.last_purchase_label', { date: formatDate(item.last_purchase) })}
                 </div>
               </div>
             ))}

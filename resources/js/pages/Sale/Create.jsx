@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function SaleCreate() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [units, setUnits] = useState([]);
@@ -61,7 +63,7 @@ export default function SaleCreate() {
 
   const addProduct = (product) => {
     if (items.some(it => it.product_id === product.id)) {
-      setErrors({ general: 'This product is already added.' });
+      setErrors({ general: t('sale.product_already_added') });
       return;
     }
     setItems(prev => [...prev, {
@@ -98,7 +100,7 @@ export default function SaleCreate() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (items.length === 0) { setErrors({ general: 'Please add at least one item.' }); return; }
+    if (items.length === 0) { setErrors({ general: t('sale.please_add_item') }); return; }
     setLoading(true);
     setErrors({});
     try {
@@ -117,7 +119,7 @@ export default function SaleCreate() {
       navigate(`/sales/${res.data.data.id}/invoice`);
     } catch (err) {
       if (err.response?.status === 422) setErrors(err.response.data.errors || {});
-      else setErrors({ general: err.response?.data?.message || 'Failed to create invoice.' });
+      else setErrors({ general: err.response?.data?.message || t('sale.create_failed') });
     } finally { setLoading(false); }
   };
 
@@ -127,8 +129,8 @@ export default function SaleCreate() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-4">
-        <button onClick={() => navigate('/sales')} className="text-sm text-[#007c89] hover:underline">&larr; Back to Sales</button>
-        <h1 className="text-xl font-semibold text-gray-900 mt-1">New Invoice</h1>
+        <button onClick={() => navigate('/sales')} className="text-sm text-[#007c89] hover:underline">&larr; {t('sale.back_to_sales')}</button>
+        <h1 className="text-xl font-semibold text-gray-900 mt-1">{t('sale.new_invoice_title')}</h1>
       </div>
 
       {errors.general && (
@@ -139,31 +141,31 @@ export default function SaleCreate() {
         {/* Invoice Details */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
           <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-900">Invoice Details</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t('sale.invoice_details')}</h2>
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Customer</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.customer_label')}</label>
                 <select name="customer_id" value={form.customer_id} onChange={e => setForm({ ...form, customer_id: e.target.value })} className={inputClass}>
-                  <option value="">Select customer</option>
+                  <option value="">{t('sale.select_customer')}</option>
                   {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Wallet</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.wallet')}</label>
                 <select name="account_id" value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className={inputClass}>
-                  <option value="">Select Wallet</option>
+                  <option value="">{t('sale.select_wallet')}</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date *</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.date_label')}</label>
                 <input type="date" name="document_date" value={form.document_date} onChange={e => setForm({ ...form, document_date: e.target.value })} className={inputClassErr('document_date')} required />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Reference #</label>
-                <input name="reference_no" value={form.reference_no} onChange={e => setForm({ ...form, reference_no: e.target.value })} className={inputClass} placeholder="Invoice #" />
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.reference_label')}</label>
+                <input name="reference_no" value={form.reference_no} onChange={e => setForm({ ...form, reference_no: e.target.value })} className={inputClass} placeholder={t('sale.reference_placeholder')} />
               </div>
             </div>
           </div>
@@ -172,22 +174,22 @@ export default function SaleCreate() {
         {/* Items Section */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Items</h2>
-            <span className="text-xs text-gray-500">{items.length} item{items.length !== 1 ? 's' : ''} added</span>
+            <h2 className="text-sm font-semibold text-gray-900">{t('sale.items')}</h2>
+            <span className="text-xs text-gray-500">{t('sale.items_added', { count: items.length })}</span>
           </div>
 
           {/* Product Search */}
           <div className="p-4 border-b border-gray-200 bg-gray-50/50">
             <div className="max-w-sm">
-              <label className="block text-xs text-gray-500 mb-0.5">Select Product</label>
+              <label className="block text-xs text-gray-500 mb-0.5">{t('sale.select_product')}</label>
               <div className="relative" ref={dropdownRef}>
                 <input type="text" value={productSearch} onChange={e => { setProductSearch(e.target.value); setShowDropdown(true); }}
-                  onFocus={() => setShowDropdown(true)} placeholder="Search products..."
+                  onFocus={() => setShowDropdown(true)} placeholder={t('sale.search_products')}
                   className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
                 {showDropdown && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
                     {filteredProducts.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-gray-400">No products found</div>
+                      <div className="px-3 py-2 text-sm text-gray-400">{t('sale.no_products_found')}</div>
                     ) : (
                       filteredProducts.map(p => (
                         <button key={p.id} type="button" onClick={() => addProduct(p)}
@@ -206,19 +208,19 @@ export default function SaleCreate() {
           {/* Items Table */}
           <div className="p-4">
             {items.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">No items added yet. Search and select a product above.</p>
+              <p className="text-sm text-gray-400 text-center py-4">{t('sale.no_items')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase">
                       <th className="text-left py-2 px-3 font-medium w-8">#</th>
-                      <th className="text-left py-2 px-3 font-medium">Product</th>
-                      <th className="text-right py-2 px-3 font-medium w-20">Qty</th>
-                      <th className="text-left py-2 px-3 font-medium w-24">Unit</th>
-                      <th className="text-right py-2 px-3 font-medium w-24">Price</th>
-                      <th className="text-right py-2 px-3 font-medium w-20">Disc %</th>
-                      <th className="text-right py-2 px-3 font-medium w-20">Total</th>
+                      <th className="text-left py-2 px-3 font-medium">{t('sale.col_product')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-20">{t('sale.col_qty')}</th>
+                      <th className="text-left py-2 px-3 font-medium w-24">{t('sale.col_unit')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-24">{t('sale.col_price')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-20">{t('sale.col_disc')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-20">{t('sale.col_total')}</th>
                       <th className="text-center py-2 px-3 font-medium w-12"></th>
                     </tr>
                   </thead>
@@ -237,7 +239,7 @@ export default function SaleCreate() {
                           <td className="py-2 px-3">
                             <select value={item.unit_id} onChange={(e) => updateItemField(idx, 'unit_id', e.target.value)}
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89]">
-                              <option value="">Default</option>
+                              <option value="">{t('sale.default')}</option>
                               {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                             </select>
                           </td>
@@ -274,45 +276,45 @@ export default function SaleCreate() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Discount Type</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.discount_type')}</label>
                   <select name="discount_type" value={form.discount_type} onChange={e => setForm({ ...form, discount_type: e.target.value })} className={inputClass}>
-                    <option value="fixed">Fixed</option>
-                    <option value="percent">Percent</option>
+                    <option value="fixed">{t('sale.fixed')}</option>
+                    <option value="percent">{t('sale.percent')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Discount</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.discount')}</label>
                   <input type="number" name="discount_value" value={form.discount_value} onChange={e => setForm({ ...form, discount_value: e.target.value })} min="0" step="any" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Shipping Cost</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.shipping_cost')}</label>
                   <input type="number" name="shipping_cost" value={form.shipping_cost} onChange={e => setForm({ ...form, shipping_cost: e.target.value })} min="0" step="any" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Paid Amount</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.paid_amount')}</label>
                   <input type="number" name="paid_amount" value={form.paid_amount} onChange={e => setForm({ ...form, paid_amount: e.target.value })} min="0" step="any" className={inputClass} />
                 </div>
               </div>
               <div className="mt-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
-                <textarea name="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows="2" className={inputClass} placeholder="Optional notes..." />
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale.notes')}</label>
+                <textarea name="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows="2" className={inputClass} placeholder={t('sale.notes_placeholder')} />
               </div>
             </div>
           </div>
           <div>
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Summary</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">{t('sale.summary')}</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>{subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Discount</span><span>-{totalDiscount.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Shipping</span><span>{parseFloat(form.shipping_cost || 0).toFixed(2)}</span></div>
-                <div className="flex justify-between font-bold text-lg border-t pt-2"><span>Total</span><span>{grandTotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-green-600"><span>Paid</span><span>{parseFloat(form.paid_amount || 0).toFixed(2)}</span></div>
-                <div className="flex justify-between text-red-600 font-bold"><span>Due</span><span>{(grandTotal - parseFloat(form.paid_amount || 0)).toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">{t('sale.subtotal')}</span><span>{subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">{t('sale.discount')}</span><span>-{totalDiscount.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">{t('sale.shipping')}</span><span>{parseFloat(form.shipping_cost || 0).toFixed(2)}</span></div>
+                <div className="flex justify-between font-bold text-lg border-t pt-2"><span>{t('sale.total')}</span><span>{grandTotal.toFixed(2)}</span></div>
+                <div className="flex justify-between text-green-600"><span>{t('sale.paid')}</span><span>{parseFloat(form.paid_amount || 0).toFixed(2)}</span></div>
+                <div className="flex justify-between text-red-600 font-bold"><span>{t('sale.due')}</span><span>{(grandTotal - parseFloat(form.paid_amount || 0)).toFixed(2)}</span></div>
               </div>
               <button type="submit" disabled={loading}
                 className="w-full mt-4 px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77] disabled:opacity-50">
-                {loading ? 'Creating...' : 'Create Invoice'}
+                {loading ? t('sale.creating') : t('sale.create_invoice')}
               </button>
             </div>
           </div>

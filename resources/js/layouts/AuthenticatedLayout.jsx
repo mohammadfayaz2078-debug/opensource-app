@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import api from '../plugins/axios';
+import i18n from '../i18n';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 // Icon component
@@ -264,6 +265,7 @@ const AuthenticatedLayout = () => {
     
     if (data.language) {
       setCurrentLanguage(data.language);
+      i18n.changeLanguage(data.language);
       const rtl = isLanguageRTL(data.language);
       setIsRTL(rtl);
       document.documentElement.dir = rtl ? 'rtl' : 'ltr';
@@ -459,6 +461,8 @@ const userTypeDisplay = getUserTypeDisplay();
       });
 
       setCurrentLanguage(lang);
+      i18n.changeLanguage(lang);
+      localStorage.setItem('lang', lang);
       const rtl = isLanguageRTL(lang);
       setIsRTL(rtl);
       
@@ -547,6 +551,8 @@ const userTypeDisplay = getUserTypeDisplay();
       setUser(userData);
       const lang = userData.language || 'en';
       setCurrentLanguage(lang);
+      i18n.changeLanguage(lang);
+      localStorage.setItem('lang', lang);
       const rtl = isLanguageRTL(lang);
       setIsRTL(rtl);
       document.documentElement.dir = rtl ? 'rtl' : 'ltr';
@@ -572,6 +578,21 @@ const userTypeDisplay = getUserTypeDisplay();
     setIsRTL(rtl);
     setSidebarKey(prev => prev + 1);
   }, [currentLanguage]);
+
+  // Keep direction in sync with the actual i18n language
+  useEffect(() => {
+    const syncFromI18n = () => {
+      const lang = i18n.language || localStorage.getItem('lang') || 'en';
+      setCurrentLanguage(lang);
+      const rtl = isLanguageRTL(lang);
+      setIsRTL(rtl);
+      document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+    };
+    syncFromI18n();
+    i18n.on('languageChanged', syncFromI18n);
+    return () => i18n.off('languageChanged', syncFromI18n);
+  }, [i18n]);
 
   // Handle impersonation
   const isImpersonatingBranch = localStorage.getItem('impersonating_branch') === 'true';

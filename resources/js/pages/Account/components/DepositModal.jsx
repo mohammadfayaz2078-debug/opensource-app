@@ -1,7 +1,9 @@
 // pages/Account/components/DepositModal.jsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const DepositModal = ({ isOpen, onClose, onSuccess }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     amount: '',
     description: ''
@@ -32,7 +34,7 @@ const DepositModal = ({ isOpen, onClose, onSuccess }) => {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-5 animate-fadeIn">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-800">Make Deposit</h2>
+          <h2 className="text-lg font-bold text-gray-800">{t('account.deposit_modal_title')}</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -47,7 +49,7 @@ const DepositModal = ({ isOpen, onClose, onSuccess }) => {
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Amount *
+                {t('account.amount')} *
               </label>
               <div className="relative">
                 <input
@@ -64,7 +66,7 @@ const DepositModal = ({ isOpen, onClose, onSuccess }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
+                {t('account.description')}
               </label>
               <input
                 type="text"
@@ -81,14 +83,14 @@ const DepositModal = ({ isOpen, onClose, onSuccess }) => {
               onClick={onClose}
               className="flex-1 px-3 py-1.5 text-sm border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
             >
-              {loading ? 'Processing...' : 'Deposit'}
+              {loading ? t('account.processing') : t('account.deposit')}
             </button>
           </div>
         </form>

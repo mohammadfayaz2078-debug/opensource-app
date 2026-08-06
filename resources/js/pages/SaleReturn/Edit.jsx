@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function SaleReturnEdit() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
@@ -58,7 +60,7 @@ export default function SaleReturnEdit() {
         id: item.id,
         sale_item_id: item.sale_item_id,
         product_id: item.product_id,
-        name: item.product?.name || 'Unknown Product',
+        name: item.product?.name || t('sale_return.unknown_product'),
         quantity: parseFloat(item.quantity),
         unit_price: parseFloat(item.unit_price),
         total: parseFloat(item.total),
@@ -70,7 +72,7 @@ export default function SaleReturnEdit() {
       setOriginalItems(JSON.parse(JSON.stringify(mappedItems)));
     } catch (err) {
       console.error('Error fetching return:', err);
-      setErrors({ general: 'Failed to load return data' });
+      setErrors({ general: t('sale_return.load_failed') });
     } finally {
       setFetching(false);
     }
@@ -139,7 +141,7 @@ export default function SaleReturnEdit() {
 
   const removeItem = (index) => {
     if (items.length <= 1) {
-      setErrors({ general: 'Cannot remove the last item.' });
+      setErrors({ general: t('sale_return.cannot_remove_last') });
       return;
     }
     setItems(prev => prev.filter((_, i) => i !== index));
@@ -173,19 +175,19 @@ export default function SaleReturnEdit() {
     e.preventDefault();
     
     if (items.length === 0) { 
-      setErrors({ general: 'Please add at least one item.' }); 
+      setErrors({ general: t('sale_return.please_add_item') }); 
       return; 
     }
     
     // Validate quantities
     const invalidItems = items.filter(item => item.quantity <= 0);
     if (invalidItems.length > 0) {
-      setErrors({ general: 'All quantities must be greater than 0.' });
+      setErrors({ general: t('sale_return.quantity_positive') });
       return;
     }
     
     if (!hasChanges()) {
-      setErrors({ general: 'No changes to save.' });
+      setErrors({ general: t('sale_return.no_changes') });
       return;
     }
     
@@ -210,7 +212,7 @@ export default function SaleReturnEdit() {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to update return' });
+        setErrors({ general: err.response?.data?.message || t('sale_return.update_failed') });
       }
     } finally { 
       setLoading(false); 
@@ -225,7 +227,7 @@ export default function SaleReturnEdit() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-center py-20">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-700 text-sm">Loading return details...</span>
+          <span className="ml-3 text-gray-700 text-sm">{t('sale_return.loading_details')}</span>
         </div>
       </div>
     );
@@ -234,8 +236,8 @@ export default function SaleReturnEdit() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-4">
-        <button onClick={() => navigate('/sale-returns')} className="text-sm text-[#007c89] hover:underline">&larr; Back to Sale Returns</button>
-        <h1 className="text-xl font-semibold text-gray-900 mt-1">Edit Sale Return</h1>
+        <button onClick={() => navigate('/sale-returns')} className="text-sm text-[#007c89] hover:underline">&larr; {t('sale_return.back_to_returns')}</button>
+        <h1 className="text-xl font-semibold text-gray-900 mt-1">{t('sale_return.edit_title')}</h1>
       </div>
 
       {errors.general && (
@@ -246,31 +248,31 @@ export default function SaleReturnEdit() {
         {/* Return Details */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
           <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-900">Return Details</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t('sale_return.details')}</h2>
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Invoice *</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale_return.invoice_label')}</label>
                 <input
                   type="text"
-                  value={`Invoice #${form.sale_id}`}
+                  value={t('sale_return.invoice_ref', { ref: form.sale_id })}
                   disabled
                   className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded bg-gray-50 text-gray-600"
                 />
-                <p className="text-xs text-gray-400 mt-1">Invoice cannot be changed</p>
+                <p className="text-xs text-gray-400 mt-1">{t('sale_return.invoice_cannot_change')}</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Return Date *</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale_return.return_date')}</label>
                 <input type="date" name="return_date" value={form.return_date}
                   onChange={e => setForm({ ...form, return_date: e.target.value })}
                   className={inputClassErr('return_date')} required />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Reason</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale_return.reason')}</label>
                 <input type="text" name="reason" value={form.reason}
                   onChange={e => setForm({ ...form, reason: e.target.value })}
-                  className={inputClass} placeholder="Reason for return..." />
+                  className={inputClass} placeholder={t('sale_return.reason_placeholder')} />
               </div>
             </div>
           </div>
@@ -279,24 +281,24 @@ export default function SaleReturnEdit() {
         {/* Items Section */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Items</h2>
-            <span className="text-xs text-gray-500">{items.length} item{items.length !== 1 ? 's' : ''}</span>
+            <h2 className="text-sm font-semibold text-gray-900">{t('sale.items')}</h2>
+            <span className="text-xs text-gray-500">{t('sale_return.items_count', { count: items.length })}</span>
           </div>
 
           {/* Product Search */}
           <div className="p-4 border-b border-gray-200 bg-gray-50/50">
             <div className="max-w-sm">
-              <label className="block text-xs text-gray-500 mb-0.5">Add Product</label>
+              <label className="block text-xs text-gray-500 mb-0.5">{t('sale_return.add_product')}</label>
               <div className="relative" ref={dropdownRef}>
                 <input type="text" value={productSearch}
                   onChange={e => { setProductSearch(e.target.value); setShowDropdown(true); }}
                   onFocus={() => setShowDropdown(true)}
-                  placeholder="Search products..."
+                  placeholder={t('sale_return.search_products')}
                   className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
                 {showDropdown && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
                     {filteredProducts.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-gray-400">No products found</div>
+                      <div className="px-3 py-2 text-sm text-gray-400">{t('sale_return.no_products_found')}</div>
                     ) : (
                       filteredProducts.map(p => (
                         <button key={p.id} type="button" onClick={() => addProduct(p)}
@@ -315,18 +317,18 @@ export default function SaleReturnEdit() {
           {/* Items Table */}
           <div className="p-4">
             {items.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">No items added yet.</p>
+              <p className="text-sm text-gray-400 text-center py-4">{t('sale_return.no_items_added')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase">
                       <th className="text-left py-2 px-3 font-medium w-8">#</th>
-                      <th className="text-left py-2 px-3 font-medium">Product</th>
-                      <th className="text-right py-2 px-3 font-medium w-32">Qty</th>
-                      <th className="text-right py-2 px-3 font-medium w-28">Price</th>
-                      <th className="text-right py-2 px-3 font-medium w-24">Total</th>
-                      <th className="text-left py-2 px-3 font-medium w-48">Notes</th>
+                      <th className="text-left py-2 px-3 font-medium">{t('sale_return.col_product')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-32">{t('sale_return.col_qty')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-28">{t('sale_return.col_price')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-24">{t('sale_return.col_total')}</th>
+                      <th className="text-left py-2 px-3 font-medium w-48">{t('sale_return.notes_col')}</th>
                       <th className="text-center py-2 px-3 font-medium w-12"></th>
                     </tr>
                   </thead>
@@ -339,7 +341,7 @@ export default function SaleReturnEdit() {
                           <td className="py-2 px-3">
                             <div className="font-medium text-gray-900">{item.name}</div>
                             {item.id && (
-                              <div className="text-xs text-gray-400">ID: {item.id}</div>
+                              <div className="text-xs text-gray-400">{t('sale_return.id_label', { id: item.id })}</div>
                             )}
                           </td>
                           <td className="py-2 px-3">
@@ -356,7 +358,7 @@ export default function SaleReturnEdit() {
                           <td className="py-2 px-3">
                             <input type="text" value={item.notes || ''}
                               onChange={(e) => updateItemField(idx, 'notes', e.target.value)}
-                              placeholder="Optional"
+                              placeholder={t('sale_return.optional')}
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded" />
                           </td>
                           <td className="py-2 px-3 text-center">
@@ -381,28 +383,28 @@ export default function SaleReturnEdit() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale_return.notes')}</label>
               <textarea name="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-                rows="2" className={inputClass} placeholder="Additional notes..." />
+                rows="2" className={inputClass} placeholder={t('sale_return.notes_additional')} />
             </div>
           </div>
           <div>
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Summary</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">{t('sale_return.summary')}</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Items</span><span>{items.length}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">{t('sale.items')}</span><span>{items.length}</span></div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
-                  <span>Total</span>
+                  <span>{t('sale_return.col_total')}</span>
                   <span>{subtotal.toFixed(2)}</span>
                 </div>
               </div>
               <button type="submit" disabled={loading || !hasChanges()}
                 className="w-full mt-4 px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77] disabled:opacity-50 disabled:cursor-not-allowed">
-                {loading ? 'Updating...' : 'Update Return'}
+                {loading ? t('sale_return.updating') : t('sale_return.update_return')}
               </button>
               <button type="button" onClick={() => navigate('/sale-returns')}
                 className="w-full mt-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors">
-                Cancel
+                {t('sale_return.cancel')}
               </button>
             </div>
           </div>

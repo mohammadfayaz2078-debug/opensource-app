@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 
 const Register = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -136,7 +138,7 @@ const Register = () => {
       }
     } catch (err) {
       console.error('Failed to fetch roles:', err);
-      Swal.fire('Error', 'Failed to load roles', 'error');
+      Swal.fire('Error', t('user.load_roles_failed'), 'error');
     }
   };
   
@@ -161,7 +163,7 @@ const Register = () => {
       setBranches(branchesData);
     } catch (err) {
       console.error('Failed to fetch branches:', err);
-      Swal.fire('Error', 'Failed to load branches', 'error');
+      Swal.fire('Error', t('user.load_branches_failed'), 'error');
     }
   };
   
@@ -172,7 +174,7 @@ const Register = () => {
       await Promise.all([fetchRoles(), fetchBranches()]);
     } catch (err) {
       console.error('Failed to fetch options:', err);
-      setError('Failed to load form options');
+      setError(t('user.load_options_failed'));
     } finally {
       setLoadingOptions(false);
     }
@@ -215,8 +217,8 @@ const Register = () => {
       
       Swal.fire({
         icon: 'success',
-        title: 'Success!',
-        text: 'User created successfully',
+        title: t('user.success'),
+        text: t('user.created_msg'),
         timer: 2000,
         showConfirmButton: false
       });
@@ -237,20 +239,20 @@ const Register = () => {
           if (branchCapacity) {
             Swal.fire({
               icon: 'error',
-              title: 'Branch User Limit Reached',
+              title: t('user.limit_reached'),
               html: `
                 <div class="text-left">
                   <p class="mb-2">${errorMessage}</p>
                   <div class="bg-gray-50 p-3 rounded-lg">
-                    <p><strong>Current Users:</strong> ${branchCapacity.current_users}</p>
-                    <p><strong>Maximum Allowed:</strong> ${branchCapacity.max_allowed}</p>
-                    <p><strong>Available Slots:</strong> ${branchCapacity.remaining_slots}</p>
-                    <p class="mt-2 text-red-600">${branchCapacity.is_full ? '⚠️ Branch is at full capacity!' : '⚠️ No slots available!'}</p>
+                    <p><strong>${t('user.current_users')}:</strong> ${branchCapacity.current_users}</p>
+                    <p><strong>${t('user.max_allowed')}:</strong> ${branchCapacity.max_allowed}</p>
+                    <p><strong>${t('user.available_slots')}:</strong> ${branchCapacity.remaining_slots}</p>
+                    <p class="mt-2 text-red-600">${branchCapacity.is_full ? t('user.full_capacity') : t('user.no_slots')}</p>
                   </div>
                 </div>
               `,
               confirmButtonColor: '#007c89',
-              confirmButtonText: 'OK'
+              confirmButtonText: t('user.ok')
             });
           } else {
             Swal.fire('Error', errorMessage, 'error');
@@ -260,14 +262,14 @@ const Register = () => {
           const errorMessages = Object.values(validationErrors).flat();
           Swal.fire({
             icon: 'error',
-            title: 'Validation Error',
+            title: t('user.validation_error'),
             html: errorMessages.map(msg => `<p class="text-left">• ${msg}</p>`).join(''),
             confirmButtonColor: '#007c89',
-            confirmButtonText: 'OK'
+            confirmButtonText: t('user.ok')
           });
         }
       } else {
-        const message = err.response?.data?.message || 'Failed to create user';
+        const message = err.response?.data?.message || t('user.create_failed');
         setError(message);
         Swal.fire('Error', message, 'error');
       }
@@ -285,7 +287,7 @@ const Register = () => {
       <div className="w-full max-w-3xl bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h1 className="text-lg font-semibold text-gray-900">Create New User</h1>
+          <h1 className="text-lg font-semibold text-gray-900">{t('user.create_title')}</h1>
           <Link
             to="../users"
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -302,7 +304,7 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">
-                  First Name <span className="text-red-500">*</span>
+                  {t('user.first_name')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="first_name"
@@ -310,7 +312,7 @@ const Register = () => {
                   onChange={handleInputChange}
                   type="text"
                   required
-                  placeholder="Enter first name"
+                  placeholder={t('user.first_name_placeholder')}
                   className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
                     errors.first_name ? 'border-red-500' : ''
                   }`}
@@ -322,7 +324,7 @@ const Register = () => {
               
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Last Name <span className="text-red-500">*</span>
+                  {t('user.last_name')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="last_name"
@@ -330,7 +332,7 @@ const Register = () => {
                   onChange={handleInputChange}
                   type="text"
                   required
-                  placeholder="Enter last name"
+                  placeholder={t('user.last_name_placeholder')}
                   className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
                     errors.last_name ? 'border-red-500' : ''
                   }`}
@@ -344,7 +346,7 @@ const Register = () => {
             {/* Email */}
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700">
-                Email Address <span className="text-red-500">*</span>
+                {t('user.email_label')} <span className="text-red-500">*</span>
               </label>
               <input
                 name="email"
@@ -352,7 +354,7 @@ const Register = () => {
                 onChange={handleInputChange}
                 type="email"
                 required
-                placeholder="Enter email address"
+                placeholder={t('user.email_placeholder')}
                 className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
                   errors.email ? 'border-red-500' : ''
                 }`}
@@ -365,14 +367,14 @@ const Register = () => {
             {/* Phone */}
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700">
-                Phone Number
+                {t('user.phone')}
               </label>
               <input
                 name="phone"
                 value={form.phone}
                 onChange={handleInputChange}
                 type="tel"
-                placeholder="Enter phone number"
+                placeholder={t('user.phone_placeholder')}
                 className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent ${
                   errors.phone ? 'border-red-500' : ''
                 }`}
@@ -386,7 +388,7 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Password <span className="text-red-500">*</span>
+                  {t('user.password')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -395,7 +397,7 @@ const Register = () => {
                     onChange={handleInputChange}
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="Enter password"
+                    placeholder={t('user.password_placeholder')}
                     className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent pr-24 ${
                       errors.password ? 'border-red-500' : ''
                     }`}
@@ -405,7 +407,7 @@ const Register = () => {
                     onClick={generatePassword}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
                   >
-                    Generate
+                    {t('user.generate')}
                   </button>
                 </div>
                 {errors.password && (
@@ -415,7 +417,7 @@ const Register = () => {
               
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Confirm Password <span className="text-red-500">*</span>
+                  {t('user.confirm_password')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -424,7 +426,7 @@ const Register = () => {
                     onChange={handleInputChange}
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="Confirm password"
+                    placeholder={t('user.confirm_password_placeholder')}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007c89] focus:border-transparent"
                   />
                   <button
@@ -453,7 +455,7 @@ const Register = () => {
               {!isBranchUser ? (
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Branch <span className="text-red-500">*</span>
+                    {t('user.branch')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="branch_id"
@@ -465,7 +467,7 @@ const Register = () => {
                       errors.branch_id ? 'border-red-500' : ''
                     }`}
                   >
-                    <option value="" disabled>Select a branch</option>
+                    <option value="" disabled>{t('user.select_branch')}</option>
                     {branches.map((branch) => (
                       <option key={branch.id} value={branch.id}>
                         {branch.branch_name} - {branch.branch_province || branch.city}
@@ -478,9 +480,9 @@ const Register = () => {
                 </div>
               ) : (
                 <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">Branch</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">{t('user.branch')}</label>
                   <p className="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2 text-sm text-gray-900">
-                    {currentUser.branch?.branch_name || 'Your Branch'}
+                    {currentUser.branch?.branch_name || t('user.your_branch')}
                   </p>
                 </div>
               )}
@@ -488,7 +490,7 @@ const Register = () => {
               {/* Role Selection - Second (filtered by branch) */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Role <span className="text-red-500">*</span>
+                  {t('user.role')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="role_id"
@@ -501,11 +503,11 @@ const Register = () => {
                   } ${(!isBranchUser && !form.branch_id) ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 >
                   <option value="" disabled>
-                    {!isBranchUser && !form.branch_id ? 'Select a branch first' : 'Select a role'}
+                    {!isBranchUser && !form.branch_id ? t('user.select_branch_first') : t('user.select_role')}
                   </option>
                   {filteredRoles.map((role) => (
                     <option key={role.id} value={role.id}>
-                      {role.role_name} {role.branch_id ? '(Branch Specific)' : '(Global)'}
+                      {role.role_name} {role.branch_id ? t('user.branch_specific') : t('user.global')}
                     </option>
                   ))}
                 </select>
@@ -514,7 +516,7 @@ const Register = () => {
                 )}
                 {!isBranchUser && form.branch_id && filteredRoles.length === 0 && (
                   <p className="mt-1 text-xs text-amber-600">
-                    No roles available for this branch. Please select a different branch.
+                    {t('user.no_roles_branch')}
                   </p>
                 )}
               </div>
@@ -525,9 +527,9 @@ const Register = () => {
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <label className="text-sm font-medium text-gray-700">
-                    User Status
+                    {t('user.status_label')}
                   </label>
-                  <p className="text-xs text-gray-500">Enable or disable this user account</p>
+                  <p className="text-xs text-gray-500">{t('user.status_hint')}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -556,14 +558,14 @@ const Register = () => {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
               )}
-              {loading ? 'Creating...' : 'Create User'}
+              {loading ? t('user.creating') : t('user.create_btn')}
             </button>
             
             <Link
               to="../users"
               className="flex-1 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors text-center text-sm font-medium"
             >
-              Cancel
+              {t('user.cancel')}
             </Link>
           </div>
           

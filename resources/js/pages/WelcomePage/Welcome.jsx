@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { setDirection } from '../../i18n';
 import api from '../../plugins/axios';
 import {
   Heart,
@@ -48,16 +50,17 @@ const CATEGORY_META = {
 const DEFAULT_META = { gradient: 'from-slate-400 via-slate-500 to-slate-700', emoji: '📦', soft: '#e2e8f0' };
 
 const FEATURES = [
-  { label: 'Sales & POS', desc: 'Fast checkout and clear invoices', icon: ShoppingBag, color: 'text-[#ee5b43]', bg: 'bg-[#fff0ec]' },
-  { label: 'Live inventory', desc: 'Know what is in stock anywhere', icon: Package, color: 'text-[#078b82]', bg: 'bg-[#e7f8f5]' },
-  { label: 'Smart accounts', desc: 'Cash, wallets and ledgers together', icon: CreditCard, color: 'text-[#4d56a5]', bg: 'bg-[#eef0ff]' },
-  { label: 'Every branch', desc: 'One view across every location', icon: Store, color: 'text-[#b47708]', bg: 'bg-[#fff5d9]' },
+  { key: 'sales_pos', icon: ShoppingBag, color: 'text-[#ee5b43]', bg: 'bg-[#fff0ec]' },
+  { key: 'live_inventory', icon: Package, color: 'text-[#078b82]', bg: 'bg-[#e7f8f5]' },
+  { key: 'smart_accounts', icon: CreditCard, color: 'text-[#4d56a5]', bg: 'bg-[#eef0ff]' },
+  { key: 'every_branch', icon: Store, color: 'text-[#b47708]', bg: 'bg-[#fff5d9]' },
 ];
 
-const formatPrice = (price) => {
+const formatPrice = (price, language = 'en') => {
   const value = Number(price ?? 0);
   if (Number.isNaN(value)) return '0.00 AFN';
-  return value.toLocaleString(undefined, {
+  const locale = language === 'fa' ? 'fa-AF' : language === 'ps' ? 'ps-AF' : 'en-AF';
+  return value.toLocaleString(locale, {
     style: 'currency',
     currency: 'AFN',
     minimumFractionDigits: 2,
@@ -90,12 +93,13 @@ const getSessionId = () => {
 
 /* ── Product card ─────────────────────────────────────────────── */
 const ProductCardWithActions = ({ product, index }) => {
+  const { t, i18n } = useTranslation();
   const sessionId = useRef(getSessionId());
 
   const categoryName = product.category?.name || product.category_name || 'Product';
   const meta = getCategoryMeta(categoryName);
   const image = getProductImage(product);
-  const location = product.location || product.branch?.name || product.city || 'Available';
+  const location = product.location || product.branch?.name || product.city || t('welcome.available');
 
   const initialLikes = product.likes_count ?? 0;
   const initialComments = product.comments_count ?? (product.comments?.length ?? 0);
@@ -182,7 +186,7 @@ const ProductCardWithActions = ({ product, index }) => {
         commentsListRef.current?.scrollTo({ top: 9999, behavior: 'smooth' });
       }, 50);
     } catch {
-      alert('Failed to add comment.');
+      alert(t('welcome.errors.comment'));
     } finally {
       setSubmittingComment(false);
     }
@@ -190,7 +194,7 @@ const ProductCardWithActions = ({ product, index }) => {
 
   const handleGetLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
+      alert(t('welcome.errors.geolocation_unsupported'));
       return;
     }
     setLocating(true);
@@ -204,7 +208,7 @@ const ProductCardWithActions = ({ product, index }) => {
         setLocating(false);
       },
       () => {
-        alert('Could not get your location. Please check location permissions.');
+        alert(t('welcome.errors.geolocation_failed'));
         setLocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000 },
@@ -261,7 +265,7 @@ const ProductCardWithActions = ({ product, index }) => {
           quantity: parseInt(i.quantity, 10) || 1,
         })),
       });
-      alert('Order placed successfully!');
+      alert(t('welcome.order.success'));
       setShowOrder(false);
       setOrderForm({
         customer_name: '', customer_last_name: '', customer_phone: '',
@@ -270,7 +274,7 @@ const ProductCardWithActions = ({ product, index }) => {
         items: [{ product_id: '', quantity: '1' }],
       });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to place order.');
+      alert(err.response?.data?.message || t('welcome.errors.order'));
     } finally {
       setOrdering(false);
     }
@@ -372,7 +376,7 @@ const ProductCardWithActions = ({ product, index }) => {
           <span className="absolute bottom-2.5 right-2.5
             bg-white/95 backdrop-blur-md text-gray-900 text-xs sm:text-sm font-bold
             px-2.5 py-1 rounded-lg shadow-md border border-white/60 tracking-tight">
-            {formatPrice(product.sale_price ?? product.price)}
+            {formatPrice(product.sale_price ?? product.price, i18n.language)}
           </span>
         </button>
 
@@ -408,14 +412,14 @@ const ProductCardWithActions = ({ product, index }) => {
               className={`flex-1 flex items-center justify-center gap-1 py-2 sm:py-2.5 text-[11px] sm:text-xs
                 font-semibold transition-all duration-150
                 ${liked ? 'text-[#F0284A] bg-red-50/60 hover:bg-red-50' : 'text-gray-500 hover:bg-white hover:text-[#F0284A]'}`}
-              aria-label={liked ? 'Unlike' : 'Like'}
+              aria-label={liked ? t('welcome.actions.unlike') : t('welcome.actions.like')}
             >
               <Heart
                 className={`w-4 h-4 transition-transform duration-300 ${likeAnimating ? 'scale-125' : ''}`}
                 fill={liked ? 'currentColor' : 'none'}
                 strokeWidth={liked ? 0 : 1.8}
               />
-              <span className="hidden min-[380px]:inline">{likeCount > 0 ? likeCount : 'Like'}</span>
+              <span className="hidden min-[380px]:inline">{likeCount > 0 ? likeCount : t('welcome.actions.like')}</span>
               <span className="min-[380px]:hidden">{likeCount > 0 ? likeCount : ''}</span>
             </button>
 
@@ -424,10 +428,10 @@ const ProductCardWithActions = ({ product, index }) => {
               onClick={openComments}
               className="flex-1 flex items-center justify-center gap-1 py-2 sm:py-2.5 text-[11px] sm:text-xs
                 font-semibold text-gray-500 hover:bg-white hover:text-[#1877F2] transition-all duration-150"
-              aria-label="Comments"
+              aria-label={t('welcome.actions.comments')}
             >
               <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
-              <span className="hidden min-[380px]:inline">{commentsCount > 0 ? commentsCount : 'Comment'}</span>
+              <span className="hidden min-[380px]:inline">{commentsCount > 0 ? commentsCount : t('welcome.actions.comment')}</span>
               <span className="min-[380px]:hidden">{commentsCount > 0 ? commentsCount : ''}</span>
             </button>
 
@@ -436,10 +440,10 @@ const ProductCardWithActions = ({ product, index }) => {
               onClick={openOrder}
               className="flex-1 flex items-center justify-center gap-1 py-2 sm:py-2.5 text-[11px] sm:text-xs
                 font-semibold text-[#1877F2] hover:bg-blue-50 active:bg-blue-100 transition-all duration-150"
-              aria-label="Order"
+              aria-label={t('welcome.actions.order')}
             >
               <ShoppingCart className="w-4 h-4" strokeWidth={1.8} />
-              <span className="hidden min-[380px]:inline">{initialOrders > 0 ? initialOrders : 'Order'}</span>
+              <span className="hidden min-[380px]:inline">{initialOrders > 0 ? initialOrders : t('welcome.actions.order')}</span>
               <span className="min-[380px]:hidden">{initialOrders > 0 ? initialOrders : ''}</span>
             </button>
           </div>
@@ -495,7 +499,7 @@ const ProductCardWithActions = ({ product, index }) => {
 
                 <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md text-gray-900
                   text-lg sm:text-xl font-bold px-4 py-1.5 rounded-xl shadow-lg border border-white/50">
-                  {formatPrice(product.sale_price ?? product.price)}
+                  {formatPrice(product.sale_price ?? product.price, i18n.language)}
                 </div>
               </div>
 
@@ -533,15 +537,15 @@ const ProductCardWithActions = ({ product, index }) => {
                     <span className={`font-bold ${liked ? 'text-[#F0284A]' : 'text-gray-600'}`}>
                       {likeCount}
                     </span>
-                    <span className="text-gray-400 text-xs font-medium">likes</span>
+                    <span className="text-gray-400 text-xs font-medium">{t('welcome.details.likes')}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm">
                     <span className="font-bold text-gray-600">{commentsCount}</span>
-                    <span className="text-gray-400 text-xs font-medium">comments</span>
+                    <span className="text-gray-400 text-xs font-medium">{t('welcome.details.comments')}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm">
                     <span className="font-bold text-amber-600">{initialOrders}</span>
-                    <span className="text-gray-400 text-xs font-medium">orders</span>
+                    <span className="text-gray-400 text-xs font-medium">{t('welcome.details.orders')}</span>
                   </div>
                   {product.stock_balance !== undefined && product.stock_balance !== null && (
                     <div className="flex items-center gap-1.5 text-sm ml-auto">
@@ -620,7 +624,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 <div className="min-w-0">
                   <p className="font-bold text-sm text-gray-900 leading-tight truncate">{product.name}</p>
                   <p className="text-xs font-semibold text-[#1877F2] mt-0.5">
-                    {formatPrice(product.sale_price ?? product.price)}
+                    {formatPrice(product.sale_price ?? product.price, i18n.language)}
                   </p>
                 </div>
               </div>
@@ -645,8 +649,8 @@ const ProductCardWithActions = ({ product, index }) => {
                   <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 flex items-center justify-center text-2xl mb-3">
                     💬
                   </div>
-                  <p className="text-gray-700 text-sm font-semibold">No comments yet</p>
-                  <p className="text-gray-400 text-xs mt-1">Be the first to share your thoughts</p>
+                  <p className="text-gray-700 text-sm font-semibold">{t('welcome.comments.empty')}</p>
+                  <p className="text-gray-400 text-xs mt-1">{t('welcome.comments.first')}</p>
                 </div>
               ) : (
                 comments.map((c, idx) => (
@@ -683,7 +687,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 type="text"
                 value={commentName}
                 onChange={(e) => setCommentName(e.target.value)}
-                placeholder="Your name…"
+                placeholder={t('welcome.comments.name')}
                 maxLength={255}
                 className="w-full px-4 py-2.5 text-sm bg-gray-100 rounded-full border border-gray-200
                   outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
@@ -700,7 +704,7 @@ const ProductCardWithActions = ({ product, index }) => {
                       handleAddComment();
                     }
                   }}
-                  placeholder="Write a comment…"
+                  placeholder={t('welcome.comments.write')}
                   maxLength={1000}
                   className="flex-1 px-4 py-2.5 text-sm bg-gray-100 rounded-full border border-gray-200
                     outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
@@ -714,7 +718,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     bg-[#1877F2] text-white shadow-md shadow-[#1877F2]/25
                     hover:bg-[#166FE5]
                     disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  aria-label="Send comment"
+                  aria-label={t('welcome.actions.send_comment')}
                 >
                   {submittingComment ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -744,8 +748,8 @@ const ProductCardWithActions = ({ product, index }) => {
             </div>
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Place Order</h2>
-                <p className="text-xs text-gray-500 mt-0.5">We&apos;ll contact you to confirm</p>
+                <h2 className="text-lg font-bold text-gray-900">{t('welcome.order.title')}</h2>
+                <p className="text-xs text-gray-500 mt-0.5">{t('welcome.order.confirm_note')}</p>
               </div>
               <button
                 type="button"
@@ -761,7 +765,7 @@ const ProductCardWithActions = ({ product, index }) => {
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                  Email Address <span className="text-rose-500">*</span>
+                  {t('welcome.order.email')} <span className="text-rose-500">*</span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -779,7 +783,7 @@ const ProductCardWithActions = ({ product, index }) => {
                         handleCheckEmail(e.target.value);
                       }
                     }}
-                    placeholder="Enter your email"
+                    placeholder={t('welcome.order.email_placeholder')}
                     className="flex-1 px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200
                       outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
                       placeholder:text-gray-400 transition"
@@ -796,7 +800,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     {checkingEmail ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      'Check'
+                      t('welcome.actions.check')
                     )}
                   </button>
                 </div>
@@ -810,7 +814,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-emerald-800">
-                        Welcome back, {existingCustomer.first_name}!
+                        {t('welcome.order.welcome_back', { name: existingCustomer.first_name })}
                       </p>
                       <p className="text-xs text-emerald-600">
                         {existingCustomer.first_name} {existingCustomer.last_name} • {existingCustomer.phone}
@@ -825,13 +829,13 @@ const ProductCardWithActions = ({ product, index }) => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                        First Name <span className="text-rose-500">*</span>
+                        {t('welcome.order.first_name')} <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={orderForm.customer_name}
                         onChange={(e) => setOrderForm((p) => ({ ...p, customer_name: e.target.value }))}
-                        placeholder="First name"
+                        placeholder={t('welcome.order.first_name')}
                         className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200
                           outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
                           placeholder:text-gray-400 transition"
@@ -840,13 +844,13 @@ const ProductCardWithActions = ({ product, index }) => {
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Last Name
+                        {t('welcome.order.last_name')}
                       </label>
                       <input
                         type="text"
                         value={orderForm.customer_last_name}
                         onChange={(e) => setOrderForm((p) => ({ ...p, customer_last_name: e.target.value }))}
-                        placeholder="Last name"
+                        placeholder={t('welcome.order.last_name')}
                         className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200
                           outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2]
                           placeholder:text-gray-400 transition"
@@ -857,31 +861,31 @@ const ProductCardWithActions = ({ product, index }) => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Phone <span className="text-rose-500">*</span>
+                        {t('welcome.order.phone')} <span className="text-rose-500">*</span>
                       </label>
                       <input 
                         type="tel" 
                         value={orderForm.customer_phone}
                         onChange={(e) => setOrderForm((p) => ({ ...p, customer_phone: e.target.value }))}
-                        placeholder="Phone number"
+                        placeholder={t('welcome.order.phone')}
                         className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 transition"
                         required 
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Province</label>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{t('welcome.order.province')}</label>
                       <input 
                         type="text" 
                         value={orderForm.province}
                         onChange={(e) => setOrderForm((p) => ({ ...p, province: e.target.value }))}
-                        placeholder="Province / State"
+                        placeholder={t('welcome.order.province')}
                         className="w-full px-3.5 py-3 text-sm bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] placeholder:text-gray-400 transition" 
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Delivery Address</label>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{t('welcome.order.address')}</label>
                     <textarea 
                       value={orderForm.customer_address}
                       onChange={(e) => setOrderForm((p) => ({ ...p, customer_address: e.target.value }))}
@@ -892,7 +896,7 @@ const ProductCardWithActions = ({ product, index }) => {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">GPS Location</label>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{t('welcome.order.gps')}</label>
                     <div className="flex items-center gap-2">
                       <button 
                         type="button" 
@@ -901,7 +905,7 @@ const ProductCardWithActions = ({ product, index }) => {
                         className={`${getLocBtnClass(!!(orderForm.gps_lat && orderForm.gps_lng))} disabled:opacity-50`}
                       >
                         {locating ? (
-                          <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Detecting…</>
+                          <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> {t('welcome.order.detecting')}</>
                         ) : (
                           <><Navigation className="w-3.5 h-3.5" strokeWidth={2} />
                             {orderForm.gps_lat && orderForm.gps_lng ? '📍 Located' : '📍 Get Location'}
@@ -919,7 +923,7 @@ const ProductCardWithActions = ({ product, index }) => {
               )}
 
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Notes</label>
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{t('welcome.order.notes')}</label>
                 <textarea 
                   value={orderForm.notes}
                   onChange={(e) => setOrderForm((p) => ({ ...p, notes: e.target.value }))}
@@ -931,16 +935,16 @@ const ProductCardWithActions = ({ product, index }) => {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Order Item</label>
+                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t('welcome.order.item')}</label>
                 </div>
                 <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <table className="min-w-full">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase">Product</th>
-                        <th className="px-3 py-2 text-center text-[10px] font-bold text-gray-500 uppercase w-20">Qty</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-bold text-gray-500 uppercase w-24">Price</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-bold text-gray-500 uppercase w-24">Total</th>
+                        <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase">{t('welcome.order.product')}</th>
+                        <th className="px-3 py-2 text-center text-[10px] font-bold text-gray-500 uppercase w-20">{t('welcome.order.quantity')}</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-bold text-gray-500 uppercase w-24">{t('welcome.order.price')}</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-bold text-gray-500 uppercase w-24">{t('welcome.order.total')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -968,7 +972,7 @@ const ProductCardWithActions = ({ product, index }) => {
                     </tbody>
                     <tfoot>
                       <tr className="bg-gray-50 border-t border-gray-200">
-                        <td colSpan="3" className="px-3 py-2 text-right text-xs font-bold text-gray-600">Total:</td>
+                        <td colSpan="3" className="px-3 py-2 text-right text-xs font-bold text-gray-600">{t('welcome.order.total')}:</td>
                         <td className="px-3 py-2 text-right text-sm font-bold text-[#1877F2]">
                           {formatPrice((parseFloat(product.sale_price) || 0) * (parseInt(orderForm.items[0]?.quantity) || 0))}
                         </td>
@@ -986,7 +990,7 @@ const ProductCardWithActions = ({ product, index }) => {
                 className="flex-1 py-3 rounded-xl text-sm font-bold text-gray-600
                   bg-gray-100 hover:bg-gray-200 transition"
               >
-                Cancel
+              {t('welcome.actions.cancel')}
               </button>
               <button
                 type="button"
@@ -1001,12 +1005,12 @@ const ProductCardWithActions = ({ product, index }) => {
                 {ordering ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Placing…
+                    {t('welcome.order.placing')}
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4" strokeWidth={2.2} />
-                    Place Order
+                    {t('welcome.order.place')}
                   </>
                 )}
               </button>
@@ -1032,12 +1036,13 @@ const ProductSkeleton = () => (
 
 /* ── Main page ────────────────────────────────────────────────── */
 const Welcome = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState('__all__');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -1048,12 +1053,12 @@ const Welcome = () => {
       const data = await fetchProducts();
       setProducts(Array.isArray(data) ? data : []);
     } catch {
-      setError('Could not load products. Please try again later.');
+      setError(t('welcome.errors.load'));
       setProducts([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadProducts();
@@ -1067,14 +1072,14 @@ const Welcome = () => {
 
   const categories = useMemo(() => {
     const names = new Set(products.map((p) => p.category?.name || p.category_name).filter(Boolean));
-    return ['All', ...Array.from(names)];
+    return ['__all__', ...Array.from(names)];
   }, [products]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return products.filter((p) => {
       const cat = p.category?.name || p.category_name;
-      const matchCat = activeCategory === 'All' || cat === activeCategory;
+      const matchCat = activeCategory === '__all__' || cat === activeCategory;
       const matchSearch =
         !q ||
         p.name?.toLowerCase().includes(q) ||
@@ -1094,7 +1099,7 @@ const Welcome = () => {
     <div className="fb-page min-h-screen min-h-[100dvh] text-gray-900 antialiased" dir="ltr">
       <style>{`
         .fb-page {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          font-family: 'Noto Sans Arabic', 'Vazirmatn', 'Inter', 'Segoe UI', Tahoma, Arial, sans-serif;
           -webkit-tap-highlight-color: transparent;
           background: #f6f7f8;
           color: #17211f;
@@ -1175,16 +1180,16 @@ const Welcome = () => {
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search products, categories or places"
+                  placeholder={t('welcome.search_placeholder')}
                   className="bg-transparent border-0 outline-none text-sm ml-2.5 w-full text-gray-800 placeholder:text-gray-400"
-                  aria-label="Search products"
+                  aria-label={t('welcome.search')}
                 />
                 {search && (
                   <button
                     type="button"
                     onClick={() => setSearch('')}
                     className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition"
-                    aria-label="Clear search"
+                    aria-label={t('welcome.clear_search')}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1193,12 +1198,27 @@ const Welcome = () => {
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2">
+              <select
+                value={i18n.resolvedLanguage || i18n.language}
+                onChange={(e) => {
+                  const language = e.target.value;
+                  i18n.changeLanguage(language);
+                  setDirection(language);
+                  localStorage.setItem('lang', language);
+                }}
+                aria-label={t('welcome.language')}
+                className="h-9 sm:h-10 rounded-full border border-gray-200 bg-white px-2 sm:px-3 text-xs sm:text-sm font-semibold text-gray-700 outline-none focus:border-[#078b82] focus:ring-2 focus:ring-[#078b82]/15"
+              >
+                <option value="en">English</option>
+                <option value="fa">دری</option>
+                <option value="ps">پښتو</option>
+              </select>
               <button
                 type="button"
                 onClick={() => setMobileSearchOpen((v) => !v)}
                 className="md:hidden w-10 h-10 flex items-center justify-center rounded-full
                   text-gray-600 bg-[#f0f2f5] hover:bg-gray-200 transition"
-                aria-label="Toggle search"
+                aria-label={t('welcome.toggle_search')}
                 aria-expanded={mobileSearchOpen}
               >
                 <Search className="w-5 h-5" strokeWidth={2.2} />
@@ -1211,7 +1231,7 @@ const Welcome = () => {
                   text-sm font-bold text-white bg-[#17211f] hover:bg-[#293633]
                   shadow-sm transition"
               >
-                Log in
+                {t('welcome.login')}
               </button>
               <button
                 type="button"
@@ -1220,7 +1240,7 @@ const Welcome = () => {
                   text-xs font-bold text-white bg-[#17211f] hover:bg-[#293633]
                   shadow-sm transition"
               >
-                Log in
+                {t('welcome.login')}
               </button>
             </div>
           </div>
@@ -1233,17 +1253,17 @@ const Welcome = () => {
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search bazarnet"
+                  placeholder={t('welcome.search_short')}
                   autoFocus
                   className="bg-transparent border-0 outline-none text-sm ml-2 w-full text-gray-800 placeholder:text-gray-400"
-                  aria-label="Search products"
+                  aria-label={t('welcome.search')}
                 />
                 {search && (
                   <button
                     type="button"
                     onClick={() => setSearch('')}
                     className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition"
-                    aria-label="Clear search"
+                    aria-label={t('welcome.clear_search')}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1265,16 +1285,19 @@ const Welcome = () => {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
-                Local commerce, made simple
+                {t('welcome.hero.eyebrow')}
               </div>
 
-              <h1 className="text-[2.35rem] sm:text-5xl lg:text-[4rem] font-black leading-[1.02]">
-                <span className="text-[#17211f]">Buy local. Run your business </span>
-                <span className="text-[#ee5b43]">better.</span>
+              <h1 className={`${['fa', 'ps'].includes(i18n.resolvedLanguage || i18n.language)
+                ? 'text-[1.9rem] sm:text-[2.65rem] lg:text-[3.25rem] leading-[1.45] font-extrabold'
+                : 'text-[2.35rem] sm:text-5xl lg:text-[4rem] leading-[1.02] font-black'
+              } tracking-[-0.02em]`}>
+                <span className="text-[#17211f]">{t('welcome.hero.title')} </span>
+                <span className="text-[#ee5b43]">{t('welcome.hero.title_accent')}</span>
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-[#52605c] leading-relaxed max-w-xl">
-                Discover products near you, order in a few taps, and manage sales, stock and accounts from one dependable platform.
+                {t('welcome.hero.description')}
               </p>
 
               <div className="mt-6 sm:mt-7 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center
@@ -1285,22 +1308,22 @@ const Welcome = () => {
                   className="h-12 px-6 rounded-lg bg-[#17211f] text-white font-bold text-sm
                     shadow-lg shadow-black/10 hover:bg-[#293633] hover:-translate-y-0.5 active:translate-y-0 transition inline-flex items-center justify-center gap-2"
                 >
-                  Open your workspace <ArrowRight className="w-4 h-4" />
+                  {t('welcome.hero.workspace')} <ArrowRight className="w-4 h-4" />
                 </button>
                 <a
                   href="#products"
                   className="h-12 px-6 rounded-lg bg-white text-[#17211f] font-bold text-sm transition inline-flex items-center justify-center gap-2
                     border border-[#cad6d1] hover:border-[#078b82] hover:text-[#078b82] hover:-translate-y-0.5"
                 >
-                  <ShoppingBag className="w-4 h-4" /> Browse marketplace
+                  <ShoppingBag className="w-4 h-4" /> {t('welcome.hero.browse')}
                 </a>
               </div>
 
               <div className="mt-8 flex flex-wrap items-center justify-start gap-6 sm:gap-9">
                 {[
-                  { n: loading ? '—' : String(products.length), l: 'Products' },
-                  { n: loading ? '—' : String(Math.max(categories.length - 1, 0)), l: 'Categories' },
-                  { n: '24/7', l: 'Available' },
+                  { n: loading ? '—' : String(products.length), l: t('welcome.products') },
+                  { n: loading ? '—' : String(Math.max(categories.length - 1, 0)), l: t('welcome.categories') },
+                  { n: '24/7', l: t('welcome.available') },
                 ].map((s) => (
                   <div key={s.l} className="text-left min-w-[4.5rem]">
                     <p className="text-xl sm:text-2xl font-black text-[#17211f]">{s.n}</p>
@@ -1333,15 +1356,15 @@ const Welcome = () => {
                 </div>
                 <div className="absolute left-8 bottom-8 bg-white rounded-lg px-4 py-3 shadow-xl flex items-center gap-3 max-w-[220px]">
                   <span className="w-9 h-9 rounded-full bg-[#e7f8f5] text-[#078b82] flex items-center justify-center shrink-0"><Check className="w-5 h-5" /></span>
-                  <span><strong className="block text-xs sm:text-sm text-[#17211f]">Easy ordering</strong><small className="block text-[10px] sm:text-xs text-[#71807b]">Direct from local sellers</small></span>
+                  <span><strong className="block text-xs sm:text-sm text-[#17211f]">{t('welcome.hero.easy_ordering')}</strong><small className="block text-[10px] sm:text-xs text-[#71807b]">{t('welcome.hero.local_sellers')}</small></span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 mt-3">
                 {FEATURES.map((item) => {
                   const Icon = item.icon;
-                  return <div key={item.label} className="bg-white/80 border border-white rounded-lg p-3 flex items-center gap-3 shadow-sm">
+                  return <div key={item.key} className="bg-white/80 border border-white rounded-lg p-3 flex items-center gap-3 shadow-sm">
                     <span className={`w-9 h-9 rounded-lg ${item.bg} ${item.color} flex items-center justify-center shrink-0`}><Icon className="w-4 h-4" /></span>
-                    <span className="text-xs sm:text-sm font-bold text-[#17211f]">{item.label}</span>
+                    <span className="text-xs sm:text-sm font-bold text-[#17211f]">{t(`welcome.features.${item.key}`)}</span>
                   </div>;
                 })}
               </div>
@@ -1356,13 +1379,13 @@ const Welcome = () => {
           <div className="px-4 sm:px-5 pt-4 pb-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-extrabold uppercase text-[#ee5b43] mb-1">Discover nearby</p>
-                <h2 className="text-xl sm:text-2xl font-black text-[#17211f]">Fresh from the marketplace</h2>
+                <p className="text-[11px] font-extrabold uppercase text-[#ee5b43] mb-1">{t('welcome.marketplace.eyebrow')}</p>
+                <h2 className="text-xl sm:text-2xl font-black text-[#17211f]">{t('welcome.marketplace.title')}</h2>
                 <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
                   {loading
-                    ? 'Loading products…'
-                    : `${filtered.length} product${filtered.length === 1 ? '' : 's'}${
-                        activeCategory !== 'All' ? ` in ${activeCategory}` : ''
+                    ? t('welcome.marketplace.loading')
+                    : `${t('welcome.marketplace.count', { count: filtered.length })}${
+                        activeCategory !== '__all__' ? t('welcome.marketplace.in_category', { category: activeCategory }) : ''
                       }`}
                 </p>
               </div>
@@ -1385,7 +1408,7 @@ const Welcome = () => {
                         : 'bg-[#f0f2f5] text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    {cat}
+                    {cat === '__all__' ? t('welcome.all') : cat}
                   </button>
                 );
               })}
@@ -1402,7 +1425,7 @@ const Welcome = () => {
               onClick={loadProducts}
               className="shrink-0 font-bold text-[#1877F2] hover:text-[#166FE5] self-start sm:self-auto"
             >
-              Retry →
+              {t('welcome.marketplace.retry')} →
             </button>
           </div>
         )}
@@ -1420,20 +1443,20 @@ const Welcome = () => {
               flex items-center justify-center text-3xl sm:text-4xl mb-4">
               🔍
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900">No products found</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('welcome.marketplace.empty_title')}</h3>
             <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
-              Try another search or category. Published products will appear here.
+              {t('welcome.marketplace.empty_text')}
             </p>
             <button
               type="button"
               onClick={() => {
                 setSearch('');
-                setActiveCategory('All');
+                setActiveCategory('__all__');
               }}
               className="mt-5 inline-flex h-10 px-6 items-center justify-center rounded-full
                 bg-[#1877F2] text-white font-bold text-sm hover:bg-[#166FE5] transition"
             >
-              Clear filters
+              {t('welcome.marketplace.clear_filters')}
             </button>
           </div>
         ) : (
@@ -1461,19 +1484,19 @@ const Welcome = () => {
                 <p className="font-extrabold text-white text-sm leading-none">
                   BazarNet
                 </p>
-                <p className="text-[10px] text-white/55 mt-0.5 font-medium">Local commerce, connected</p>
+                <p className="text-[10px] text-white/55 mt-0.5 font-medium">{t('welcome.footer.tagline')}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-white/55">
-              {['Sales', 'Inventory', 'Wallets', 'Branches'].map((item, i) => (
+              {['sales', 'inventory', 'wallets', 'branches'].map((item, i) => (
                 <React.Fragment key={item}>
                   {i > 0 && <span className="text-gray-300 hidden sm:inline">·</span>}
-                  <span className="hover:text-white transition cursor-default">{item}</span>
+                  <span className="hover:text-white transition cursor-default">{t(`welcome.footer.${item}`)}</span>
                 </React.Fragment>
               ))}
             </div>
             <p className="text-xs font-medium text-white/45">
-              © {new Date().getFullYear()} BazarNet. All rights reserved.
+              © {new Date().getFullYear()} BazarNet. {t('welcome.footer.rights')}
             </p>
           </div>
         </div>

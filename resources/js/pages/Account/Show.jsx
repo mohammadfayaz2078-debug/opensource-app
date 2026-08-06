@@ -1,6 +1,7 @@
 // pages/Account/Show.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import DepositModal from './components/DepositModal';
@@ -26,6 +27,7 @@ const AccountShow = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const basePath = location.pathname.startsWith('/company-admin') ? '/company-admin' : '';
   
   const [account, setAccount] = useState(null);
@@ -65,7 +67,7 @@ const AccountShow = () => {
       await fetchTransactions(1);
     } catch (err) {
       console.error('Failed to fetch data:', err);
-      Swal.fire('Error', 'Failed to load account data', 'error');
+      Swal.fire(t('error'), t('account.failed_load'), 'error');
       navigate(`${basePath}/accounts`);
     } finally {
       setLoading(false);
@@ -97,9 +99,9 @@ const AccountShow = () => {
         ...data
       });
       await fetchData();
-      Swal.fire('Success!', 'Deposit completed successfully.', 'success');
+      Swal.fire(t('account.success'), t('account.deposit_success'), 'success');
     } catch (err) {
-      Swal.fire('Error', err.response?.data?.message || 'Failed to process deposit', 'error');
+      Swal.fire(t('error'), err.response?.data?.message || t('account.failed_deposit'), 'error');
       throw err;
     }
   };
@@ -111,9 +113,9 @@ const AccountShow = () => {
         ...data
       });
       await fetchData();
-      Swal.fire('Success!', 'Withdrawal completed successfully.', 'success');
+      Swal.fire(t('account.success'), t('account.withdrawal_success'), 'success');
     } catch (err) {
-      Swal.fire('Error', err.response?.data?.message || 'Failed to process withdrawal', 'error');
+      Swal.fire(t('error'), err.response?.data?.message || t('account.failed_withdrawal'), 'error');
       throw err;
     }
   };
@@ -218,7 +220,7 @@ const AccountShow = () => {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading account...</span>
+        <span className="ml-3 text-gray-600">{t('account.loading')}</span>
       </div>
     );
   }
@@ -227,12 +229,12 @@ const AccountShow = () => {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <p className="text-gray-600">Wallet not found</p>
+          <p className="text-gray-600">{t('account.not_found')}</p>
           <button
             onClick={() => navigate(`${basePath}/accounts`)}
             className="mt-2 text-blue-600 hover:underline"
           >
-            Go back to wallets
+            {t('account.back_to_wallets')}
           </button>
         </div>
       </div>
@@ -250,7 +252,7 @@ const AccountShow = () => {
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back to Wallets
+          {t('account.back_button')}
         </button>
 
         {/* Account Header */}
@@ -263,7 +265,7 @@ const AccountShow = () => {
                   ? 'bg-green-100 text-green-700'
                   : 'bg-gray-100 text-gray-600'
               }`}>
-                {account.is_active ? 'Active' : 'Inactive'}
+                {account.is_active ? t('active') : t('inactive')}
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -274,7 +276,7 @@ const AccountShow = () => {
                 <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Deposit
+                {t('account.deposit')}
               </button>
               <button
                 onClick={() => setWithdrawalModalOpen(true)}
@@ -283,7 +285,7 @@ const AccountShow = () => {
                 <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" />
                 </svg>
-                Withdraw
+                {t('account.withdraw')}
               </button>
             </div>
           </div>
@@ -296,24 +298,24 @@ const AccountShow = () => {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-sm p-4 sm:p-6 mb-4 text-white">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-blue-100 text-xs font-medium">Current Balance</p>
+              <p className="text-blue-100 text-xs font-medium">{t('account.current_balance')}</p>
               <p className="text-2xl sm:text-3xl font-bold mt-0.5">{parseFloat(account.balance).toFixed(2)}</p>
-              <p className="text-blue-100 text-xs">AFN</p>
+              <p className="text-blue-100 text-xs">{t('account.currency')}</p>
             </div>
             <div className="flex gap-6 sm:gap-8">
               <div>
-                <p className="text-blue-100 text-xs">Deposits</p>
+                <p className="text-blue-100 text-xs">{t('account.deposits')}</p>
                 <p className="text-lg sm:text-xl font-semibold">
                   {deposits.reduce((sum, d) => sum + parseFloat(d.amount), 0).toFixed(2)}
                 </p>
-                <p className="text-blue-100 text-xs">AFN</p>
+                <p className="text-blue-100 text-xs">{t('account.currency')}</p>
               </div>
               <div>
-                <p className="text-blue-100 text-xs">Withdrawals</p>
+                <p className="text-blue-100 text-xs">{t('account.withdrawals')}</p>
                 <p className="text-lg sm:text-xl font-semibold">
                   {withdrawals.reduce((sum, w) => sum + parseFloat(w.amount), 0).toFixed(2)}
                 </p>
-                <p className="text-blue-100 text-xs">AFN</p>
+                <p className="text-blue-100 text-xs">{t('account.currency')}</p>
               </div>
             </div>
           </div>
@@ -331,7 +333,7 @@ const AccountShow = () => {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                All Transactions
+                {t('account.all_transactions')}
                 {activeTab === 'transactions' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></span>
                 )}
@@ -347,7 +349,7 @@ const AccountShow = () => {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Deposits
+                {t('account.deposits')}
                 {activeTab === 'deposits' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></span>
                 )}
@@ -363,7 +365,7 @@ const AccountShow = () => {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Withdrawals
+                {t('account.withdrawals')}
                 {activeTab === 'withdrawals' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></span>
                 )}
@@ -389,11 +391,11 @@ const AccountShow = () => {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-gray-100">
-                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Type</th>
-                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Amount</th>
-                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Balance After</th>
-                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Description</th>
-                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('accountTransaction.type')}</th>
+                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.amount')}</th>
+                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.balance_after')}</th>
+                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.description')}</th>
+                            <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.date')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -402,7 +404,7 @@ const AccountShow = () => {
                               <td className="py-2">
                                 <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getTransactionBadge(transaction.type)}`}>
                                   {getTransactionIcon(transaction.type)}
-                                  {transaction.type?.charAt(0).toUpperCase() + transaction.type?.slice(1) || 'Unknown'}
+                                  {transaction.type ? t(`account.type_${transaction.type}`, { defaultValue: transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) }) : t('account.unknown')}
                                 </span>
                               </td>
                               <td className={`py-2 font-medium whitespace-nowrap ${getTransactionTypeColor(transaction.type)}`}>
@@ -433,7 +435,7 @@ const AccountShow = () => {
                             <div className="flex items-start justify-between mb-2">
                               <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getTransactionBadge(transaction.type)}`}>
                                 {getTransactionIcon(transaction.type)}
-                                {transaction.type?.charAt(0).toUpperCase() + transaction.type?.slice(1) || 'Unknown'}
+                                {transaction.type ? t(`account.type_${transaction.type}`, { defaultValue: transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) }) : t('account.unknown')}
                               </span>
                               <span className={`text-sm font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
                                 {sign} {parseFloat(transaction.amount).toFixed(2)} AFN
@@ -441,11 +443,11 @@ const AccountShow = () => {
                             </div>
                             <div className="space-y-1">
                               <div className="flex justify-between text-xs">
-                                <span className="text-gray-500">Balance After:</span>
+                                <span className="text-gray-500">{t('account.balance_after')}:</span>
                                 <span className="text-gray-700 font-medium">{parseFloat(transaction.balance_after).toFixed(2)} AFN</span>
                               </div>
                               <div className="flex justify-between text-xs">
-                                <span className="text-gray-500">Date:</span>
+                                <span className="text-gray-500">{t('account.date')}:</span>
                                 <span className="text-gray-700">{formatDate(transaction.created_at)}</span>
                               </div>
                               {transaction.description && (
@@ -461,7 +463,7 @@ const AccountShow = () => {
                     {transactionMeta && transactionMeta.last_page > 1 && (
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 pt-4 border-t border-gray-100 gap-3">
                         <div className="text-xs text-gray-500 text-center sm:text-left">
-                          Showing {transactionMeta.from || 0} to {transactionMeta.to || 0} of {transactionMeta.total || 0} transactions
+                          {t('account.showing_range', { from: transactionMeta.from || 0, to: transactionMeta.to || 0, total: transactionMeta.total || 0 })}
                         </div>
                         <div className="flex items-center justify-center gap-1">
                           <button
@@ -496,9 +498,9 @@ const AccountShow = () => {
                   </>
                 ) : (
                   <EmptyState 
-                    title="No transactions yet" 
-                    message="Start by making your first transaction" 
-                    actionLabel="Make Deposit"
+                    title={t('account.no_transactions')} 
+                    message={t('account.start_transaction')} 
+                    actionLabel={t('account.make_deposit')}
                     onAction={() => setDepositModalOpen(true)}
                   />
                 )}
@@ -514,9 +516,9 @@ const AccountShow = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-100">
-                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Amount</th>
-                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Description</th>
-                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Date</th>
+                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.amount')}</th>
+                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.description')}</th>
+                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.date')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -548,9 +550,9 @@ const AccountShow = () => {
                 </>
               ) : (
                 <EmptyState 
-                  title="No deposits yet" 
-                  message="Start by making your first deposit" 
-                  actionLabel="Make Deposit"
+                  title={t('account.no_deposits')} 
+                  message={t('account.start_deposit')} 
+                  actionLabel={t('account.make_deposit')}
                   onAction={() => setDepositModalOpen(true)}
                 />
               )
@@ -565,9 +567,9 @@ const AccountShow = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-100">
-                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Amount</th>
-                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Description</th>
-                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">Date</th>
+                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.amount')}</th>
+                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.description')}</th>
+                          <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">{t('account.date')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -599,9 +601,9 @@ const AccountShow = () => {
                 </>
               ) : (
                 <EmptyState 
-                  title="No withdrawals yet" 
-                  message="Start by making your first withdrawal" 
-                  actionLabel="Make Withdrawal"
+                  title={t('account.no_withdrawals')} 
+                  message={t('account.start_withdrawal')} 
+                  actionLabel={t('account.make_withdrawal')}
                   onAction={() => setWithdrawalModalOpen(true)}
                 />
               )
@@ -628,3 +630,5 @@ const AccountShow = () => {
 };
 
 export default AccountShow;
+
+

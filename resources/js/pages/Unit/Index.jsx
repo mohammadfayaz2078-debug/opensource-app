@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 const generatePageNumbers = (current, total) => {
@@ -19,6 +20,7 @@ const generatePageNumbers = (current, total) => {
 
 export default function UnitIndex() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [units, setUnits] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,13 +94,13 @@ export default function UnitIndex() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this unit? This action cannot be undone.')) return;
+    if (!confirm(t('unit.delete_confirm'))) return;
     try {
       await api.delete(`/units/${id}`);
       fetchUnits(currentPage);
       fetchStatistics();
     } catch (err) {
-      const message = err.response?.data?.message || 'Delete failed';
+      const message = err.response?.data?.message || t('unit.delete_failed');
       alert(message);
     }
   };
@@ -111,17 +113,26 @@ export default function UnitIndex() {
       ));
       fetchStatistics();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to toggle status');
+      alert(err.response?.data?.message || t('unit.toggle_failed'));
     }
   };
 
   const getTypeBadge = (type) => {
-    const badges = {
-      reference: <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Reference</span>,
-      bigger: <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Bigger</span>,
-      smaller: <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">Smaller</span>
+    const labels = {
+      reference: t('unit.type_reference'),
+      bigger: t('unit.type_bigger'),
+      smaller: t('unit.type_smaller')
     };
-    return badges[type] || badges.reference;
+    const colors = {
+      reference: 'bg-blue-100 text-blue-700',
+      bigger: 'bg-green-100 text-green-700',
+      smaller: 'bg-orange-100 text-orange-700'
+    };
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors[type] || colors.reference}`}>
+        {labels[type] || labels.reference}
+      </span>
+    );
   };
 
   return (
@@ -129,13 +140,13 @@ export default function UnitIndex() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">Units</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('unit.title')}</h1>
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{summary.total_units} total</span>
-            <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">{summary.reference_units} reference</span>
-            <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full">{summary.bigger_units} bigger</span>
-            <span className="text-xs text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full">{summary.smaller_units} smaller</span>
-            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{summary.active_units} active</span>
+            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{t('unit.total', { count: summary.total_units })}</span>
+            <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">{t('unit.reference_count', { count: summary.reference_units })}</span>
+            <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full">{t('unit.bigger_count', { count: summary.bigger_units })}</span>
+            <span className="text-xs text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full">{t('unit.smaller_count', { count: summary.smaller_units })}</span>
+            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t('unit.active_count', { count: summary.active_units })}</span>
           </div>
         </div>
       </div>
@@ -145,7 +156,7 @@ export default function UnitIndex() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] sm:text-xs text-gray-700">Total Units</p>
+              <p className="text-[10px] sm:text-xs text-gray-700">{t('unit.stat_total')}</p>
               <p className="text-base sm:text-xl font-bold text-gray-900">{summary.total_units || 0}</p>
             </div>
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center">
@@ -159,7 +170,7 @@ export default function UnitIndex() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] sm:text-xs text-gray-700">Reference</p>
+              <p className="text-[10px] sm:text-xs text-gray-700">{t('unit.stat_reference')}</p>
               <p className="text-base sm:text-xl font-bold text-blue-600">{summary.reference_units || 0}</p>
             </div>
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -171,7 +182,7 @@ export default function UnitIndex() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] sm:text-xs text-gray-700">Bigger</p>
+              <p className="text-[10px] sm:text-xs text-gray-700">{t('unit.stat_bigger')}</p>
               <p className="text-base sm:text-xl font-bold text-green-600">{summary.bigger_units || 0}</p>
             </div>
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -183,7 +194,7 @@ export default function UnitIndex() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] sm:text-xs text-gray-700">Smaller</p>
+              <p className="text-[10px] sm:text-xs text-gray-700">{t('unit.stat_smaller')}</p>
               <p className="text-base sm:text-xl font-bold text-orange-600">{summary.smaller_units || 0}</p>
             </div>
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center">
@@ -195,7 +206,7 @@ export default function UnitIndex() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 sm:p-4 col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] sm:text-xs text-gray-700">Active</p>
+              <p className="text-[10px] sm:text-xs text-gray-700">{t('unit.stat_active')}</p>
               <p className="text-base sm:text-xl font-bold text-green-600">{summary.active_units || 0}</p>
             </div>
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -218,7 +229,7 @@ export default function UnitIndex() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('unit.search_placeholder')}
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
             />
           </div>
@@ -227,7 +238,7 @@ export default function UnitIndex() {
             onChange={e => setFilterCategory(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="">All Categories</option>
+            <option value="">{t('unit.all_categories')}</option>
             {categories.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
@@ -237,10 +248,10 @@ export default function UnitIndex() {
             onChange={e => setFilterType(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="all">All Types</option>
-            <option value="reference">Reference</option>
-            <option value="bigger">Bigger</option>
-            <option value="smaller">Smaller</option>
+            <option value="all">{t('unit.all_types')}</option>
+            <option value="reference">{t('unit.type_reference')}</option>
+            <option value="bigger">{t('unit.type_bigger')}</option>
+            <option value="smaller">{t('unit.type_smaller')}</option>
           </select>
         </div>
         <div className="flex gap-2">
@@ -251,7 +262,7 @@ export default function UnitIndex() {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
-            Convert
+            {t('unit.convert')}
           </button>
           <button
             onClick={() => navigate('/units/export')}
@@ -260,7 +271,7 @@ export default function UnitIndex() {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Export
+            {t('unit.export')}
           </button>
           <Link
             to="/units/create"
@@ -269,7 +280,7 @@ export default function UnitIndex() {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            New Unit
+            {t('unit.new_unit')}
           </Link>
         </div>
       </div>
@@ -278,7 +289,7 @@ export default function UnitIndex() {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-700 text-sm">Loading units...</span>
+          <span className="ml-3 text-gray-700 text-sm">{t('unit.loading')}</span>
         </div>
       )}
 
@@ -292,8 +303,8 @@ export default function UnitIndex() {
               </svg>
               <p className="text-sm text-gray-700">
                 {search || filterCategory || filterType !== 'all' 
-                  ? 'No units match your filters.' 
-                  : 'No units found. Create your first unit to get started.'}
+                  ? t('unit.no_results_filters') 
+                  : t('unit.no_results')}
               </p>
             </div>
           ) : (
@@ -303,13 +314,13 @@ export default function UnitIndex() {
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Unit Name</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Type</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Factor</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Rounding</th>
-                      <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('unit.col_unit_name')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('unit.col_category')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('unit.col_type')}</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('unit.col_factor')}</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('unit.col_rounding')}</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">{t('unit.col_status')}</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('unit.col_actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -339,7 +350,7 @@ export default function UnitIndex() {
                               unit.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-700'
                             }`}
                           >
-                            {unit.is_active ? 'Active' : 'Inactive'}
+                            {unit.is_active ? t('active') : t('inactive')}
                           </button>
                         </td>
                         <td className="px-4 py-2.5 whitespace-nowrap text-right">
@@ -347,7 +358,7 @@ export default function UnitIndex() {
                             <button
                               onClick={() => navigate(`/units/${unit.id}/edit`)}
                               className="p-1.5 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600"
-                              title="Edit"
+                              title={t('edit')}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -356,7 +367,7 @@ export default function UnitIndex() {
                             <button
                               onClick={() => handleDelete(unit.id)}
                               className="p-1.5 rounded hover:bg-red-50 text-gray-700 hover:text-red-600"
-                              title="Delete"
+                              title={t('delete')}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -389,17 +400,17 @@ export default function UnitIndex() {
                             unit.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'
                           }`}
                         >
-                          {unit.is_active ? 'Active' : 'Inactive'}
+                          {unit.is_active ? t('active') : t('inactive')}
                         </button>
                       </div>
                     </div>
                     <div className="space-y-1 mb-3">
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Factor:</span>
+                        <span className="text-gray-500">{t('unit.factor_label')}</span>
                         <span className="text-gray-700 font-mono font-medium">{Number(unit.factor).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Rounding:</span>
+                        <span className="text-gray-500">{t('unit.rounding_label')}</span>
                         <span className="text-gray-700 font-mono font-medium">{Number(unit.rounding).toFixed(2)}</span>
                       </div>
                     </div>
@@ -408,19 +419,19 @@ export default function UnitIndex() {
                         onClick={() => navigate(`/units/${unit.id}`)}
                         className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                       >
-                        View
+                        {t('view')}
                       </button>
                       <button
                         onClick={() => navigate(`/units/${unit.id}/edit`)}
                         className="flex-1 px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
                       >
-                        Edit
+                        {t('edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(unit.id)}
                         className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
                       >
-                        Delete
+                        {t('delete')}
                       </button>
                     </div>
                   </div>
@@ -433,7 +444,7 @@ export default function UnitIndex() {
           {totalPages > 1 && (
             <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-xs text-gray-500 text-center sm:text-left">
-                Page {currentPage} of {totalPages}
+                {t('unit.page_of', { current: currentPage, total: totalPages })}
               </div>
               <div className="flex items-center justify-center gap-1">
                 {/* First */}
@@ -483,7 +494,7 @@ export default function UnitIndex() {
                 </button>
               </div>
               <div className="flex items-center justify-center sm:justify-end gap-2">
-                <span className="text-xs text-gray-500">Show</span>
+                <span className="text-xs text-gray-500">{t('unit.show')}</span>
                 <select
                   value={perPage}
                   onChange={(e) => { setPerPage(parseInt(e.target.value)); setCurrentPage(1); fetchUnits(1, parseInt(e.target.value)); }}
@@ -494,7 +505,7 @@ export default function UnitIndex() {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                <span className="text-xs text-gray-500">per page</span>
+                <span className="text-xs text-gray-500">{t('unit.per_page')}</span>
               </div>
             </div>
           )}

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function ProductShow() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showFullDescription, setShowFullDescription] = useState(false);
 
   useEffect(() => {
     fetchProduct();
@@ -26,12 +27,12 @@ export default function ProductShow() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this product? This action cannot be undone.')) return;
+    if (!confirm(t('product.delete_confirm'))) return;
     try {
       await api.delete(`/products/${id}`);
       navigate('/products');
     } catch (err) {
-      const message = err.response?.data?.message || 'Delete failed';
+      const message = err.response?.data?.message || t('product.delete_failed');
       alert(message);
     }
   };
@@ -40,7 +41,7 @@ export default function ProductShow() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading product...</span>
+        <span className="ml-3 text-gray-600">{t('product.loading_product')}</span>
       </div>
     );
   }
@@ -52,7 +53,7 @@ export default function ProductShow() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/products')} className="hover:text-[#007c89] whitespace-nowrap">Products</button>
+          <button onClick={() => navigate('/products')} className="hover:text-[#007c89] whitespace-nowrap">{t('product.title')}</button>
           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -63,7 +64,7 @@ export default function ProductShow() {
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 break-words">{product.name}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              {product.barcode && <span>SKU: {product.barcode}</span>}
+              {product.barcode && <span>{t('product.sku_label', { sku: product.barcode })}</span>}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -74,7 +75,7 @@ export default function ProductShow() {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              Edit
+              {t('edit')}
             </button>
             <button
               onClick={handleDelete}
@@ -83,7 +84,7 @@ export default function ProductShow() {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Delete
+              {t('delete')}
             </button>
           </div>
         </div>
@@ -98,13 +99,13 @@ export default function ProductShow() {
             <div className="p-4 sm:px-6 sm:py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Purchase Price</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">{t('product.purchase_price')}</p>
                   <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     ${product.purchase_price?.toLocaleString()}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Sale Price</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">{t('product.sale_price')}</p>
                   <p className="text-xl sm:text-3xl font-bold text-green-700">
                     ${product.sale_price?.toLocaleString()}
                   </p>
@@ -112,7 +113,7 @@ export default function ProductShow() {
               </div>
               <div className="mt-3 pt-3 border-t border-green-200 text-center">
                 <p className="text-xs sm:text-sm text-gray-600">
-                  Margin: {(((product.sale_price - product.purchase_price) / product.sale_price) * 100).toFixed(2)}%
+                  {t('product.margin', { pct: (((product.sale_price - product.purchase_price) / product.sale_price) * 100).toFixed(2) })}
                 </p>
               </div>
             </div>
@@ -122,20 +123,20 @@ export default function ProductShow() {
           {(product.low_stock_warning_count > 0 || product.reorder_point > 0) && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Inventory Settings</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('product.inventory_settings')}</h2>
               </div>
               <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Low Stock Warning</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase">{t('product.low_stock_warning_label')}</p>
                     <p className="text-base sm:text-xl font-semibold text-orange-600">
-                      {product.low_stock_warning_count} units
+                      {t('product.units_label', { count: product.low_stock_warning_count })}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Reorder Point</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase">{t('product.reorder_point')}</p>
                     <p className="text-base sm:text-xl font-semibold text-blue-600">
-                      {product.reorder_point} units
+                      {t('product.units_label', { count: product.reorder_point })}
                     </p>
                   </div>
                 </div>
@@ -147,7 +148,7 @@ export default function ProductShow() {
           {product.attachments && product.attachments.length > 0 && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Attachments</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('product.attachments')}</h2>
               </div>
               <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -179,7 +180,7 @@ export default function ProductShow() {
           {/* Category Card */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Category</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('product.category_title')}</h2>
             </div>
             <div className="p-4 sm:p-6">
               {product.category ? (
@@ -192,11 +193,11 @@ export default function ProductShow() {
                     to={`/product-categories/${product.category.id}`}
                     className="inline-block mt-3 text-xs text-[#007c89] hover:underline"
                   >
-                    View Category →
+                    {t('product.view_category')}
                   </Link>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">Uncategorized</p>
+                <p className="text-sm text-gray-400">{t('product.uncategorized')}</p>
               )}
             </div>
           </div>
@@ -204,16 +205,16 @@ export default function ProductShow() {
           {/* Audit Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Audit Information</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('product.audit_info')}</h2>
             </div>
             <div className="p-4 sm:p-6">
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Created At</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">{t('product.created_at')}</dt>
                   <dd className="text-gray-700">{new Date(product.created_at).toLocaleString()}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Last Updated</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">{t('product.last_updated')}</dt>
                   <dd className="text-gray-700">{new Date(product.updated_at).toLocaleString()}</dd>
                 </div>
               </dl>

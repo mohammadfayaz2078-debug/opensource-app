@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import BranchUsersModal from '../../components/BranchUsersModal';
@@ -42,6 +43,7 @@ const getImageUrl = (path) => {
 };
 
 const BranchIndex = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const isCompanyAdmin = location.pathname.startsWith('/company-admin');
@@ -165,7 +167,7 @@ const BranchIndex = () => {
 
   const openBranchUsers = (branch) => {
     if (!branch.is_active) {
-      Swal.fire('Warning', 'Cannot login to an inactive branch.', 'warning');
+      Swal.fire(t('branch.warning'), t('branch.warning_inactive'), 'warning');
       return;
     }
     setSelectedBranch(branch);
@@ -187,14 +189,14 @@ const BranchIndex = () => {
 
   const deleteBranch = async (id, branchName) => {
     const result = await Swal.fire({
-      title: 'Delete Branch?',
-      html: `Are you sure you want to delete "<strong>${branchName}</strong>"?`,
+      title: t('branch.delete_title'),
+      html: t('branch.delete_confirm', { name: `<strong>${branchName}</strong>` }),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: t('branch.delete_confirm_btn'),
+      cancelButtonText: t('branch.cancel'),
     });
 
     if (result.isConfirmed) {
@@ -202,7 +204,7 @@ const BranchIndex = () => {
         await api.delete(`/branches/${id}`);
         Swal.fire({
           icon: 'success',
-          title: 'Deleted!',
+          title: t('branch.delete_success'),
           timer: 1500,
           showConfirmButton: false,
           toast: true,
@@ -210,7 +212,7 @@ const BranchIndex = () => {
         });
         fetchBranches(currentPage);
       } catch (err) {
-        Swal.fire('Error', err.response?.data?.message || 'Cannot delete branch', 'error');
+        Swal.fire('Error', err.response?.data?.message || t('branch.delete_error'), 'error');
       }
     }
   };
@@ -220,7 +222,7 @@ const BranchIndex = () => {
       const res = await api.patch(`/branches/${id}/toggle-status`);
       Swal.fire({
         icon: 'success',
-        title: res.data.data?.is_active ? 'Activated!' : 'Deactivated!',
+        title: res.data.data?.is_active ? t('branch.activated') : t('branch.deactivated'),
         timer: 1500,
         showConfirmButton: false,
         toast: true,
@@ -228,7 +230,7 @@ const BranchIndex = () => {
       });
       fetchBranches(currentPage);
     } catch (err) {
-      Swal.fire('Error', err.response?.data?.message || 'Failed to update status', 'error');
+      Swal.fire('Error', err.response?.data?.message || t('branch.status_error'), 'error');
     }
   };
 
@@ -269,10 +271,10 @@ const BranchIndex = () => {
             <div>
               <h1 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <Store className="w-5 h-5 text-blue-600" />
-                Branches
+                {t('branch.title')}
               </h1>
               <p className="text-xs text-gray-400 mt-0.5">
-                {pagination.total || 0} total branches · Manage all locations
+                {t('branch.subtitle', { total: pagination.total || 0 })}
               </p>
             </div>
             <Link
@@ -280,7 +282,7 @@ const BranchIndex = () => {
               className="inline-flex items-center px-3.5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow"
             >
               <Plus className="w-4 h-4 mr-1.5" />
-              New Branch
+              {t('branch.new')}
             </Link>
           </div>
         </div>
@@ -294,7 +296,7 @@ const BranchIndex = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search branches..."
+                placeholder={t('branch.search')}
                 className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -304,7 +306,7 @@ const BranchIndex = () => {
               onChange={(e) => setProvinceFilter(e.target.value)}
               className="px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="">All Provinces</option>
+              <option value="">{t('branch.all_provinces')}</option>
               {provinces.map((province) => (
                 <option key={province} value={province}>{province}</option>
               ))}
@@ -315,9 +317,9 @@ const BranchIndex = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="">{t('branch.all_status')}</option>
+              <option value="active">{t('branch.active')}</option>
+              <option value="inactive">{t('branch.inactive')}</option>
             </select>
 
             <div className="flex items-center gap-1.5 ml-auto">
@@ -335,7 +337,7 @@ const BranchIndex = () => {
               <button
                 onClick={() => fetchBranches(currentPage)}
                 className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Refresh"
+                title={t('branch.refresh')}
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -347,7 +349,7 @@ const BranchIndex = () => {
         {loading ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex items-center justify-center">
             <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-            <span className="ml-3 text-sm text-gray-500">Loading branches...</span>
+            <span className="ml-3 text-sm text-gray-500">{t('branch.loading')}</span>
           </div>
         ) : error ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex flex-col items-center">
@@ -356,7 +358,7 @@ const BranchIndex = () => {
           </div>
         ) : (
           /* Branches Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {branches && branches.length > 0 ? (
               branches.map((branch) => {
                 // Calculate capacity usage
@@ -377,15 +379,15 @@ const BranchIndex = () => {
                     key={branch.id}
                     className={`bg-white rounded-xl shadow-sm border ${
                       branch.is_active ? 'border-gray-100' : 'border-gray-200 bg-gray-50/50'
-                    } hover:shadow-md transition-all group`}
+                    } hover:shadow-md transition-all duration-200 group h-full min-w-0 overflow-hidden`}
                   >
-                    <div className="p-4">
+                    <div className="p-3 h-full flex flex-col min-w-0">
                       {/* Header with Logo */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-start justify-between gap-2 mb-2.5 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           {/* Logo or Initials */}
                           {logoUrl ? (
-                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 bg-white">
+                            <div className="w-9 h-9 rounded-md overflow-hidden flex-shrink-0 border border-gray-200 bg-white">
                               <img 
                                 src={logoUrl} 
                                 alt={branch.branch_name}
@@ -406,67 +408,67 @@ const BranchIndex = () => {
                             </div>
                           ) : (
                             <div 
-                              className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
+                              className="w-9 h-9 rounded-md flex items-center justify-center text-white font-semibold text-xs flex-shrink-0"
                               style={{ backgroundColor: getRandomColor(branch.id) }}
                             >
                               {getInitials(branch.branch_name)}
                             </div>
                           )}
-                          <div>
-                            <h3 className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors truncate" title={branch.branch_name}>
                               {branch.branch_name}
                             </h3>
                             {branch.branch_slogan && (
-                              <p className="text-xs text-gray-400 truncate max-w-[180px]">
+                              <p className="text-xs text-gray-400 truncate w-full" title={branch.branch_slogan}>
                                 {branch.branch_slogan}
                               </p>
                             )}
                           </div>
                         </div>
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0 ${
+                        <span className={`px-2 py-0.5 text-[11px] sm:text-xs font-medium rounded-full flex-shrink-0 whitespace-nowrap ${
                           branch.is_active 
                             ? 'bg-green-50 text-green-600 border border-green-200' 
                             : 'bg-gray-100 text-gray-500 border border-gray-200'
                         }`}>
-                          {branch.is_active ? 'Active' : 'Inactive'}
+                          {branch.is_active ? t('branch.active') : t('branch.inactive')}
                         </span>
                       </div>
 
                       {/* Location */}
                       <div className="flex items-start gap-2 text-xs text-gray-500 mb-1.5">
                         <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-gray-400" />
-                        <span>
-                          {branch.branch_province || 'No province'}
+                        <span className="min-w-0 break-words leading-relaxed">
+                          {branch.branch_province || t('branch.no_province')}
                           {branch.branch_district && `, ${branch.branch_district}`}
                           {branch.branch_village && `, ${branch.branch_village}`}
                         </span>
                       </div>
 
                       {/* Contact Info */}
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-x-3 gap-y-1.5 mt-2 min-w-0">
                         {branch.branch_phone && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <Phone className="w-3 h-3 text-gray-400" />
-                            <span>{branch.branch_phone}</span>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500 min-w-0">
+                            <Phone className="w-3 h-3 text-gray-400 shrink-0" />
+                            <span className="truncate" title={branch.branch_phone}>{branch.branch_phone}</span>
                           </div>
                         )}
                         {branch.branch_email && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <Mail className="w-3 h-3 text-gray-400" />
-                            <span className="truncate max-w-[120px]">{branch.branch_email}</span>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500 min-w-0">
+                            <Mail className="w-3 h-3 text-gray-400 shrink-0" />
+                            <span className="truncate" title={branch.branch_email}>{branch.branch_email}</span>
                           </div>
                         )}
                       </div>
 
                       {/* Capacity Stats */}
-                      <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                      <div className="mt-2.5 pt-2.5 border-t border-gray-100 space-y-2 flex-1">
                         {/* Users Capacity */}
                         <div>
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-1.5">
                               <Users className="w-3.5 h-3.5 text-gray-400" />
                               <span className="text-xs font-medium text-gray-600">
-                                Users
+                                {t('branch.users')}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5">
@@ -496,7 +498,7 @@ const BranchIndex = () => {
                             <div className="flex items-center gap-1.5">
                               <Package className="w-3.5 h-3.5 text-gray-400" />
                               <span className="text-xs font-medium text-gray-600">
-                                Products
+                                {t('branch.products')}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5">
@@ -524,56 +526,56 @@ const BranchIndex = () => {
                         <div className="flex items-center gap-1.5 pt-1">
                           <Calendar className="w-3.5 h-3.5 text-gray-400" />
                           <span className="text-xs text-gray-400">
-                            Created: {formatDate(branch.created_at)}
+                            {t('branch.created', { date: formatDate(branch.created_at) })}
                           </span>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-1 mt-3 pt-3 border-t border-gray-100">
+                      <div className="grid grid-cols-2 gap-1 mt-2.5 pt-2.5 border-t border-gray-100">
                         {isCompanyAdmin && (
                           <button
                             onClick={() => openBranchUsers(branch)}
                             disabled={!branch.is_active}
-                            className={`flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                            className={`min-w-0 inline-flex items-center justify-center px-2 py-1.5 text-[11px] font-medium rounded-md transition-colors ${
                               !branch.is_active
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
                             }`}
-                            title={!branch.is_active ? 'Branch is inactive' : 'View users'}
+                            title={!branch.is_active ? t('branch.branch_inactive_title') : t('branch.view_users_title')}
                           >
-                            <Users className="w-3.5 h-3.5 mr-1.5" />
-                            Users
+                            <Users className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                            <span className="truncate">{t('branch.view_users')}</span>
                           </button>
                         )}
                         <button
                           onClick={() => viewBranch(branch.id)}
-                          className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                          className="min-w-0 inline-flex items-center justify-center px-2 py-1.5 text-[11px] font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
                         >
-                          <Eye className="w-3.5 h-3.5 mr-1.5" />
-                          View
+                          <Eye className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                          <span className="truncate">{t('branch.view')}</span>
                         </button>
                         <button
                           onClick={() => editBranch(branch.id)}
-                          className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
+                          className="min-w-0 inline-flex items-center justify-center px-2 py-1.5 text-[11px] font-medium rounded-md text-amber-600 hover:bg-amber-50 transition-colors"
                         >
-                          <Edit2 className="w-3.5 h-3.5 mr-1.5" />
-                          Edit
+                          <Edit2 className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                          <span className="truncate">{t('branch.edit')}</span>
                         </button>
                         <button
                           onClick={() => deleteBranch(branch.id, branch.branch_name)}
-                          className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                          className="min-w-0 inline-flex items-center justify-center px-2 py-1.5 text-[11px] font-medium rounded-md text-red-600 hover:bg-red-50 transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                          Delete
+                          <Trash2 className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                          <span className="truncate">{t('branch.delete')}</span>
                         </button>
                       </div>
 
                       {/* Status Toggle */}
-                      <div className="mt-2">
+                      <div className="mt-1.5">
                         <button
                           onClick={() => toggleStatus(branch.id, branch.is_active)}
-                          className={`w-full inline-flex items-center justify-center px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+                          className={`w-full inline-flex items-center justify-center px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors ${
                             branch.is_active
                               ? 'text-green-600 bg-green-50 hover:bg-green-100'
                               : 'text-gray-500 bg-gray-100 hover:bg-gray-200'
@@ -582,12 +584,12 @@ const BranchIndex = () => {
                           {branch.is_active ? (
                             <>
                               <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                              Click to Deactivate
+                              {t('branch.deactivate')}
                             </>
                           ) : (
                             <>
                               <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                              Click to Activate
+                              {t('branch.activate')}
                             </>
                           )}
                         </button>
@@ -600,13 +602,13 @@ const BranchIndex = () => {
               /* Empty State */
               <div className="col-span-full bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
                 <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-400">No branches found</p>
+                <p className="text-sm text-gray-400">{t('branch.empty')}</p>
                 <Link
                   to="create"
                   className="mt-3 inline-flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
-                  Create your first branch
+                  {t('branch.create_first')}
                 </Link>
               </div>
             )}
@@ -618,9 +620,9 @@ const BranchIndex = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mt-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-xs text-gray-500">
-                Showing <span className="font-medium text-gray-700">{pagination.from || 0}</span> to{' '}
-                <span className="font-medium text-gray-700">{pagination.to || 0}</span> of{' '}
-                <span className="font-medium text-gray-700">{pagination.total || 0}</span> results
+                {t('branch.showing')} <span className="font-medium text-gray-700">{pagination.from || 0}</span> {t('branch.to')}{' '}
+                <span className="font-medium text-gray-700">{pagination.to || 0}</span> {t('branch.of')}{' '}
+                <span className="font-medium text-gray-700">{pagination.total || 0}</span> {t('branch.results')}
               </div>
 
               <div className="flex items-center gap-1">
@@ -634,7 +636,7 @@ const BranchIndex = () => {
                   } transition-colors`}
                 >
                   <ChevronLeft className="w-3.5 h-3.5 mr-1" />
-                  Prev
+                  {t('branch.prev')}
                 </button>
 
                 <div className="flex items-center gap-0.5">
@@ -673,7 +675,7 @@ const BranchIndex = () => {
                       : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
                   } transition-colors`}
                 >
-                  Next
+                  {t('branch.next')}
                   <ChevronRight className="w-3.5 h-3.5 ml-1" />
                 </button>
               </div>

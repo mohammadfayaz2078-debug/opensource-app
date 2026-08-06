@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 const generatePageNumbers = (current, total) => {
@@ -18,6 +19,7 @@ const generatePageNumbers = (current, total) => {
 };
 
 export default function IncomeCategoryIndex() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,13 +77,13 @@ export default function IncomeCategoryIndex() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this category? This action cannot be undone.')) return;
+    if (!confirm(t('income_category.delete_confirm'))) return;
     try {
       await api.delete(`/income-categories/${id}`);
       fetchCategories(currentPage);
       fetchStats();
     } catch (err) {
-      const message = err.response?.data?.message || 'Delete failed';
+      const message = err.response?.data?.message || t('income_category.delete_failed');
       alert(message);
     }
   };
@@ -94,7 +96,7 @@ export default function IncomeCategoryIndex() {
       ));
       fetchStats();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to toggle status');
+      alert(err.response?.data?.message || t('income_category.toggle_failed'));
     }
   };
 
@@ -103,10 +105,10 @@ export default function IncomeCategoryIndex() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">Income Categories</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('income_category.title')}</h1>
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{summary.total_categories} total</span>
-            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{summary.active_categories} active</span>
+            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{t('income_category.total', { count: summary.total_categories })}</span>
+            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t('income_category.active', { count: summary.active_categories })}</span>
           </div>
         </div>
       </div>
@@ -122,7 +124,7 @@ export default function IncomeCategoryIndex() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('income_category.search_placeholder')}
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
             />
           </div>
@@ -131,9 +133,9 @@ export default function IncomeCategoryIndex() {
             onChange={e => setFilterActive(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">{t('income_category.all')}</option>
+            <option value="active">{t('income_category.status_active')}</option>
+            <option value="inactive">{t('income_category.status_inactive')}</option>
           </select>
         </div>
         <div className="flex gap-2">
@@ -144,7 +146,7 @@ export default function IncomeCategoryIndex() {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Export
+            {t('income_category.export')}
           </button>
           <Link
             to="/income-categories/create"
@@ -153,7 +155,7 @@ export default function IncomeCategoryIndex() {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            New
+            {t('income_category.new')}
           </Link>
         </div>
       </div>
@@ -162,7 +164,7 @@ export default function IncomeCategoryIndex() {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-700 text-sm">Loading categories...</span>
+          <span className="ml-3 text-gray-700 text-sm">{t('income_category.loading')}</span>
         </div>
       )}
 
@@ -177,10 +179,10 @@ export default function IncomeCategoryIndex() {
                 </svg>
               </div>
               <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                {search ? 'No Results Found' : 'No Income Categories Yet'}
+                {search ? t('income_category.no_results_title') : t('income_category.no_categories_title')}
               </h3>
               <p className="text-xs text-gray-500 mb-5 text-center max-w-[200px] leading-relaxed">
-                {search ? 'Try adjusting your search or filters above.' : 'Start by creating your first income category to organize your earnings.'}
+                {search ? t('income_category.no_results_desc') : t('income_category.no_categories_desc')}
               </p>
               {!search && (
                 <Link
@@ -190,7 +192,7 @@ export default function IncomeCategoryIndex() {
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                   </svg>
-                  Create Category
+                  {t('income_category.create_category')}
                 </Link>
               )}
             </div>
@@ -201,11 +203,11 @@ export default function IncomeCategoryIndex() {
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Description</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Created</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('income_category.col_name')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('income_category.col_description')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('income_category.col_status')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('income_category.col_created')}</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('income_category.col_actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -233,7 +235,7 @@ export default function IncomeCategoryIndex() {
                               category.is_active ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                           >
-                            {category.is_active ? 'Active' : 'Inactive'}
+                            {category.is_active ? t('income_category.status_active') : t('income_category.status_inactive')}
                           </button>
                          </td>
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-700">
@@ -244,7 +246,7 @@ export default function IncomeCategoryIndex() {
                             <button
                               onClick={() => navigate(`/income-categories/${category.id}/edit`)}
                               className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600"
-                              title="Edit"
+                              title={t('income_category.edit')}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -253,7 +255,7 @@ export default function IncomeCategoryIndex() {
                             <button
                               onClick={() => handleDelete(category.id)}
                               className="p-1 rounded hover:bg-red-50 text-gray-700 hover:text-red-600"
-                              title="Delete"
+                              title={t('income_category.delete')}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -291,30 +293,30 @@ export default function IncomeCategoryIndex() {
                           category.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {category.is_active ? 'Active' : 'Inactive'}
+                        {category.is_active ? t('income_category.status_active') : t('income_category.status_inactive')}
                       </button>
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                      <span>Created: {new Date(category.created_at).toLocaleDateString()}</span>
+                      <span>{t('income_category.created_at_label', { date: new Date(category.created_at).toLocaleDateString() })}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => navigate(`/income-categories/${category.id}`)}
                         className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                       >
-                        View
+                        {t('income_category.view')}
                       </button>
                       <button
                         onClick={() => navigate(`/income-categories/${category.id}/edit`)}
                         className="flex-1 px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
                       >
-                        Edit
+                        {t('income_category.edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(category.id)}
                         className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
                       >
-                        Delete
+                        {t('income_category.delete')}
                       </button>
                     </div>
                   </div>
@@ -327,7 +329,7 @@ export default function IncomeCategoryIndex() {
           {totalPages > 1 && (
             <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-xs text-gray-500 text-center sm:text-left">
-                Page {currentPage} of {totalPages}
+                {t('income_category.page_of', { current: currentPage, total: totalPages })}
               </div>
               <div className="flex items-center justify-center gap-1">
                 <button onClick={() => fetchCategories(1)} disabled={currentPage === 1}
@@ -348,7 +350,7 @@ export default function IncomeCategoryIndex() {
                   className="hidden sm:inline-flex px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">⏭</button>
               </div>
               <div className="flex items-center justify-center sm:justify-end gap-2">
-                <span className="text-xs text-gray-500">Show</span>
+                <span className="text-xs text-gray-500">{t('income_category.show')}</span>
                 <select value={perPage}
                   onChange={(e) => { setPerPage(parseInt(e.target.value)); setCurrentPage(1); fetchCategories(1, parseInt(e.target.value)); }}
                   className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#007c89]">
@@ -357,7 +359,7 @@ export default function IncomeCategoryIndex() {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                <span className="text-xs text-gray-500">per page</span>
+                <span className="text-xs text-gray-500">{t('income_category.per_page')}</span>
               </div>
             </div>
           )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
@@ -24,6 +25,7 @@ export default function AccountTransferReceipt() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const basePath = location.pathname.startsWith('/company-admin') ? '/company-admin' : '';
   const [searchParams] = useSearchParams();
   const receiptRef = useRef();
@@ -41,7 +43,7 @@ export default function AccountTransferReceipt() {
       setTransactions(res.data.transactions || []);
     } catch (err) {
       console.error(err);
-      Swal.fire('Error', 'Failed to load transfer details', 'error');
+      Swal.fire(t('error'), t('accountTransfer.failed_load'), 'error');
       navigate(`${basePath}/accounts`);
     } finally {
       setLoading(false);
@@ -112,27 +114,27 @@ export default function AccountTransferReceipt() {
 
   const handleReverse = async () => {
     const result = await Swal.fire({
-      title: 'Reverse Transfer?',
+      title: t('accountTransfer.reverse_title'),
       html: `
-        <p>Are you sure you want to reverse this transfer?</p>
+        <p>${t('accountTransfer.reverse_confirm')}</p>
         <p class="mt-2 text-sm text-gray-500">
-          Amount: <strong>${formatPrice(transfer.amount)}</strong>
+          ${t('accountTransfer.amount')}: <strong>${formatPrice(transfer.amount)}</strong>
         </p>
       `,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, reverse it',
+      confirmButtonText: t('accountTransfer.yes_reverse'),
     });
 
     if (result.isConfirmed) {
       try {
         await api.post(`/account-transfers/${transfer.id}/reverse`, { transfer_id: transfer.id });
-        Swal.fire('Reversed!', 'Transfer has been reversed.', 'success');
+        Swal.fire(t('accountTransfer.reversed_success'), t('accountTransfer.reversed_msg'), 'success');
         fetchTransfer();
       } catch (err) {
-        Swal.fire('Error', err.response?.data?.message || 'Failed to reverse transfer', 'error');
+        Swal.fire(t('error'), err.response?.data?.message || t('accountTransfer.failed_reverse'), 'error');
       }
     }
   };
@@ -162,7 +164,7 @@ export default function AccountTransferReceipt() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back
+            {t('accountTransfer.back')}
           </button>
           <div className="flex items-center gap-1.5">
             {canReverse && (
@@ -173,7 +175,7 @@ export default function AccountTransferReceipt() {
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                 </svg>
-                Reverse
+                {t('accountTransfer.reverse')}
               </button>
             )}
             <button
@@ -183,7 +185,7 @@ export default function AccountTransferReceipt() {
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Download
+              {t('accountTransfer.download')}
             </button>
             <button
               onClick={handlePrint}
@@ -192,7 +194,7 @@ export default function AccountTransferReceipt() {
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
-              Print
+              {t('accountTransfer.print')}
             </button>
           </div>
         </div>
@@ -207,10 +209,10 @@ export default function AccountTransferReceipt() {
       >
         {/* Header */}
         <div className="text-center mb-4">
-          <p className="text-lg font-bold tracking-widest text-gray-800">TRANSFER RECEIPT</p>
+          <p className="text-lg font-bold tracking-widest text-gray-800">{t('accountTransfer.receipt_title')}</p>
           <p className="text-[10px] text-gray-400 mt-0.5">{transfer.reference_number}</p>
           <span className={`inline-block mt-1.5 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded ${statusColors[transfer.status] || 'bg-gray-100 text-gray-700'}`}>
-            {transfer.status}
+            {t(`accountTransfer.status_${transfer.status}`, { defaultValue: transfer.status })}
           </span>
         </div>
 
@@ -219,11 +221,11 @@ export default function AccountTransferReceipt() {
         {/* Date Time */}
         <div className="text-[10px] text-gray-600 mb-3 leading-relaxed">
           <div className="flex justify-between">
-            <span>Date</span>
+            <span>{t('accountTransfer.date')}</span>
             <span>{date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
           </div>
           <div className="flex justify-between">
-            <span>Time</span>
+            <span>{t('accountTransfer.time')}</span>
             <span>{date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         </div>
@@ -232,7 +234,7 @@ export default function AccountTransferReceipt() {
 
         {/* From */}
         <div className="mb-3">
-          <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">FROM</p>
+          <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">{t('accountTransfer.from')}</p>
           <p className="text-xs font-bold text-gray-900">{transfer.sender_account?.name}</p>
           <div className="flex items-center gap-1">
             <span className="text-[10px] text-gray-500">{transfer.sender_account?.wallet_number}</span>
@@ -244,7 +246,7 @@ export default function AccountTransferReceipt() {
               }}
             >
               {copiedSender ? (
-                <span className="text-[8px] text-green-600 font-bold">Copied!</span>
+                <span className="text-[8px] text-green-600 font-bold">{t('accountTransfer.copied')}</span>
               ) : (
                 <svg className="w-2.5 h-2.5 text-gray-300 hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -256,7 +258,7 @@ export default function AccountTransferReceipt() {
 
         {/* To */}
         <div className="mb-3">
-          <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">TO</p>
+          <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">{t('accountTransfer.to')}</p>
           <p className="text-xs font-bold text-gray-900">{transfer.receiver_account?.name}</p>
           <div className="flex items-center gap-1">
             <span className="text-[10px] text-gray-500">{transfer.receiver_account?.wallet_number}</span>
@@ -268,7 +270,7 @@ export default function AccountTransferReceipt() {
               }}
             >
               {copiedReceiver ? (
-                <span className="text-[8px] text-green-600 font-bold">Copied!</span>
+                <span className="text-[8px] text-green-600 font-bold">{t('accountTransfer.copied')}</span>
               ) : (
                 <svg className="w-2.5 h-2.5 text-gray-300 hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -282,7 +284,7 @@ export default function AccountTransferReceipt() {
 
         {/* Amount */}
         <div className="text-center mb-3">
-          <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Amount</p>
+          <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">{t('accountTransfer.amount')}</p>
           <p className="text-lg font-bold text-gray-900 mt-0.5">{formatPrice(transfer.amount)}</p>
         </div>
 
@@ -290,7 +292,7 @@ export default function AccountTransferReceipt() {
           <>
             <div className="border-t border-dashed border-gray-300 mb-3" />
             <div className="mb-3">
-              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Note</p>
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">{t('accountTransfer.note_label')}</p>
               <p className="text-[10px] text-gray-700">{transfer.note}</p>
             </div>
           </>
@@ -301,7 +303,7 @@ export default function AccountTransferReceipt() {
           <>
             <div className="border-t border-dashed border-gray-300 mb-3" />
             <div className="mb-3">
-              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">LEDGER</p>
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{t('accountTransfer.ledger')}</p>
               {transactions.map((txn) => (
                 <div key={txn.id} className="text-[10px] mb-1.5 leading-tight">
                   <div className="flex justify-between text-gray-800">
@@ -310,7 +312,7 @@ export default function AccountTransferReceipt() {
                   </div>
                   <div className="flex justify-between text-gray-400">
                     <span>{txn.account?.wallet_number}</span>
-                    <span>Balance: {formatPrice(txn.balance_after)}</span>
+                    <span>{t('accountTransfer.balance')} {formatPrice(txn.balance_after)}</span>
                   </div>
                 </div>
               ))}
@@ -322,8 +324,8 @@ export default function AccountTransferReceipt() {
 
         {/* Footer */}
         <div className="text-center text-[9px] text-gray-400">
-          <p className="mb-0.5">Processed by {transfer.created_by?.name || 'System'}</p>
-          <p>Computer-generated receipt &bull; No signature required</p>
+          <p className="mb-0.5">{t('accountTransfer.processed_by', { name: transfer.created_by?.name || t('accountTransfer.system') })}</p>
+          <p>{t('accountTransfer.comp_gen')}</p>
         </div>
       </div>
 

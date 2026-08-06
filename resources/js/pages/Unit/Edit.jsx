@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function UnitEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [referenceUnit, setReferenceUnit] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -88,7 +90,7 @@ export default function UnitEdit() {
           setErrors({ general: err.response.data.message });
         }
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to update unit.' });
+        setErrors({ general: err.response?.data?.message || t('unit.update_failed') });
       }
     } finally {
       setLoading(false);
@@ -99,21 +101,19 @@ export default function UnitEdit() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading unit...</span>
+        <span className="ml-3 text-gray-600">{t('unit.loading_unit')}</span>
       </div>
     );
   }
 
   const inputClass = (field) => `w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89] ${errors[field] ? 'border-red-400' : 'border-gray-300'}`;
 
-  const selectedCategory = categories.find(c => c.id === parseInt(form.category_id));
-
   return (
     <div>
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/units')} className="hover:text-[#007c89]">Units</button>
+          <button onClick={() => navigate('/units')} className="hover:text-[#007c89]">{t('unit.title')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -123,9 +123,9 @@ export default function UnitEdit() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">Edit</span>
+          <span className="text-gray-700">{t('edit')}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Edit Unit</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">{t('unit.edit_title')}</h1>
       </div>
 
       {errors.general && (
@@ -137,13 +137,13 @@ export default function UnitEdit() {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Unit Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('unit.unit_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Category
+                      {t('unit.category_label')}
                     </label>
                     <select
                       name="category_id"
@@ -151,7 +151,7 @@ export default function UnitEdit() {
                       onChange={handleChange}
                       className={inputClass('category_id')}
                     >
-                      <option value="">Select category</option>
+                      <option value="">{t('unit.select_category')}</option>
                       {categories.map(cat => (
                         <option key={cat.id} value={cat.id}>
                           {cat.name} ({cat.measure_type_label})
@@ -163,7 +163,7 @@ export default function UnitEdit() {
                   
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Unit Name
+                      {t('unit.unit_name_field')}
                     </label>
                     <input
                       name="name"
@@ -176,7 +176,7 @@ export default function UnitEdit() {
                   
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Unit Type
+                      {t('unit.unit_type')}
                     </label>
                     <div className="grid grid-cols-3 gap-3 mt-2">
                       <label
@@ -195,7 +195,7 @@ export default function UnitEdit() {
                           className="hidden"
                         />
                         <span className="text-2xl mb-1">⚓</span>
-                        <span className="text-xs font-medium">Reference</span>
+                        <span className="text-xs font-medium">{t('unit.type_reference')}</span>
                       </label>
                       
                       <label
@@ -214,7 +214,7 @@ export default function UnitEdit() {
                           className="hidden"
                         />
                         <span className="text-2xl mb-1">⬆️</span>
-                        <span className="text-xs font-medium">Bigger</span>
+                        <span className="text-xs font-medium">{t('unit.type_bigger')}</span>
                       </label>
                       
                       <label
@@ -233,7 +233,7 @@ export default function UnitEdit() {
                           className="hidden"
                         />
                         <span className="text-2xl mb-1">⬇️</span>
-                        <span className="text-xs font-medium">Smaller</span>
+                        <span className="text-xs font-medium">{t('unit.type_smaller')}</span>
                       </label>
                     </div>
                     {errors.uom_type && <p className="text-red-500 text-xs mt-1">{errors.uom_type[0]}</p>}
@@ -242,7 +242,7 @@ export default function UnitEdit() {
                   {form.uom_type !== 'reference' && (
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        Conversion Factor *
+                        {t('unit.conversion_factor')}
                       </label>
                       <input
                         type="text"
@@ -250,7 +250,7 @@ export default function UnitEdit() {
                         value={form.factor}
                         onChange={handleChange}
                         className={inputClass('factor')}
-                        placeholder="Enter conversion factor"
+                        placeholder={t('unit.factor_placeholder2')}
                       />
                       {errors.factor && <p className="text-red-500 text-xs mt-1">{errors.factor[0]}</p>}
 
@@ -266,27 +266,27 @@ export default function UnitEdit() {
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             {form.uom_type === 'bigger'
-                              ? `1 ${form.name} contains ${parseFloat(form.factor).toString()} ${referenceUnit.name}`
-                              : `1 ${referenceUnit.name} contains ${parseFloat(form.factor).toString()} ${form.name}`}
+                              ? t('unit.contains_bigger', { name: form.name, factor: parseFloat(form.factor).toString(), ref: referenceUnit.name })
+                              : t('unit.contains_smaller', { ref: referenceUnit.name, factor: parseFloat(form.factor).toString(), name: form.name })}
                           </p>
                         </div>
                       )}
                       {!referenceUnit && form.category_id && (
                         <div className="mt-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                          <p className="text-xs text-amber-700">⚠️ No reference unit found in this category.</p>
+                          <p className="text-xs text-amber-700">{t('unit.no_reference_edit')}</p>
                         </div>
                       )}
                       <p className="text-xs text-gray-400 mt-1">
                         {form.uom_type === 'bigger'
-                          ? 'How many reference units equal 1 of this unit'
-                          : 'How many of this unit equal 1 reference unit'}
+                          ? t('unit.bigger_hint2')
+                          : t('unit.smaller_hint2')}
                       </p>
                     </div>
                   )}
                   
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Rounding Precision
+                      {t('unit.rounding_precision')}
                     </label>
                     <input
                       type="number"
@@ -312,7 +312,7 @@ export default function UnitEdit() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Reference unit: {referenceUnit.name}</span>
+                    <span>{t('unit.reference_unit_label', { name: referenceUnit.name })}</span>
                   </div>
                 </div>
               )}
@@ -326,7 +326,7 @@ export default function UnitEdit() {
                     onChange={handleChange}
                     className="h-4 w-4 text-[#007c89] focus:ring-[#007c89] border-gray-300 rounded"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Active</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('active')}</span>
                 </label>
               </div>
 
@@ -338,14 +338,14 @@ export default function UnitEdit() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Saving...
+                    {t('unit.saving')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Changes
+                    {t('save')}
                   </>
                 )}
               </button>
@@ -354,7 +354,7 @@ export default function UnitEdit() {
                 onClick={() => navigate(`/units/${id}`)}
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 mt-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>

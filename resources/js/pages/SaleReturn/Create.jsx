@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function SaleReturnCreate() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [sales, setSales] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -81,7 +83,7 @@ export default function SaleReturnCreate() {
       setItems(returnItems);
     } catch (err) {
       console.error('Error fetching sale items:', err);
-      setErrors({ sale_id: 'Could not load sale items' });
+      setErrors({ sale_id: t('sale_return.could_not_load') });
     } finally {
       setFetchingItems(false);
     }
@@ -156,14 +158,14 @@ export default function SaleReturnCreate() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (items.length === 0) { setErrors({ general: 'Please add at least one item.' }); return; }
+    if (items.length === 0) { setErrors({ general: t('sale_return.please_add_item') }); return; }
     
     // Validate quantities
     const invalidItems = items.filter(item => 
       item.quantity <= 0 || (item.max_quantity && item.quantity > item.max_quantity)
     );
     if (invalidItems.length > 0) {
-      setErrors({ general: 'Some items have invalid quantities. Please check max limits.' });
+      setErrors({ general: t('sale_return.invalid_qty') });
       return;
     }
     
@@ -182,7 +184,7 @@ export default function SaleReturnCreate() {
       navigate('/sale-returns');
     } catch (err) {
       if (err.response?.status === 422) setErrors(err.response.data.errors || {});
-      else setErrors({ general: err.response?.data?.message || 'Failed to create return' });
+      else setErrors({ general: err.response?.data?.message || t('sale_return.create_failed') });
     } finally { setLoading(false); }
   };
 
@@ -192,8 +194,8 @@ export default function SaleReturnCreate() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-4">
-        <button onClick={() => navigate('/sale-returns')} className="text-sm text-[#007c89] hover:underline">&larr; Back to Sale Returns</button>
-        <h1 className="text-xl font-semibold text-gray-900 mt-1">New Sale Return</h1>
+        <button onClick={() => navigate('/sale-returns')} className="text-sm text-[#007c89] hover:underline">&larr; {t('sale_return.back_to_returns')}</button>
+        <h1 className="text-xl font-semibold text-gray-900 mt-1">{t('sale_return.new_title')}</h1>
       </div>
 
       {errors.general && (
@@ -204,12 +206,12 @@ export default function SaleReturnCreate() {
         {/* Return Details */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
           <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-900">Return Details</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t('sale_return.details')}</h2>
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Invoice *</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale_return.invoice_label')}</label>
                 <select 
                   name="sale_id" 
                   value={form.sale_id} 
@@ -218,7 +220,7 @@ export default function SaleReturnCreate() {
                   required
                   disabled={isSaleLocked}
                 >
-                  <option value="">Select Invoice</option>
+                  <option value="">{t('sale_return.select_invoice')}</option>
                   {sales.map(s => (
                     <option key={s.id} value={s.id}>
                       {s.reference_no} - {parseFloat(s.total_amount).toFixed(2)}
@@ -230,22 +232,22 @@ export default function SaleReturnCreate() {
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    Invoice is locked (from sale details)
+                    {t('sale_return.invoice_locked')}
                   </p>
                 )}
                 {errors.sale_id && <p className="mt-1 text-xs text-red-500">{errors.sale_id}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Return Date *</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale_return.return_date')}</label>
                 <input type="date" name="return_date" value={form.return_date}
                   onChange={e => setForm({ ...form, return_date: e.target.value })}
                   className={inputClassErr('return_date')} required />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Reason</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale_return.reason')}</label>
                 <input type="text" name="reason" value={form.reason}
                   onChange={e => setForm({ ...form, reason: e.target.value })}
-                  className={inputClass} placeholder="Reason for return..." />
+                  className={inputClass} placeholder={t('sale_return.reason_placeholder')} />
               </div>
             </div>
           </div>
@@ -254,25 +256,25 @@ export default function SaleReturnCreate() {
         {/* Items Section */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Items</h2>
-            <span className="text-xs text-gray-500">{items.length} item{items.length !== 1 ? 's' : ''} added</span>
+            <h2 className="text-sm font-semibold text-gray-900">{t('sale.items')}</h2>
+            <span className="text-xs text-gray-500">{t('sale_return.items_added', { count: items.length })}</span>
           </div>
 
           {/* Selected Sale Info */}
           {selectedSale && (
             <div className="px-4 py-2 bg-blue-50/50 border-b border-gray-200 flex items-center justify-between text-sm flex-wrap gap-2">
               <span className="text-gray-700">
-                Invoice: <span className="font-medium">{selectedSale.sale_reference}</span>
+                {t('sale_return.invoice_colon', { ref: selectedSale.sale_reference })}
               </span>
               <span className="text-gray-700">
-                Refundable Items: <span className="font-medium">{totalRefundable}</span>
+                {t('sale_return.refundable_items', { count: totalRefundable })}
               </span>
               {isSaleLocked && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-medium">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  From Sale
+                  {t('sale_return.from_sale')}
                 </span>
               )}
             </div>
@@ -281,7 +283,7 @@ export default function SaleReturnCreate() {
           {fetchingItems && (
             <div className="p-4 text-center">
               <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-[#007c89] border-t-transparent"></div>
-              <span className="ml-2 text-sm text-gray-600">Loading sale items...</span>
+              <span className="ml-2 text-sm text-gray-600">{t('sale_return.loading_items')}</span>
             </div>
           )}
 
@@ -289,17 +291,17 @@ export default function SaleReturnCreate() {
           {!fetchingItems && (
             <div className="p-4 border-b border-gray-200 bg-gray-50/50">
               <div className="max-w-sm">
-                <label className="block text-xs text-gray-500 mb-0.5">Select Product</label>
+                <label className="block text-xs text-gray-500 mb-0.5">{t('sale_return.select_product')}</label>
                 <div className="relative" ref={dropdownRef}>
                   <input type="text" value={productSearch}
                     onChange={e => { setProductSearch(e.target.value); setShowDropdown(true); }}
                     onFocus={() => setShowDropdown(true)}
-                    placeholder="Search products..."
+                    placeholder={t('sale_return.search_products')}
                     className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
                   {showDropdown && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
                       {filteredProducts.length === 0 ? (
-                        <div className="px-3 py-2 text-sm text-gray-400">No products found</div>
+                        <div className="px-3 py-2 text-sm text-gray-400">{t('sale_return.no_products_found')}</div>
                       ) : (
                         filteredProducts.map(p => (
                           <button key={p.id} type="button" onClick={() => addProduct(p)}
@@ -320,7 +322,7 @@ export default function SaleReturnCreate() {
           <div className="p-4">
             {items.length === 0 && !fetchingItems ? (
               <p className="text-sm text-gray-400 text-center py-4">
-                {form.sale_id ? 'No refundable items found for this sale.' : 'Select an invoice first to load items.'}
+                {form.sale_id ? t('sale_return.no_refundable') : t('sale_return.select_invoice_first')}
               </p>
             ) : items.length > 0 && !fetchingItems ? (
               <div className="overflow-x-auto">
@@ -328,10 +330,10 @@ export default function SaleReturnCreate() {
                   <thead>
                     <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase">
                       <th className="text-left py-2 px-3 font-medium w-8">#</th>
-                      <th className="text-left py-2 px-3 font-medium">Product</th>
-                      <th className="text-right py-2 px-3 font-medium w-32">Qty</th>
-                      <th className="text-right py-2 px-3 font-medium w-28">Price</th>
-                      <th className="text-right py-2 px-3 font-medium w-24">Total</th>
+                      <th className="text-left py-2 px-3 font-medium">{t('sale_return.col_product')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-32">{t('sale_return.col_qty')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-28">{t('sale_return.col_price')}</th>
+                      <th className="text-right py-2 px-3 font-medium w-24">{t('sale_return.col_total')}</th>
                       <th className="text-center py-2 px-3 font-medium w-12"></th>
                     </tr>
                   </thead>
@@ -347,7 +349,7 @@ export default function SaleReturnCreate() {
                               <div className="font-medium text-gray-900">{item.name}</div>
                               {item.max_quantity && (
                                 <div className="text-xs text-gray-400">
-                                  Max: {item.max_quantity}
+                                  {t('sale_return.max_label', { max: item.max_quantity })}
                                 </div>
                               )}
                             </div>
@@ -357,7 +359,7 @@ export default function SaleReturnCreate() {
                               onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded text-right" />
                             {item.quantity > maxQty && (
-                              <div className="text-xs text-red-500">Exceeds max</div>
+                              <div className="text-xs text-red-500">{t('sale_return.exceeds_max')}</div>
                             )}
                           </td>
                           <td className="py-2 px-3">
@@ -388,21 +390,21 @@ export default function SaleReturnCreate() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{t('sale_return.notes')}</label>
               <textarea name="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-                rows="2" className={inputClass} placeholder="Optional notes..." />
+                rows="2" className={inputClass} placeholder={t('sale_return.notes_placeholder')} />
             </div>
           </div>
           <div>
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Summary</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">{t('sale_return.summary')}</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Items</span><span>{items.length}</span></div>
-                <div className="flex justify-between font-bold text-lg border-t pt-2"><span>Total</span><span>{subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">{t('sale.items')}</span><span>{items.length}</span></div>
+                <div className="flex justify-between font-bold text-lg border-t pt-2"><span>{t('sale_return.col_total')}</span><span>{subtotal.toFixed(2)}</span></div>
               </div>
               <button type="submit" disabled={loading || fetchingItems || items.length === 0}
                 className="w-full mt-4 px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77] disabled:opacity-50 disabled:cursor-not-allowed">
-                {loading ? 'Creating...' : 'Create Return'}
+                {loading ? t('sale_return.creating') : t('sale_return.create_return')}
               </button>
             </div>
           </div>

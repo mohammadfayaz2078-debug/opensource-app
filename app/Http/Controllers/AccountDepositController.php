@@ -23,15 +23,18 @@ class AccountDepositController extends Controller
 
     public function store(Request $request)
     {
+        $actor = auth()->user();
         $validated = $request->validate([
             'account_id'  => 'required|exists:accounts,id',
             'amount'      => 'required|numeric|min:0.01',
             'description' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($validated, &$deposit) {
+        DB::transaction(function () use ($validated, $actor, &$deposit) {
 
-            $account = Account::accessibleTo(auth()->user())->lockForUpdate()->findOrFail($validated['account_id']);
+            $account = Account::accessibleTo($actor)
+                ->lockForUpdate()
+                ->findOrFail($validated['account_id']);
             
             // Get the current balance before deposit
             $balanceBefore = $account->balance;
@@ -43,7 +46,7 @@ class AccountDepositController extends Controller
                 'account_id'  => $account->id,
                 'amount'      => $amount,
                 'description' => $validated['description'] ?? null,
-                'created_by'  => auth()->user() instanceof User ? auth()->id() : null,
+                'created_by'  => $actor instanceof User ? $actor->id : null,
             ]);
 
             // Create transaction log
@@ -55,7 +58,7 @@ class AccountDepositController extends Controller
                 'description' => $validated['description'] ?? 'Deposit made',
                 'reference_id' => $deposit->id,
                 'reference_type' => AccountDeposit::class,
-                'created_by' => auth()->user() instanceof User ? auth()->id() : null,
+                'created_by' => $actor instanceof User ? $actor->id : null,
             ]);
 
             // Update account balance

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 
 export default function SupplierCreate() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -40,7 +42,7 @@ export default function SupplierCreate() {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to create supplier.' });
+        setErrors({ general: err.response?.data?.message || t('supplier.create_failed') });
       }
     } finally {
       setLoading(false);
@@ -54,13 +56,13 @@ export default function SupplierCreate() {
       {/* Breadcrumb */}
       <div className="mb-3">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <button onClick={() => navigate('/suppliers')} className="hover:text-[#007c89]">Suppliers</button>
+          <button onClick={() => navigate('/suppliers')} className="hover:text-[#007c89]">{t('supplier.breadcrumb')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">New Supplier</span>
+          <span className="text-gray-700">{t('supplier.new_supplier')}</span>
         </div>
-        <h1 className="text-xl font-semibold text-gray-900">Add Supplier</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t('supplier.add_supplier')}</h1>
       </div>
 
       {errors.general && (
@@ -72,26 +74,26 @@ export default function SupplierCreate() {
           {/* Supplier Information */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Supplier Information</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('supplier.info')}</h2>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Supplier Code
+                    {t('supplier.code_field')}
                   </label>
                   <input
                     name="supplier_code"
                     value={form.supplier_code}
                     onChange={handleChange}
                     className={inputClass('supplier_code')}
-                    placeholder="Auto-generated if empty"
+                    placeholder={t('supplier.code_placeholder')}
                   />
                   {errors.supplier_code && <p className="text-red-500 text-xs mt-0.5">{errors.supplier_code[0]}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    First Name *
+                    {t('supplier.first_name')}
                   </label>
                   <input
                     name="first_name"
@@ -104,7 +106,7 @@ export default function SupplierCreate() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Last Name
+                    {t('supplier.last_name')}
                   </label>
                   <input
                     name="last_name"
@@ -121,39 +123,39 @@ export default function SupplierCreate() {
           {/* Contact Information */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Contact Information</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('supplier.contact_info')}</h2>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Contact Person
+                    {t('supplier.contact_person')}
                   </label>
                   <input
                     name="contact_person"
                     value={form.contact_person}
                     onChange={handleChange}
                     className={inputClass('contact_person')}
-                    placeholder="Main point of contact"
+                    placeholder={t('supplier.contact_placeholder')}
                   />
                   {errors.contact_person && <p className="text-red-500 text-xs mt-0.5">{errors.contact_person[0]}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Phone
+                    {t('supplier.phone')}
                   </label>
                   <input
                     name="phone"
                     value={form.phone}
                     onChange={handleChange}
                     className={inputClass('phone')}
-                    placeholder="+93 XX XXX XXXX"
+                    placeholder={t('supplier.phone_placeholder')}
                   />
                   {errors.phone && <p className="text-red-500 text-xs mt-0.5">{errors.phone[0]}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Email
+                    {t('supplier.email')}
                   </label>
                   <input
                     type="email"
@@ -161,7 +163,7 @@ export default function SupplierCreate() {
                     value={form.email}
                     onChange={handleChange}
                     className={inputClass('email')}
-                    placeholder="supplier@example.com"
+                    placeholder={t('supplier.email_placeholder')}
                   />
                   {errors.email && <p className="text-red-500 text-xs mt-0.5">{errors.email[0]}</p>}
                 </div>
@@ -172,13 +174,13 @@ export default function SupplierCreate() {
           {/* Address */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Address</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('supplier.address')}</h2>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Street Address
+                    {t('supplier.street_address')}
                   </label>
                   <textarea
                     name="address"
@@ -186,14 +188,14 @@ export default function SupplierCreate() {
                     onChange={handleChange}
                     rows="1"
                     className={inputClass('address')}
-                    placeholder="Street, building, etc."
+                    placeholder={t('supplier.street_placeholder')}
                   />
                   {errors.address && <p className="text-red-500 text-xs mt-0.5">{errors.address[0]}</p>}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      City
+                      {t('supplier.city')}
                     </label>
                     <input
                       name="city"
@@ -205,7 +207,7 @@ export default function SupplierCreate() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      Country
+                      {t('supplier.country')}
                     </label>
                     <input
                       name="country"
@@ -223,13 +225,13 @@ export default function SupplierCreate() {
           {/* Additional Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Additional Information</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('supplier.additional_info')}</h2>
             </div>
             <div className="p-4">
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Notes
+                    {t('supplier.notes')}
                   </label>
                   <textarea
                     name="note"
@@ -237,7 +239,7 @@ export default function SupplierCreate() {
                     onChange={handleChange}
                     rows="2"
                     className={inputClass('note')}
-                    placeholder="Any additional information about this supplier..."
+                    placeholder={t('supplier.notes_placeholder')}
                   />
                   {errors.note && <p className="text-red-500 text-xs mt-0.5">{errors.note[0]}</p>}
                 </div>
@@ -250,7 +252,7 @@ export default function SupplierCreate() {
                     className="h-3.5 w-3.5 text-[#007c89] focus:ring-[#007c89] border-gray-300 rounded"
                   />
                   <label className="text-sm text-gray-700">
-                    Active (available for purchases)
+                    {t('supplier.active_for_purchases')}
                   </label>
                 </div>
               </div>
@@ -267,14 +269,14 @@ export default function SupplierCreate() {
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Creating...
+                  {t('supplier.creating')}
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                   </svg>
-                  Create Supplier
+                  {t('supplier.create_supplier')}
                 </>
               )}
             </button>
@@ -283,7 +285,7 @@ export default function SupplierCreate() {
               onClick={() => navigate('/suppliers')}
               className="inline-flex items-center justify-center px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         </div>

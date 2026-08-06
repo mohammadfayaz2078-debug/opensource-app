@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function OtherIncomeEdit() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -65,7 +67,7 @@ export default function OtherIncomeEdit() {
           setErrors({ general: err.response.data.message });
         }
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to update income record.' });
+        setErrors({ general: err.response?.data?.message || t('other_income.update_failed') });
       }
     } finally {
       setLoading(false);
@@ -76,7 +78,7 @@ export default function OtherIncomeEdit() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading income record...</span>
+        <span className="ml-3 text-gray-600">{t('other_income.loading_record')}</span>
       </div>
     );
   }
@@ -88,7 +90,7 @@ export default function OtherIncomeEdit() {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/other-incomes')} className="hover:text-[#007c89]">Other Incomes</button>
+          <button onClick={() => navigate('/other-incomes')} className="hover:text-[#007c89]">{t('other_income.breadcrumb')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -98,9 +100,9 @@ export default function OtherIncomeEdit() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">Edit</span>
+          <span className="text-gray-700">{t('other_income.edit_breadcrumb')}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Edit Other Income</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">{t('other_income.edit_title')}</h1>
       </div>
 
       {errors.general && (
@@ -114,13 +116,13 @@ export default function OtherIncomeEdit() {
             {/* Basic Information */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Income Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('other_income.income_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Wallet <span className="text-red-500">*</span>
+                      {t('other_income.wallet_label')}
                     </label>
                     <select
                       name="account_id"
@@ -129,10 +131,10 @@ export default function OtherIncomeEdit() {
                       className={inputClass('account_id')}
                       required
                     >
-                      <option value="">Select Wallet</option>
+                      <option value="">{t('other_income.select_wallet')}</option>
                       {accounts.map(acc => (
                         <option key={acc.id} value={acc.id}>
-                          {acc.name} - Balance: {parseFloat(acc.balance || 0).toFixed(2)}
+                          {acc.name} - {t('other_income.balance_label', { balance: parseFloat(acc.balance || 0).toFixed(2) })}
                         </option>
                       ))}
                     </select>
@@ -141,7 +143,7 @@ export default function OtherIncomeEdit() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Category
+                      {t('other_income.category_label')}
                     </label>
                     <select
                       name="income_category_id"
@@ -149,7 +151,7 @@ export default function OtherIncomeEdit() {
                       onChange={handleChange}
                       className={inputClass('income_category_id')}
                     >
-                      <option value="">Select category</option>
+                      <option value="">{t('other_income.select_category')}</option>
                       {categories.map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
@@ -159,7 +161,7 @@ export default function OtherIncomeEdit() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Income Date <span className="text-red-500">*</span>
+                      {t('other_income.date_label')}
                     </label>
                     <input
                       type="date"
@@ -174,7 +176,7 @@ export default function OtherIncomeEdit() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Description
+                      {t('other_income.description_label')}
                     </label>
                     <textarea
                       name="description"
@@ -182,14 +184,14 @@ export default function OtherIncomeEdit() {
                       onChange={handleChange}
                       rows="3"
                       className={inputClass('description')}
-                      placeholder="Describe the income..."
+                      placeholder={t('other_income.description_placeholder')}
                     />
                     {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description[0]}</p>}
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Amount <span className="text-red-500">*</span>
+                      {t('other_income.amount_label')}
                     </label>
                     <input
                       type="number"
@@ -211,7 +213,7 @@ export default function OtherIncomeEdit() {
             {/* Notes */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Notes</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('other_income.notes_title')}</h2>
               </div>
               <div className="p-6">
                 <textarea
@@ -220,7 +222,7 @@ export default function OtherIncomeEdit() {
                   onChange={handleChange}
                   rows="3"
                   className={inputClass('note')}
-                  placeholder="Additional notes..."
+                  placeholder={t('other_income.notes_placeholder')}
                 />
                 {errors.note && <p className="text-red-500 text-xs mt-1">{errors.note[0]}</p>}
               </div>
@@ -238,14 +240,14 @@ export default function OtherIncomeEdit() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Saving...
+                    {t('other_income.saving')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Changes
+                    {t('other_income.save_changes')}
                   </>
                 )}
               </button>
@@ -254,7 +256,7 @@ export default function OtherIncomeEdit() {
                 onClick={() => navigate(`/other-incomes/${id}`)}
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 mt-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t('other_income.cancel')}
               </button>
             </div>
           </div>

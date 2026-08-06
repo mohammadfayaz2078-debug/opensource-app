@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 use Exception;
@@ -16,7 +17,7 @@ class Account extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'company_id', 'branch_id', 'name', 'wallet_number', 'type',
+        'company_id', 'branch_id', 'owner_user_id', 'owner_type', 'owner_id', 'name', 'wallet_number', 'type',
         'description', 'is_active',
     ];
 
@@ -24,6 +25,8 @@ class Account extends Model
         'is_active'  => 'boolean',
         'company_id' => 'integer',
         'branch_id'  => 'integer',
+        'owner_user_id' => 'integer',
+        'owner_id' => 'integer',
     ];
 
     public function company(): BelongsTo
@@ -41,17 +44,29 @@ class Account extends Model
         return $this->belongsToMany(User::class, 'account_user');
     }
 
+    public function owner(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    public function isOwnedBy($actor): bool
+    {
+        return $actor
+            && $this->owner_type === $actor::class
+            && (int) $this->owner_id === (int) $actor->id;
+    }
+
     public function scopeAccessibleTo(Builder $query, $actor): Builder
     {
-        if ($actor instanceof SuperAdmin) {
-            return $query;
-        }
+        return $query->where(function (Builder $accounts) use ($actor) {
+            $accounts->where(function (Builder $owner) use ($actor) {
+                $owner->where('owner_type', $actor::class)->where('owner_id', $actor->id);
+            });
 
-        if ($actor instanceof Company) {
-            return $query->where('company_id', $actor->id);
-        }
-
-        return $query->whereHas('users', fn (Builder $users) => $users->whereKey($actor->id));
+            if ($actor instanceof User) {
+                $accounts->orWhereHas('users', fn (Builder $users) => $users->whereKey($actor->id));
+            }
+        });
     }
 
     public function deposits(): HasMany

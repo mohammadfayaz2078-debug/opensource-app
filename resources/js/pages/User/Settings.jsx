@@ -26,8 +26,8 @@ const UserSettings = () => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50/30">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-              <p className="text-gray-500 text-sm mt-1">Manage your branch settings and data</p>
+              <h1 className="text-2xl font-bold text-gray-800">{t('settings.title')}</h1>
+              <p className="text-gray-500 text-sm mt-1">{t('settings.subtitle')}</p>
             </div>
           </div>
 
@@ -39,14 +39,14 @@ const UserSettings = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  Settings
+                  {t('settings.title')}
                 </h2>
-                <p className="text-gray-500 text-sm mt-1">Configure your account preferences</p>
+                <p className="text-gray-500 text-sm mt-1">{t('settings.section_subtitle')}</p>
               </div>
 
               <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <p className="text-sm text-gray-500">
-                  Settings coming soon. Manage your profile and preferences here.
+                  {t('settings.coming_soon')}
                 </p>
               </div>
             </div>

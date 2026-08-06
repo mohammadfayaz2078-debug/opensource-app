@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 
 const UsersIndex = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   
   const [users, setUsers] = useState({ data: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } });
@@ -116,7 +118,7 @@ const UsersIndex = () => {
       setCurrentPage(page);
     } catch (err) {
       console.error('Fetch error:', err);
-      setError(err.response?.data?.message || 'Failed to fetch users');
+      setError(err.response?.data?.message || t('user.fetch_failed'));
     } finally {
       setLoading(false);
     }
@@ -128,25 +130,25 @@ const UsersIndex = () => {
   
   const deleteUser = async (id, name) => {
     const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: `You won't be able to revert this! Delete ${name}?`,
+      title: t('user.delete_title'),
+      text: t('user.delete_text', { name }),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel'
+      confirmButtonText: t('user.delete_confirm'),
+      cancelButtonText: t('user.cancel')
     });
     
     if (result.isConfirmed) {
       try {
         await api.delete(`/user/${id}`);
-        Swal.fire('Deleted!', 'User has been deleted successfully.', 'success');
+        Swal.fire(t('user.deleted'), t('user.deleted_msg'), 'success');
         fetchUsers(currentPage);
       } catch (err) {
         console.error('Failed to delete user:', err);
-        const message = err.response?.data?.message || 'Cannot delete user.';
-        Swal.fire('Error!', message, 'error');
+        const message = err.response?.data?.message || t('user.delete_failed');
+        Swal.fire(t('user.error'), message, 'error');
       }
     }
   };
@@ -156,24 +158,24 @@ const UsersIndex = () => {
     const action = newStatus ? 'activate' : 'deactivate';
     
     const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: `Do you want to ${action} ${name}?`,
+      title: t('user.toggle_title'),
+      text: t('user.toggle_text', { action: t(action === 'activate' ? 'user.activate' : 'user.deactivate'), name }),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#007c89',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: `Yes, ${action}`,
-      cancelButtonText: 'Cancel'
+      confirmButtonText: t('user.toggle_confirm', { action: t(action === 'activate' ? 'user.activate' : 'user.deactivate') }),
+      cancelButtonText: t('user.cancel')
     });
     
     if (result.isConfirmed) {
       try {
         await api.post(`/user/${id}/toggle-status`);
-        Swal.fire('Success!', `User has been ${action}d successfully.`, 'success');
+        Swal.fire(t('user.toggle_success'), t('user.toggle_success_msg', { action: t(action === 'activate' ? 'user.activate' : 'user.deactivate') }), 'success');
         fetchUsers(currentPage);
       } catch (err) {
         console.error('Failed to toggle status:', err);
-        Swal.fire('Error!', 'Failed to update user status.', 'error');
+        Swal.fire(t('user.error'), t('user.toggle_failed'), 'error');
       }
     }
   };
@@ -216,9 +218,9 @@ useEffect(() => {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="text-xl font-semibold text-gray-900">Users</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('user.title')}</h1>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{users.meta.total} total</span>
+            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{t('user.total', { count: users.meta.total })}</span>
           </div>
         </div>
       </div>
@@ -234,7 +236,7 @@ useEffect(() => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('user.search')}
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
             />
           </div>
@@ -244,7 +246,7 @@ useEffect(() => {
             onChange={(e) => setRoleFilter(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="">All Roles</option>
+            <option value="">{t('user.all_roles')}</option>
             {roles.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.role_name || role.position}
@@ -258,7 +260,7 @@ useEffect(() => {
             onChange={(e) => setBranchFilter(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="">All Branches</option>
+            <option value="">{t('user.all_branches')}</option>
             {branches.map((branch) => (
               <option key={branch.id} value={branch.id}>
                 {branch.branch_name}
@@ -272,9 +274,9 @@ useEffect(() => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="">{t('user.all_status')}</option>
+            <option value="active">{t('user.active')}</option>
+            <option value="inactive">{t('user.inactive')}</option>
           </select>
           
           <select
@@ -295,7 +297,7 @@ useEffect(() => {
           <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
-          New
+          {t('user.new')}
         </Link>
       </div>
       
@@ -303,7 +305,7 @@ useEffect(() => {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-700 text-sm">Loading users...</span>
+          <span className="ml-3 text-gray-700 text-sm">{t('user.loading')}</span>
         </div>
       )}
       
@@ -326,15 +328,15 @@ useEffect(() => {
             <table className="min-w-full">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ID</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Email</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Role</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('user.id')}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('user.name')}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('user.email')}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('user.role')}</th>
                 {!isBranchUser && (
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Branch</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('user.branch')}</th>
                 )}
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('user.status')}</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('user.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -373,7 +375,7 @@ useEffect(() => {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          {user.status ? 'Active' : 'Inactive'}
+                          {user.status ? t('user.active') : t('user.inactive')}
                         </button>
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-right">
@@ -381,7 +383,7 @@ useEffect(() => {
                           <button
                             onClick={() => editUser(user.id)}
                             className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600"
-                            title="Edit"
+                            title={t('user.edit')}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -390,7 +392,7 @@ useEffect(() => {
                           <button
                             onClick={() => deleteUser(user.id, `${user.first_name} ${user.last_name}`)}
                             className="p-1 rounded hover:bg-red-50 text-gray-700 hover:text-red-600"
-                            title="Delete"
+                            title={t('user.delete')}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -406,7 +408,7 @@ useEffect(() => {
                       <svg className="w-10 h-10 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
-                      <p className="text-sm text-gray-700">No users found</p>
+                      <p className="text-sm text-gray-700">{t('user.empty')}</p>
                       <Link
                         to="create"
                         className="mt-3 inline-flex items-center px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77]"
@@ -414,7 +416,7 @@ useEffect(() => {
                         <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        Create your first user
+                        {t('user.create_first')}
                       </Link>
                     </td>
                   </tr>
@@ -428,8 +430,8 @@ useEffect(() => {
             <div className="px-4 py-3 border-t border-gray-200 bg-gray-50/50">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{users.meta.from || 0}</span> to{' '}
-                  <span className="font-medium">{users.meta.to || 0}</span> of{' '}
+                  {t('user.showing')} <span className="font-medium">{users.meta.from || 0}</span> {t('user.to')}{' '}
+                  <span className="font-medium">{users.meta.to || 0}</span> {t('user.of')}{' '}
                   <span className="font-medium">{users.meta.total || 0}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -438,7 +440,7 @@ useEffect(() => {
                     disabled={users.meta.current_page === 1}
                     className="px-2.5 py-1 text-sm border border-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-gray-700"
                   >
-                    Previous
+                    {t('user.previous')}
                   </button>
                   {pageNumbers.map((page) => (
                     <button
@@ -458,7 +460,7 @@ useEffect(() => {
                     disabled={users.meta.current_page === users.meta.last_page}
                     className="px-2.5 py-1 text-sm border border-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-gray-700"
                   >
-                    Next
+                    {t('user.next')}
                   </button>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import {
   TrendingUp,
@@ -47,6 +48,7 @@ import {
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
 
 const CompanyDashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -143,7 +145,7 @@ const CompanyDashboard = () => {
   };
 
   const formatDate = (date) => {
-    if (!date) return 'All Time';
+    if (!date) return t('company_admin.all_time');
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -188,7 +190,7 @@ const CompanyDashboard = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading company dashboard...</p>
+          <p className="mt-4 text-gray-600 font-medium">{t('company_admin.loading')}</p>
         </div>
       </div>
     );
@@ -227,9 +229,9 @@ const CompanyDashboard = () => {
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-emerald-500" />
-              Company Dashboard
+              {t('company_admin.title')}
             </h1>
-            <p className="text-xs text-gray-500">{data?.company?.company_name || 'Company Overview'}</p>
+            <p className="text-xs text-gray-500">{data?.company?.company_name || t('company_admin.overview')}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -237,7 +239,7 @@ const CompanyDashboard = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Filter className="w-4 h-4" />
-              {showFilters ? 'Hide Filters' : 'Filters'}
+              {showFilters ? t('company_admin.hide_filters') : t('company_admin.filters')}
             </button>
             <button
               onClick={refresh}
@@ -245,7 +247,7 @@ const CompanyDashboard = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Refresh'}
+              {refreshing ? t('company_admin.refreshing') : t('company_admin.refresh')}
             </button>
           </div>
         </div>
@@ -255,13 +257,13 @@ const CompanyDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Branch</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('company_admin.branch')}</label>
                 <select
                   value={filters.branch_id}
                   onChange={(e) => handleFilterChange('branch_id', e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="">All Branches</option>
+                  <option value="">{t('company_admin.all_branches')}</option>
                   {branches.map(branch => (
                     <option key={branch.id} value={branch.id}>
                       {branch.branch_name}
@@ -270,11 +272,11 @@ const CompanyDashboard = () => {
                   ))}
                 </select>
                 {branches.length === 0 && (
-                  <p className="text-[10px] text-gray-400 mt-1">No branches available</p>
+                  <p className="text-[10px] text-gray-400 mt-1">{t('company_admin.no_branches')}</p>
                 )}
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">From</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('company_admin.from')}</label>
                 <input
                   type="date"
                   value={filters.from_date}
@@ -283,7 +285,7 @@ const CompanyDashboard = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">To</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('company_admin.to')}</label>
                 <input
                   type="date"
                   value={filters.to_date}
@@ -292,16 +294,16 @@ const CompanyDashboard = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Period Type</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('company_admin.period_type')}</label>
                 <select
                   value={filters.period_type}
                   onChange={(e) => handleFilterChange('period_type', e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
+                  <option value="daily">{t('company_admin.period_daily')}</option>
+                  <option value="weekly">{t('company_admin.period_weekly')}</option>
+                  <option value="monthly">{t('company_admin.period_monthly')}</option>
+                  <option value="yearly">{t('company_admin.period_yearly')}</option>
                 </select>
               </div>
             </div>
@@ -311,7 +313,7 @@ const CompanyDashboard = () => {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
               >
                 <X className="w-4 h-4" />
-                Clear Filters
+                {t('company_admin.clear_filters')}
               </button>
             </div>
           </div>
@@ -335,33 +337,33 @@ const CompanyDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Revenue</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('company_admin.revenue')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.sales?.total)}</p>
               </div>
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-4 h-4 text-blue-600" />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">{formatNumber(summary.sales?.count || 0)} orders</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('company_admin.orders', { count: formatNumber(summary.sales?.count || 0) })}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Expenses</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('company_admin.expenses')}</p>
                 <p className="text-lg font-bold text-red-600">{formatCurrency(summary.expenses?.total)}</p>
               </div>
               <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                 <Wallet className="w-4 h-4 text-red-600" />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">{formatNumber(summary.expenses?.count || 0)} transactions</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('company_admin.transactions', { count: formatNumber(summary.expenses?.count || 0) })}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Net Profit</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('company_admin.net_profit')}</p>
                 <p className={`text-lg font-bold ${getStatusColor(summary.net_profit)}`}>
                   {formatCurrency(summary.net_profit)}
                 </p>
@@ -379,20 +381,20 @@ const CompanyDashboard = () => {
                 )}
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">After all expenses</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('company_admin.after_expenses')}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Customers</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('company_admin.customers')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatNumber(summary.customers)}</p>
               </div>
               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Users className="w-4 h-4 text-purple-600" />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">{formatNumber(summary.suppliers || 0)} suppliers</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('company_admin.suppliers', { count: formatNumber(summary.suppliers || 0) })}</p>
           </div>
         </div>
 
@@ -400,19 +402,19 @@ const CompanyDashboard = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
           <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <Building2 className="w-4 h-4 text-emerald-500" />
-            Branch Performance
+            {t('company_admin.branch_performance')}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Branch</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Sales</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Orders</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Purchases</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Expenses</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Profit</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">Customers</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">{t('company_admin.branch')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('company_admin.th_sales')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('company_admin.th_orders')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('company_admin.th_purchases')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('company_admin.th_expenses')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('company_admin.th_profit')}</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">{t('company_admin.th_customers')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -435,7 +437,7 @@ const CompanyDashboard = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="px-3 py-4 text-center text-gray-400">No branch data available</td>
+                    <td colSpan="7" className="px-3 py-4 text-center text-gray-400">{t('company_admin.no_branch_data')}</td>
                   </tr>
                 )}
               </tbody>
@@ -447,7 +449,7 @@ const CompanyDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           {/* Financial Chart */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Financial Overview</h2>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">{t('company_admin.financial_overview')}</h2>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={chartData}>
@@ -469,7 +471,7 @@ const CompanyDashboard = () => {
 
           {/* Payment Breakdown */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Sales Payment Status</h2>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">{t('company_admin.sales_payment_status')}</h2>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -499,7 +501,7 @@ const CompanyDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Package className="w-4 h-4 text-blue-500" />
-              Top Products
+              {t('company_admin.top_products')}
             </h2>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {topProducts.length > 0 ? (
@@ -509,14 +511,14 @@ const CompanyDashboard = () => {
                       <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                        <p className="text-xs text-gray-500">{formatNumber(product.quantity)} units</p>
+                        <p className="text-xs text-gray-500">{t('company_admin.units', { count: formatNumber(product.quantity) })}</p>
                       </div>
                     </div>
                     <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(product.revenue)}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-400 py-4 text-sm">No product data available</p>
+                <p className="text-center text-gray-400 py-4 text-sm">{t('company_admin.no_product_data')}</p>
               )}
             </div>
           </div>
@@ -524,7 +526,7 @@ const CompanyDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-purple-500" />
-              Top Branches
+              {t('company_admin.top_branches')}
             </h2>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {topBranches.length > 0 ? (
@@ -534,14 +536,14 @@ const CompanyDashboard = () => {
                       <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{branch.name}</p>
-                        <p className="text-xs text-gray-500">{branch.order_count} orders</p>
+                        <p className="text-xs text-gray-500">{t('company_admin.orders', { count: formatNumber(branch.order_count) })}</p>
                       </div>
                     </div>
                     <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(branch.revenue)}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-400 py-4 text-sm">No branch data available</p>
+                <p className="text-center text-gray-400 py-4 text-sm">{t('company_admin.no_branch_data')}</p>
               )}
             </div>
           </div>
@@ -552,19 +554,19 @@ const CompanyDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Users className="w-4 h-4 text-emerald-500" />
-              User Statistics
+              {t('company_admin.user_statistics')}
             </h2>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="text-center p-2 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-500">Total</p>
+                <p className="text-xs text-gray-500">{t('company_admin.total')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatNumber(userStats.total)}</p>
               </div>
               <div className="text-center p-2 bg-green-50 rounded-lg">
-                <p className="text-xs text-gray-500">Active</p>
+                <p className="text-xs text-gray-500">{t('company_admin.active')}</p>
                 <p className="text-lg font-bold text-green-600">{formatNumber(userStats.active)}</p>
               </div>
               <div className="text-center p-2 bg-red-50 rounded-lg">
-                <p className="text-xs text-gray-500">Inactive</p>
+                <p className="text-xs text-gray-500">{t('company_admin.inactive')}</p>
                 <p className="text-lg font-bold text-red-600">{formatNumber(userStats.inactive)}</p>
               </div>
             </div>
@@ -581,10 +583,10 @@ const CompanyDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Package className="w-4 h-4 text-orange-500" />
-              Inventory Overview
+              {t('company_admin.inventory_overview')}
             </h2>
             <div className="text-center p-3 bg-gray-50 rounded-lg mb-3">
-              <p className="text-xs text-gray-500">Total Products</p>
+              <p className="text-xs text-gray-500">{t('company_admin.total_products')}</p>
               <p className="text-2xl font-bold text-gray-900">{formatNumber(inventoryStats.total)}</p>
             </div>
             <div className="space-y-1">
@@ -595,7 +597,7 @@ const CompanyDashboard = () => {
                 </div>
               ))}
               {(!inventoryStats.by_category || inventoryStats.by_category.length === 0) && (
-                <p className="text-center text-gray-400 py-2 text-sm">No categories data</p>
+                <p className="text-center text-gray-400 py-2 text-sm">{t('company_admin.no_categories_data')}</p>
               )}
             </div>
           </div>
@@ -605,7 +607,7 @@ const CompanyDashboard = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <Clock className="w-4 h-4 text-gray-500" />
-            Recent Activity
+            {t('company_admin.recent_activity')}
           </h2>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {recentActivity.length > 0 ? (
@@ -615,14 +617,14 @@ const CompanyDashboard = () => {
                     {getActivityIcon(activity.type)}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900 truncate">
-                        {activity.type === 'sale' && `Invoice ${activity.reference}`}
-                        {activity.type === 'purchase' && `Bill ${activity.reference}`}
-                        {activity.type === 'customer' && `New Customer: ${activity.name}`}
+                        {activity.type === 'sale' && t('company_admin.activity_sale', { reference: activity.reference })}
+                        {activity.type === 'purchase' && t('company_admin.activity_purchase', { reference: activity.reference })}
+                        {activity.type === 'customer' && t('company_admin.activity_customer', { name: activity.name })}
                       </p>
                       <p className="text-xs text-gray-500">
                         {activity.customer || activity.supplier || activity.code || ''}
                         {activity.branch && ` • ${activity.branch}`}
-                        {' '}• {activity.time_ago || 'Just now'}
+                        {' '}• {activity.time_ago || t('company_admin.just_now')}
                       </p>
                     </div>
                   </div>
@@ -632,20 +634,20 @@ const CompanyDashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-400 py-4 text-sm">No recent activity</p>
+              <p className="text-center text-gray-400 py-4 text-sm">{t('company_admin.no_recent_activity')}</p>
             )}
           </div>
         </div>
 
         {/* Footer */}
         <div className="mt-4 text-center text-[10px] text-gray-400">
-          {data?.company?.company_name || 'Company'} Dashboard • 
+          {data?.company?.company_name || t('company_admin.title')} • 
           {filters.from_date || filters.to_date ? (
-            ` Showing: ${formatDate(filters.from_date)} - ${formatDate(filters.to_date)}`
+            ` ${t('company_admin.showing_range', { from: formatDate(filters.from_date), to: formatDate(filters.to_date) })}`
           ) : (
-            ' Showing: All Time'
+            ` ${t('company_admin.showing_all_time')}`
           )}
-          {selectedBranch && ` • Branch: ${selectedBranch.branch_name}`}
+          {selectedBranch && ` • ${t('company_admin.branch_suffix', { name: selectedBranch.branch_name })}`}
         </div>
       </div>
     </div>

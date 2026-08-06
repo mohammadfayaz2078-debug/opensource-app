@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 import {
   TrendingUp,
   TrendingDown,
@@ -41,6 +42,7 @@ const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'
 
 const PurchaseReport = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [filterOptions, setFilterOptions] = useState(null);
@@ -186,7 +188,7 @@ const PurchaseReport = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading purchase report...</p>
+          <p className="mt-4 text-gray-600 font-medium">{t('purchase_report.loading')}</p>
         </div>
       </div>
     );
@@ -228,9 +230,9 @@ const PurchaseReport = () => {
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-purple-500" />
-              Purchase Report
+              {t('purchase_report.title')}
             </h1>
-            <p className="text-xs text-gray-500">Comprehensive purchase analytics</p>
+            <p className="text-xs text-gray-500">{t('purchase_report.subtitle')}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -238,21 +240,21 @@ const PurchaseReport = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Filter className="w-4 h-4" />
-              {showFilters ? 'Hide Filters' : 'Filters'}
+              {showFilters ? t('report.hide_filters') : t('report.filters')}
             </button>
             <button
               onClick={handleExport}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
             >
               <Download className="w-4 h-4" />
-              Export
+              {t('report.export')}
             </button>
             <button
               onClick={fetchReport}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
-              Refresh
+              {t('report.refresh')}
             </button>
           </div>
         </div>
@@ -262,7 +264,7 @@ const PurchaseReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">From</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.from')}</label>
                 <input
                   type="date"
                   value={filters.from_date}
@@ -271,7 +273,7 @@ const PurchaseReport = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">To</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.to')}</label>
                 <input
                   type="date"
                   value={filters.to_date}
@@ -280,7 +282,7 @@ const PurchaseReport = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Supplier</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('purchase_report.supplier')}</label>
                 <select
                   value={filters.supplier_id}
                   onChange={(e) => handleFilterChange('supplier_id', e.target.value)}
@@ -293,7 +295,7 @@ const PurchaseReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Product</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('purchase_report.product')}</label>
                 <select
                   value={filters.product_id}
                   onChange={(e) => handleFilterChange('product_id', e.target.value)}
@@ -306,7 +308,7 @@ const PurchaseReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Payment</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('purchase_report.payment')}</label>
                 <select
                   value={filters.payment_status}
                   onChange={(e) => handleFilterChange('payment_status', e.target.value)}
@@ -319,7 +321,7 @@ const PurchaseReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Refund</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('purchase_report.refund')}</label>
                 <select
                   value={filters.refund_status}
                   onChange={(e) => handleFilterChange('refund_status', e.target.value)}
@@ -332,7 +334,7 @@ const PurchaseReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Min</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.min')}</label>
                 <input
                   type="number"
                   placeholder="0"
@@ -342,7 +344,7 @@ const PurchaseReport = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Max</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.max')}</label>
                 <input
                   type="number"
                   placeholder="999999"
@@ -352,12 +354,12 @@ const PurchaseReport = () => {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Search</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.search')}</label>
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder={t('report.search_placeholder')}
                     value={filters.search}
                     onChange={(e) => handleFilterChange('search', e.target.value)}
                     className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
@@ -370,7 +372,7 @@ const PurchaseReport = () => {
                   className="w-full px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
                   <X className="w-3.5 h-3.5 inline mr-1" />
-                  Clear
+                  {t('report.clear')}
                 </button>
               </div>
             </div>
@@ -382,7 +384,7 @@ const PurchaseReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Total Spent</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('purchase_report.total_spent')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.total_spent)}</p>
               </div>
               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -394,7 +396,7 @@ const PurchaseReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Purchases</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('purchase_report.purchases')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatNumber(summary.total_purchases)}</p>
               </div>
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -406,7 +408,7 @@ const PurchaseReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Paid</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('report.paid')}</p>
                 <p className="text-lg font-bold text-green-600">{formatCurrency(summary.total_paid)}</p>
               </div>
               <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -418,7 +420,7 @@ const PurchaseReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Due</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('report.due')}</p>
                 <p className="text-lg font-bold text-red-600">{formatCurrency(summary.total_due)}</p>
               </div>
               <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
@@ -432,11 +434,11 @@ const PurchaseReport = () => {
         {growthPercentage !== 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500">Purchase Growth:</span>
+              <span className="text-xs text-gray-500">{t('purchase_report.purchase_growth')}</span>
               <span className={`text-sm font-bold ${growthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {growthPercentage >= 0 ? '↑' : '↓'} {Math.abs(growthPercentage).toFixed(1)}%
               </span>
-              <span className="text-xs text-gray-400">from first to last period</span>
+              <span className="text-xs text-gray-400">{t('report.growth_hint')}</span>
             </div>
           </div>
         )}
@@ -450,7 +452,7 @@ const PurchaseReport = () => {
                 chartTab === 'spending' ? 'bg-purple-50 text-purple-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Spending Trend
+              {t('purchase_report.tab_spending')}
             </button>
             <button
               onClick={() => setChartTab('growth')}
@@ -458,7 +460,7 @@ const PurchaseReport = () => {
                 chartTab === 'growth' ? 'bg-purple-50 text-purple-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Growth Analysis
+              {t('report.tab_growth')}
             </button>
             <button
               onClick={() => setChartTab('payment')}
@@ -466,7 +468,7 @@ const PurchaseReport = () => {
                 chartTab === 'payment' ? 'bg-purple-50 text-purple-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Payment Breakdown
+              {t('report.tab_payment')}
             </button>
             <button
               onClick={() => setChartTab('refund')}
@@ -474,7 +476,7 @@ const PurchaseReport = () => {
                 chartTab === 'refund' ? 'bg-purple-50 text-purple-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Refund Status
+              {t('purchase_report.tab_refund')}
             </button>
             <div className="ml-auto flex items-center gap-2">
               <select
@@ -482,10 +484,10 @@ const PurchaseReport = () => {
                 onChange={(e) => handleFilterChange('chart_type', e.target.value)}
                 className="px-2 py-1 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
               >
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
+                <option value="daily">{t('report.daily')}</option>
+                <option value="weekly">{t('report.weekly')}</option>
+                <option value="monthly">{t('report.monthly')}</option>
+                <option value="yearly">{t('report.yearly')}</option>
               </select>
             </div>
           </div>
@@ -555,7 +557,7 @@ const PurchaseReport = () => {
                     </ResponsiveContainer>
                   </div>
                   <div className="w-1/2 pl-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Payment Summary</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('report.payment_summary')}</h4>
                     <div className="space-y-2">
                       {paymentData.map((item, index) => (
                         <div key={item.name} className="flex items-center justify-between text-sm">
@@ -598,7 +600,7 @@ const PurchaseReport = () => {
                     </ResponsiveContainer>
                   </div>
                   <div className="w-1/2 pl-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Refund Summary</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('purchase_report.refund_summary')}</h4>
                     <div className="space-y-2">
                       {refundData.map((item, index) => (
                         <div key={item.name} className="flex items-center justify-between text-sm">
@@ -622,7 +624,7 @@ const PurchaseReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Package className="w-4 h-4 text-purple-500" />
-              Top Products
+              {t('report.top_products')}
             </h2>
             <div className="space-y-2">
               {topProducts.slice(0, 5).map((product, index) => (
@@ -631,14 +633,14 @@ const PurchaseReport = () => {
                     <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                      <p className="text-xs text-gray-500">{formatNumber(product.total_quantity)} units</p>
+                      <p className="text-xs text-gray-500">{t('report.units', { count: formatNumber(product.total_quantity) })}</p>
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(product.total_spent)}</p>
                 </div>
               ))}
               {topProducts.length === 0 && (
-                <p className="text-center text-gray-400 py-2 text-sm">No products data</p>
+                <p className="text-center text-gray-400 py-2 text-sm">{t('report.no_products_data')}</p>
               )}
             </div>
           </div>
@@ -646,7 +648,7 @@ const PurchaseReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Truck className="w-4 h-4 text-blue-500" />
-              Top Suppliers
+              {t('purchase_report.top_suppliers')}
             </h2>
             <div className="space-y-2">
               {topSuppliers.slice(0, 5).map((supplier, index) => (
@@ -655,14 +657,14 @@ const PurchaseReport = () => {
                     <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900 truncate">{supplier.supplier_name}</p>
-                      <p className="text-xs text-gray-500">{supplier.order_count} orders</p>
+                      <p className="text-xs text-gray-500">{t('report.orders', { count: supplier.order_count })}</p>
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(supplier.total_spent)}</p>
                 </div>
               ))}
               {topSuppliers.length === 0 && (
-                <p className="text-center text-gray-400 py-2 text-sm">No supplier data</p>
+                <p className="text-center text-gray-400 py-2 text-sm">{t('purchase_report.no_supplier_data')}</p>
               )}
             </div>
           </div>
@@ -671,9 +673,9 @@ const PurchaseReport = () => {
         {/* Purchases Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-3 py-2 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Purchase Transactions</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t('purchase_report.transactions')}</h2>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">{pagination.total || 0} records</span>
+              <span className="text-xs text-gray-500">{t('report.records', { count: pagination.total || 0 })}</span>
               <select
                 value={perPage}
                 onChange={(e) => setPerPage(Number(e.target.value))}
@@ -691,14 +693,14 @@ const PurchaseReport = () => {
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Ref</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Supplier</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Total</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Paid</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Due</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">Payment</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">Refund</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">{t('report.col_ref')}</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">{t('report.col_date')}</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">{t('purchase_report.col_supplier')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('report.col_total')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('report.col_paid')}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('report.col_due')}</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">{t('report.col_payment')}</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-500 uppercase">{t('purchase_report.col_refund')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -710,7 +712,7 @@ const PurchaseReport = () => {
                   </tr>
                 ) : purchases.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="text-center py-4 text-gray-400">No records found</td>
+                    <td colSpan="8" className="text-center py-4 text-gray-400">{t('report.no_records')}</td>
                   </tr>
                 ) : (
                   purchases.map((purchase) => (
@@ -724,7 +726,7 @@ const PurchaseReport = () => {
                         </button>
                       </td>
                       <td className="px-3 py-2 text-gray-600">{formatDate(purchase.purchase_date)}</td>
-                      <td className="px-3 py-2 text-gray-600 truncate max-w-[100px]">{purchase.supplier?.full_name || 'N/A'}</td>
+                      <td className="px-3 py-2 text-gray-600 truncate max-w-[100px]">{purchase.supplier?.full_name || t('report.na')}</td>
                       <td className="px-3 py-2 text-right font-medium text-gray-900">{formatCurrency(purchase.total_amount)}</td>
                       <td className="px-3 py-2 text-right text-green-600">{formatCurrency(purchase.paid_amount)}</td>
                       <td className="px-3 py-2 text-right text-red-600">{formatCurrency(purchase.due_amount)}</td>
@@ -756,7 +758,7 @@ const PurchaseReport = () => {
                   disabled={currentPage === 1}
                   className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
                 >
-                  Prev
+                  {t('report.prev')}
                 </button>
                 {Array.from({ length: Math.min(3, pagination.last_page) }, (_, i) => {
                   let pageNum = i + 1;
@@ -787,7 +789,7 @@ const PurchaseReport = () => {
                   disabled={currentPage === pagination.last_page}
                   className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
                 >
-                  Next
+                  {t('report.next')}
                 </button>
               </div>
             </div>

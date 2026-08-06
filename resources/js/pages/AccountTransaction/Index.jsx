@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 const TYPE_COLORS = {
@@ -28,6 +29,7 @@ const generatePageNumbers = (current, total) => {
 
 export default function AccountTransactions() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -63,7 +65,7 @@ export default function AccountTransactions() {
     const color = TYPE_COLORS[type] || 'bg-gray-100 text-gray-700';
     return (
       <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${color}`}>
-        {type.charAt(0).toUpperCase() + type.slice(1)}
+        {t(`account.type_${type}`, { defaultValue: type.charAt(0).toUpperCase() + type.slice(1) })}
       </span>
     );
   };
@@ -93,8 +95,8 @@ export default function AccountTransactions() {
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Wallet Transactions</h1>
-            <p className="text-sm text-gray-500 mt-0.5">View all financial transactions across accounts</p>
+            <h1 className="text-xl font-semibold text-gray-900">{t('accountTransaction.title')}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{t('accountTransaction.subtitle')}</p>
           </div>
           <button
             onClick={() => navigate('/accounts')}
@@ -103,7 +105,7 @@ export default function AccountTransactions() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            Manage Wallets
+            {t('accountTransaction.manage_wallets')}
           </button>
         </div>
       </div>
@@ -118,7 +120,7 @@ export default function AccountTransactions() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by description or wallet..."
+            placeholder={t('accountTransaction.search_placeholder')}
             className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           />
         </div>
@@ -127,20 +129,20 @@ export default function AccountTransactions() {
           onChange={(e) => setTypeFilter(e.target.value)}
           className="px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] bg-white"
         >
-          <option value="">All Types</option>
-          <option value="deposit">Deposit</option>
-          <option value="withdrawal">Withdrawal</option>
-          <option value="transfer">Transfer</option>
-          <option value="expense">Expense</option>
-          <option value="income">Income</option>
-          <option value="adjustment">Adjustment</option>
+          <option value="">{t('accountTransaction.all_types')}</option>
+          <option value="deposit">{t('account.type_deposit')}</option>
+          <option value="withdrawal">{t('account.type_withdrawal')}</option>
+          <option value="transfer">{t('account.type_transfer')}</option>
+          <option value="expense">{t('account.type_expense')}</option>
+          <option value="income">{t('account.type_income')}</option>
+          <option value="adjustment">{t('account.type_adjustment')}</option>
         </select>
         {(search || typeFilter) && (
           <button
             onClick={() => { setSearch(''); setTypeFilter(''); }}
             className="px-2.5 py-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
           >
-            Clear Filters
+            {t('accountTransaction.clear_filters')}
           </button>
         )}
       </div>
@@ -148,10 +150,10 @@ export default function AccountTransactions() {
       {/* Stats summary */}
       {!loading && transactions.length > 0 && (
         <div className="flex flex-wrap items-center gap-4 mb-4 text-xs text-gray-500">
-          <span>Total: {meta?.total || 0} transactions</span>
+          <span>{t('accountTransaction.total', { count: meta?.total || 0 })}</span>
           {meta?.total > 0 && (
             <span>
-              Page {meta?.current_page || 1} of {meta?.last_page || 1}
+              {t('accountTransaction.page_of', { current: meta?.current_page || 1, total: meta?.last_page || 1 })}
             </span>
           )}
         </div>
@@ -169,9 +171,9 @@ export default function AccountTransactions() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-1">No transactions found</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('accountTransaction.no_transactions')}</h3>
           <p className="text-xs text-gray-400">
-            {search || typeFilter ? 'Try adjusting your filters' : 'No transactions have been recorded yet.'}
+            {search || typeFilter ? t('accountTransaction.adjust_filters') : t('accountTransaction.none_recorded')}
           </p>
         </div>
       ) : (
@@ -181,12 +183,12 @@ export default function AccountTransactions() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Wallet</th>
-                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Balance After</th>
-                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">{t('accountTransaction.wallet')}</th>
+                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">{t('accountTransaction.type')}</th>
+                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">{t('accountTransaction.amount')}</th>
+                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">{t('accountTransaction.balance_after')}</th>
+                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">{t('accountTransaction.description')}</th>
+                  <th className="text-left py-2.5 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">{t('accountTransaction.date')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -212,7 +214,7 @@ export default function AccountTransactions() {
                       {parseFloat(txn.balance_after).toFixed(2)} <span className="text-xs font-normal text-gray-400">AFN</span>
                     </td>
                     <td className="py-2.5 px-4 text-gray-500 max-w-[200px] truncate">
-                      {txn.description || <span className="italic text-gray-300">No description</span>}
+                      {txn.description || <span className="italic text-gray-300">{t('accountTransaction.no_description')}</span>}
                     </td>
                     <td className="py-2.5 px-4 text-xs text-gray-400 whitespace-nowrap">
                       {new Date(txn.created_at).toLocaleDateString('en-US', {
@@ -253,13 +255,13 @@ export default function AccountTransactions() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div>
-                    <div className="text-[10px] text-gray-500 uppercase">Amount</div>
+                    <div className="text-[10px] text-gray-500 uppercase">{t('accountTransaction.amount')}</div>
                     <div className={`text-sm font-bold ${getAmountStyle(txn.type)}`}>
                       {getAmountPrefix(txn.type)} {parseFloat(txn.amount).toFixed(2)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 uppercase">Balance</div>
+                    <div className="text-[10px] text-gray-500 uppercase">{t('accountTransaction.balance')}</div>
                     <div className="text-sm font-semibold text-gray-700">{parseFloat(txn.balance_after).toFixed(2)}</div>
                   </div>
                 </div>
@@ -275,7 +277,7 @@ export default function AccountTransactions() {
             <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="text-xs text-gray-500 text-center sm:text-left">
-                  Showing {meta.from || 0} to {meta.to || 0} of {meta.total || 0} transactions
+                  {t('accountTransaction.showing_range', { from: meta.from || 0, to: meta.to || 0, total: meta.total || 0 })}
                 </div>
                 <div className="flex items-center justify-center gap-1">
                   <button
@@ -320,7 +322,7 @@ export default function AccountTransactions() {
                   </button>
                 </div>
                 <div className="flex items-center justify-center sm:justify-end gap-2">
-                  <span className="text-xs text-gray-500">Show</span>
+                  <span className="text-xs text-gray-500">{t('accountTransaction.show')}</span>
                   <select
                     value={perPage}
                     onChange={(e) => { setPerPage(parseInt(e.target.value)); setPage(1); fetchTransactions(1, parseInt(e.target.value)); }}
@@ -331,7 +333,7 @@ export default function AccountTransactions() {
                     <option value={50}>50</option>
                     <option value={100}>100</option>
                   </select>
-                  <span className="text-xs text-gray-500">per page</span>
+                  <span className="text-xs text-gray-500">{t('accountTransaction.per_page')}</span>
                 </div>
               </div>
             </div>

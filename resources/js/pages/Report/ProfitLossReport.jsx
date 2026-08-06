@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 import {
   TrendingUp,
   TrendingDown,
@@ -48,6 +49,7 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 
 const ProfitLossReport = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [filterOptions, setFilterOptions] = useState(null);
@@ -206,7 +208,7 @@ const ProfitLossReport = () => {
   };
 
   const formatDate = (date) => {
-    if (!date) return 'All Time';
+    if (!date) return t('profit_loss.all_time');
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -237,7 +239,7 @@ const ProfitLossReport = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading report data...</p>
+          <p className="mt-4 text-gray-600 font-medium">{t('profit_loss.loading')}</p>
         </div>
       </div>
     );
@@ -287,9 +289,9 @@ const ProfitLossReport = () => {
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-emerald-500" />
-              Profit & Loss Report
+              {t('profit_loss.title')}
             </h1>
-            <p className="text-xs text-gray-500">Comprehensive financial performance analysis</p>
+            <p className="text-xs text-gray-500">{t('profit_loss.subtitle')}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -297,21 +299,21 @@ const ProfitLossReport = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Filter className="w-4 h-4" />
-              {showFilters ? 'Hide Filters' : 'Filters'}
+              {showFilters ? t('report.hide_filters') : t('report.filters')}
             </button>
             <button
               onClick={handleExport}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
             >
               <Download className="w-4 h-4" />
-              Export
+              {t('report.export')}
             </button>
             <button
               onClick={fetchReport}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
-              Refresh
+              {t('report.refresh')}
             </button>
           </div>
         </div>
@@ -321,27 +323,27 @@ const ProfitLossReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">From</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.from')}</label>
                 <input
                   type="date"
                   value={filters.from_date}
                   onChange={(e) => handleFilterChange('from_date', e.target.value)}
                   className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
-                  placeholder="All Time"
+                  placeholder={t('profit_loss.all_time')}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">To</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('report.to')}</label>
                 <input
                   type="date"
                   value={filters.to_date}
                   onChange={(e) => handleFilterChange('to_date', e.target.value)}
                   className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
-                  placeholder="All Time"
+                  placeholder={t('profit_loss.all_time')}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Period Type</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('profit_loss.period_type')}</label>
                 <select
                   value={filters.period_type}
                   onChange={(e) => handleFilterChange('period_type', e.target.value)}
@@ -353,16 +355,16 @@ const ProfitLossReport = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">Quick Select</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">{t('profit_loss.quick_select')}</label>
                 <select
                   onChange={(e) => handlePresetChange(e.target.value)}
                   className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="">Select preset</option>
+                  <option value="">{t('profit_loss.select_preset')}</option>
                   {filterOptions?.date_range_presets?.map(p => (
                     <option key={p.value} value={p.value}>{p.label}</option>
                   ))}
-                  <option value="all_time">All Time</option>
+                  <option value="all_time">{t('profit_loss.all_time')}</option>
                 </select>
               </div>
               <div className="flex items-end gap-2">
@@ -371,16 +373,16 @@ const ProfitLossReport = () => {
                   className="flex-1 px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
                   <X className="w-3.5 h-3.5 inline mr-1" />
-                  Reset
+                  {t('profit_loss.reset')}
                 </button>
               </div>
             </div>
             {/* Show date range info */}
             <div className="mt-2 text-[10px] text-gray-400">
               {filters.from_date || filters.to_date ? (
-                <span>Showing: {formatDate(filters.from_date)} - {formatDate(filters.to_date)}</span>
+                <span>{t('profit_loss.showing')} {formatDate(filters.from_date)} - {formatDate(filters.to_date)}</span>
               ) : (
-                <span>Showing: All Time</span>
+                <span>{t('profit_loss.showing')} {t('profit_loss.all_time')}</span>
               )}
             </div>
           </div>
@@ -391,7 +393,7 @@ const ProfitLossReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Revenue</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('profit_loss.revenue')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.gross_revenue)}</p>
               </div>
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -403,7 +405,7 @@ const ProfitLossReport = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Gross Profit</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('profit_loss.gross_profit')}</p>
                 <p className={`text-lg font-bold ${getStatusColor(summary.gross_profit)}`}>
                   {formatCurrency(summary.gross_profit)}
                 </p>
@@ -412,13 +414,13 @@ const ProfitLossReport = () => {
                 <TrendingUp className="w-4 h-4 text-emerald-600" />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">Margin: {summary.gross_profit_margin?.toFixed(1)}%</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('profit_loss.margin', { value: summary.gross_profit_margin?.toFixed(1) })}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Expenses</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('profit_loss.expenses')}</p>
                 <p className="text-lg font-bold text-red-600">{formatCurrency(summary.total_expenses)}</p>
               </div>
               <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
@@ -434,7 +436,7 @@ const ProfitLossReport = () => {
           }`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Net Profit</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('profit_loss.net_profit')}</p>
                 <p className={`text-lg font-bold ${getStatusColor(summary.net_profit)}`}>
                   {formatCurrency(summary.net_profit)}
                 </p>
@@ -446,30 +448,30 @@ const ProfitLossReport = () => {
                 {getStatusIcon(summary.net_profit)}
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">Margin: {summary.net_profit_margin?.toFixed(1)}%</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('profit_loss.margin', { value: summary.net_profit_margin?.toFixed(1) })}</p>
           </div>
         </div>
 
         {/* Key Metrics Row */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Sales</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('profit_loss.sales')}</p>
             <p className="text-sm font-bold text-gray-900">{formatNumber(summary.total_sales)}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Items Sold</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('profit_loss.items_sold')}</p>
             <p className="text-sm font-bold text-gray-900">{formatNumber(summary.total_items_sold)}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Purchases</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('profit_loss.purchases')}</p>
             <p className="text-sm font-bold text-gray-900">{formatNumber(summary.total_purchases)}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Items Purchased</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('profit_loss.items_purchased')}</p>
             <p className="text-sm font-bold text-gray-900">{formatNumber(summary.total_items_purchased)}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Profit/Order</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('profit_loss.profit_per_order')}</p>
             <p className={`text-sm font-bold ${getStatusColor(summary.profit_per_order)}`}>
               {formatCurrency(summary.profit_per_order)}
             </p>
@@ -485,7 +487,7 @@ const ProfitLossReport = () => {
                 chartTab === 'overview' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Overview
+              {t('profit_loss.tab_overview')}
             </button>
             <button
               onClick={() => setChartTab('trend')}
@@ -493,7 +495,7 @@ const ProfitLossReport = () => {
                 chartTab === 'trend' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Monthly Trend
+              {t('profit_loss.tab_trend')}
             </button>
             <button
               onClick={() => setChartTab('expenses')}
@@ -501,7 +503,7 @@ const ProfitLossReport = () => {
                 chartTab === 'expenses' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Expense Breakdown
+              {t('profit_loss.tab_expenses')}
             </button>
             <button
               onClick={() => setChartTab('income')}
@@ -509,7 +511,7 @@ const ProfitLossReport = () => {
                 chartTab === 'income' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Income Breakdown
+              {t('profit_loss.tab_income')}
             </button>
             <button
               onClick={() => setChartTab('products')}
@@ -517,7 +519,7 @@ const ProfitLossReport = () => {
                 chartTab === 'products' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Top Products
+              {t('profit_loss.tab_products')}
             </button>
           </div>
 
@@ -586,7 +588,7 @@ const ProfitLossReport = () => {
                     </ResponsiveContainer>
                   </div>
                   <div className="w-1/2 pl-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Expense Categories</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('profit_loss.expense_categories')}</h4>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {expenseCategoryData.map((item, index) => (
                         <div key={item.name} className="flex items-center justify-between text-sm">
@@ -598,7 +600,7 @@ const ProfitLossReport = () => {
                         </div>
                       ))}
                       {expenseCategoryData.length === 0 && (
-                        <p className="text-gray-400 text-sm">No expense data available</p>
+                        <p className="text-gray-400 text-sm">{t('profit_loss.no_expense_data')}</p>
                       )}
                     </div>
                   </div>
@@ -632,7 +634,7 @@ const ProfitLossReport = () => {
                     </ResponsiveContainer>
                   </div>
                   <div className="w-1/2 pl-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Income Categories</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('profit_loss.income_categories')}</h4>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {incomeCategoryData.map((item, index) => (
                         <div key={item.name} className="flex items-center justify-between text-sm">
@@ -644,7 +646,7 @@ const ProfitLossReport = () => {
                         </div>
                       ))}
                       {incomeCategoryData.length === 0 && (
-                        <p className="text-gray-400 text-sm">No income data available</p>
+                        <p className="text-gray-400 text-sm">{t('profit_loss.no_income_data')}</p>
                       )}
                     </div>
                   </div>
@@ -657,12 +659,12 @@ const ProfitLossReport = () => {
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
                         <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">#</th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Product</th>
-                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Qty</th>
-                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Revenue</th>
-                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Cost</th>
-                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Profit</th>
-                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">Margin</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">{t('profit_loss.col_product')}</th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('profit_loss.col_qty')}</th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('profit_loss.col_revenue')}</th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('profit_loss.col_cost')}</th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('profit_loss.col_profit')}</th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase">{t('profit_loss.col_margin')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -689,7 +691,7 @@ const ProfitLossReport = () => {
                       ))}
                       {topProducts.length === 0 && (
                         <tr>
-                          <td colSpan="7" className="px-3 py-4 text-center text-gray-400">No product data available</td>
+                          <td colSpan="7" className="px-3 py-4 text-center text-gray-400">{t('profit_loss.no_product_data')}</td>
                         </tr>
                       )}
                     </tbody>
@@ -704,13 +706,13 @@ const ProfitLossReport = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span>
-              Report Period: {filters.from_date || filters.to_date ? (
+              {t('profit_loss.report_period')} {filters.from_date || filters.to_date ? (
                 `${formatDate(filters.from_date)} - ${formatDate(filters.to_date)}`
               ) : (
-                'All Time'
+                t('profit_loss.all_time')
               )}
             </span>
-            <span>Generated: {new Date().toLocaleString()}</span>
+            <span>{t('profit_loss.generated')} {new Date().toLocaleString()}</span>
           </div>
         </div>
       </div>

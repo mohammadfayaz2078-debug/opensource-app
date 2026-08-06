@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function OtherIncomeShow() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [income, setIncome] = useState(null);
@@ -25,12 +27,12 @@ export default function OtherIncomeShow() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this income record? This action cannot be undone.')) return;
+    if (!confirm(t('other_income.delete_confirm'))) return;
     try {
       await api.delete(`/other-incomes/${id}`);
       navigate('/other-incomes');
     } catch (err) {
-      alert(err.response?.data?.message || 'Delete failed');
+      alert(err.response?.data?.message || t('other_income.delete_failed'));
     }
   };
 
@@ -39,7 +41,7 @@ export default function OtherIncomeShow() {
       await api.post(`/other-incomes/${id}/duplicate`);
       navigate('/other-incomes');
     } catch (err) {
-      alert(err.response?.data?.message || 'Duplicate failed');
+      alert(err.response?.data?.message || t('other_income.duplicate_failed'));
     }
   };
 
@@ -76,7 +78,7 @@ export default function OtherIncomeShow() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading income record...</span>
+        <span className="ml-3 text-gray-600">{t('other_income.loading_record')}</span>
       </div>
     );
   }
@@ -93,7 +95,7 @@ export default function OtherIncomeShow() {
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Other Incomes
+              {t('other_income.breadcrumb')}
             </button>
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -106,19 +108,19 @@ export default function OtherIncomeShow() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl p-4 border border-emerald-200">
-            <p className="text-xs font-medium text-emerald-700 uppercase tracking-wider">Amount</p>
+            <p className="text-xs font-medium text-emerald-700 uppercase tracking-wider">{t('other_income.amount_label')}</p>
             <p className="text-xl sm:text-2xl font-bold text-emerald-800 mt-1">{formatCurrency(income.amount)}</p>
           </div>
           <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-200">
-            <p className="text-xs font-medium text-blue-700 uppercase tracking-wider">Category</p>
+            <p className="text-xs font-medium text-blue-700 uppercase tracking-wider">{t('other_income.category_label')}</p>
             <p className="text-base sm:text-lg font-semibold text-blue-800 mt-1">
-              {income.income_category?.name || 'Uncategorized'}
+              {income.income_category?.name || t('other_income.uncategorized')}
             </p>
           </div>
           <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-4 border border-purple-200">
-            <p className="text-xs font-medium text-purple-700 uppercase tracking-wider">Account</p>
+            <p className="text-xs font-medium text-purple-700 uppercase tracking-wider">{t('other_income.account')}</p>
             <p className="text-base sm:text-lg font-semibold text-purple-800 mt-1">
-              {income.account?.name || 'No Account'}
+              {income.account?.name || t('other_income.no_account')}
             </p>
           </div>
         </div>
@@ -134,13 +136,13 @@ export default function OtherIncomeShow() {
                   <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
-                  Description
+                  {t('other_income.description_label')}
                 </h2>
               </div>
               <div className="p-4 sm:p-6">
                 <p className="text-sm text-gray-700 leading-relaxed">
                   {income.description || (
-                    <span className="text-gray-400 italic">No description provided.</span>
+                    <span className="text-gray-400 italic">{t('other_income.show_no_description')}</span>
                   )}
                 </p>
               </div>
@@ -154,7 +156,7 @@ export default function OtherIncomeShow() {
                     <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                    Notes
+                    {t('other_income.notes_title')}
                   </h2>
                 </div>
                 <div className="p-4 sm:p-6">
@@ -173,20 +175,20 @@ export default function OtherIncomeShow() {
                   <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Details
+                  {t('other_income.details')}
                 </h2>
               </div>
               <div className="p-4 sm:p-6 space-y-4">
                 <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Income Number</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('other_income.income_number')}</dt>
                   <dd className="mt-1 text-sm font-medium text-gray-900">{income.income_number || '—'}</dd>
                 </div>
                 <div className="border-t border-gray-100 pt-4">
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Date</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('other_income.date')}</dt>
                   <dd className="mt-1 text-sm text-gray-900">{formatDate(income.income_date)}</dd>
                 </div>
                 <div className="border-t border-gray-100 pt-4">
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Category</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('other_income.category_label')}</dt>
                   <dd className="mt-1 text-sm text-gray-900">
                     {income.income_category ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
@@ -198,7 +200,7 @@ export default function OtherIncomeShow() {
                   </dd>
                 </div>
                 <div className="border-t border-gray-100 pt-4">
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Account</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('other_income.account')}</dt>
                   <dd className="mt-1 text-sm text-gray-900">
                     {income.account ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
@@ -219,12 +221,12 @@ export default function OtherIncomeShow() {
                   <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Audit
+                  {t('other_income.audit')}
                 </h2>
               </div>
               <div className="p-4 sm:p-6 space-y-4">
                 <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('other_income.created_by')}</dt>
                   <dd className="mt-1 text-sm text-gray-900">
                     {income.creator?.first_name ? (
                       <span className="inline-flex items-center gap-1.5">
@@ -239,11 +241,11 @@ export default function OtherIncomeShow() {
                   </dd>
                 </div>
                 <div className="border-t border-gray-100 pt-4">
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('other_income.created_at')}</dt>
                   <dd className="mt-1 text-sm text-gray-900">{formatDateTime(income.created_at)}</dd>
                 </div>
                 <div className="border-t border-gray-100 pt-4">
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('other_income.last_updated')}</dt>
                   <dd className="mt-1 text-sm text-gray-900">{formatDateTime(income.updated_at)}</dd>
                 </div>
               </div>
@@ -251,7 +253,7 @@ export default function OtherIncomeShow() {
 
             {/* Quick Actions */}
             <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200 rounded-xl p-4">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Quick Actions</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">{t('other_income.quick_actions')}</p>
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => navigate(`/other-incomes/${id}/edit`)}
@@ -260,7 +262,7 @@ export default function OtherIncomeShow() {
                   <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  Edit Income
+                  {t('other_income.edit_income')}
                 </button>
                 <button
                   onClick={handleDuplicate}
@@ -269,7 +271,7 @@ export default function OtherIncomeShow() {
                   <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
-                  Duplicate Income
+                  {t('other_income.duplicate_income')}
                 </button>
                 <button
                   onClick={handleDelete}
@@ -278,7 +280,7 @@ export default function OtherIncomeShow() {
                   <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  Delete Income
+                  {t('other_income.delete_income')}
                 </button>
               </div>
             </div>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function UnitCategoryEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
@@ -71,7 +73,7 @@ export default function UnitCategoryEdit() {
           setErrors({ general: err.response.data.message });
         }
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to update unit category.' });
+        setErrors({ general: err.response?.data?.message || t('unit_category.update_failed') });
       }
     } finally {
       setLoading(false);
@@ -82,7 +84,7 @@ export default function UnitCategoryEdit() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading category...</span>
+        <span className="ml-3 text-gray-600">{t('unit_category.loading_category')}</span>
       </div>
     );
   }
@@ -99,7 +101,7 @@ export default function UnitCategoryEdit() {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/unit-categories')} className="hover:text-[#007c89]">Unit Categories</button>
+          <button onClick={() => navigate('/unit-categories')} className="hover:text-[#007c89]">{t('unit_category.title')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -109,9 +111,9 @@ export default function UnitCategoryEdit() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">Edit</span>
+          <span className="text-gray-700">{t('edit')}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Edit Unit Category</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">{t('unit_category.edit_title')}</h1>
       </div>
 
       {errors.general && (
@@ -123,13 +125,13 @@ export default function UnitCategoryEdit() {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Category Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('unit_category.category_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Category Name
+                      {t('unit_category.category_name').replace(' *', '')}
                     </label>
                     <input
                       name="name"
@@ -142,7 +144,7 @@ export default function UnitCategoryEdit() {
                   
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Measure Type
+                      {t('unit_category.measure_type').replace(' *', '')}
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
                       {measureTypes.map(type => {
@@ -169,7 +171,7 @@ export default function UnitCategoryEdit() {
                             />
                             <span className="text-2xl mb-1">{type.icon}</span>
                             <span className="text-xs font-medium text-center">
-                              {type.label.split(' ')[0]}
+                              {t(`unit_category.type_${type.value}`) || type.label.split(' ')[0]}
                             </span>
                           </label>
                         );
@@ -178,7 +180,7 @@ export default function UnitCategoryEdit() {
                     {errors.measure_type && <p className="text-red-500 text-xs mt-1">{errors.measure_type[0]}</p>}
                     {unitsCount > 0 && (
                       <p className="text-xs text-amber-600 mt-2">
-                        ⚠️ Cannot change measure type because this category has {unitsCount} unit(s) associated.
+                        ⚠️ {t('unit_category.measure_locked', { count: unitsCount })}
                       </p>
                     )}
                   </div>
@@ -203,7 +205,7 @@ export default function UnitCategoryEdit() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    <span>This category has {unitsCount} unit(s). Deleting will require removing them first.</span>
+                    <span>{t('unit_category.deleting_requires', { count: unitsCount })}</span>
                   </div>
                 </div>
               )}
@@ -216,14 +218,14 @@ export default function UnitCategoryEdit() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Saving...
+                    {t('unit_category.saving')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Changes
+                    {t('unit_category.save_changes')}
                   </>
                 )}
               </button>
@@ -232,7 +234,7 @@ export default function UnitCategoryEdit() {
                 onClick={() => navigate(`/unit-categories/${id}`)}
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 mt-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>

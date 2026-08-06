@@ -23,15 +23,18 @@ class AccountWithdrawalController extends Controller
 
     public function store(Request $request)
     {
+        $actor = auth()->user();
         $validated = $request->validate([
             'account_id'  => 'required|exists:accounts,id',
             'amount'      => 'required|numeric|min:0.01',
             'description' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($validated, &$withdrawal) {
+        DB::transaction(function () use ($validated, $actor, &$withdrawal) {
 
-            $account = Account::accessibleTo(auth()->user())->lockForUpdate()->findOrFail($validated['account_id']);
+            $account = Account::accessibleTo($actor)
+                ->lockForUpdate()
+                ->findOrFail($validated['account_id']);
             
             // Get the current balance before withdrawal
             $balanceBefore = $account->balance;
@@ -47,7 +50,7 @@ class AccountWithdrawalController extends Controller
                 'account_id'  => $account->id,
                 'amount'      => $amount,
                 'description' => $validated['description'] ?? null,
-                'created_by'  => auth()->user() instanceof User ? auth()->id() : null,
+                'created_by'  => $actor instanceof User ? $actor->id : null,
             ]);
 
             // Create transaction log
@@ -59,7 +62,7 @@ class AccountWithdrawalController extends Controller
                 'description' => $validated['description'] ?? 'Withdrawal made',
                 'reference_id' => $withdrawal->id,
                 'reference_type' => AccountWithdrawal::class,
-                'created_by' => auth()->user() instanceof User ? auth()->id() : null,
+                'created_by' => $actor instanceof User ? $actor->id : null,
             ]);
 
             // Update account balance

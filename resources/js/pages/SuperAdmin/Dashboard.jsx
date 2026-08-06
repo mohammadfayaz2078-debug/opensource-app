@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 
 const SuperAdminDashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +59,7 @@ const SuperAdminDashboard = () => {
         window.location.href = '/company-admin/dashboard';
       }
     } catch (err) {
-      Swal.fire('Error', err.response?.data?.message || 'Failed to login as company', 'error');
+      Swal.fire(t('super_admin.error'), err.response?.data?.message || t('super_admin.login_failed'), 'error');
     } finally {
       setImpersonating(null);
     }
@@ -73,10 +75,10 @@ const SuperAdminDashboard = () => {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
-          Welcome, {user.name || 'Super Admin'}
+          {t('super_admin.welcome', { name: user.name || t('super_admin.brand') })}
         </h1>
         <p className="text-gray-500 mt-1">
-          System Management — manage all company accounts from here
+          {t('super_admin.subtitle')}
         </p>
       </div>
 
@@ -85,7 +87,7 @@ const SuperAdminDashboard = () => {
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Companies</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('super_admin.total_companies')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
             </div>
             <div className="bg-blue-100 rounded-full p-3">
@@ -99,7 +101,7 @@ const SuperAdminDashboard = () => {
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('super_admin.active')}</p>
               <p className="text-3xl font-bold text-green-600 mt-1">{stats.active}</p>
             </div>
             <div className="bg-green-100 rounded-full p-3">
@@ -113,7 +115,7 @@ const SuperAdminDashboard = () => {
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Inactive</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('super_admin.inactive')}</p>
               <p className="text-3xl font-bold text-gray-400 mt-1">{stats.inactive}</p>
             </div>
             <div className="bg-gray-100 rounded-full p-3">
@@ -128,7 +130,7 @@ const SuperAdminDashboard = () => {
       {/* Companies List */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800">All Companies</h2>
+          <h2 className="text-lg font-semibold text-gray-800">{t('super_admin.all_companies')}</h2>
           <Link
             to="/super-admin/companies/create"
             className="inline-flex items-center px-4 py-2 bg-[#007c89] text-white text-sm font-medium rounded-md hover:bg-[#006d77] transition-colors"
@@ -136,26 +138,26 @@ const SuperAdminDashboard = () => {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            New Company
+            {t('super_admin.new_company')}
           </Link>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-            <span className="ml-3 text-gray-500">Loading companies...</span>
+            <span className="ml-3 text-gray-500">{t('super_admin.loading_companies')}</span>
           </div>
         ) : companies.length === 0 ? (
           <div className="text-center py-16">
             <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
-            <p className="mt-3 text-gray-500">No companies yet</p>
+            <p className="mt-3 text-gray-500">{t('super_admin.no_companies')}</p>
             <Link
               to="/super-admin/companies/create"
               className="mt-3 inline-flex items-center px-4 py-2 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77]"
             >
-              Create your first company
+              {t('super_admin.create_first_company')}
             </Link>
           </div>
         ) : (
@@ -163,11 +165,11 @@ const SuperAdminDashboard = () => {
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manager</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('super_admin.col_company')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('super_admin.col_manager')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('super_admin.col_status')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('super_admin.col_created')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('super_admin.col_actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -198,7 +200,7 @@ const SuperAdminDashboard = () => {
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                         company.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                       }`}>
-                        {company.is_active ? 'Active' : 'Inactive'}
+                        {company.is_active ? t('super_admin.status_active') : t('super_admin.status_inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
@@ -211,7 +213,7 @@ const SuperAdminDashboard = () => {
                           onClick={() => loginAsCompany(company)}
                           disabled={!company.is_active || impersonating === company.id}
                           className="inline-flex items-center px-3 py-1.5 bg-[#007c89] text-white text-xs font-medium rounded-md hover:bg-[#006d77] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Login as this company"
+                          title={t('super_admin.login_title')}
                         >
                           {impersonating === company.id ? (
                             <div className="inline-block animate-spin rounded-full h-3 w-3 border border-white border-t-transparent mr-1.5"></div>
@@ -220,13 +222,13 @@ const SuperAdminDashboard = () => {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                             </svg>
                           )}
-                          Login
+                          {t('super_admin.login')}
                         </button>
                         {/* Edit */}
                         <button
                           onClick={() => navigate(`/super-admin/companies/${company.id}/edit`)}
                           className="p-1.5 text-gray-400 hover:text-amber-600 transition-colors"
-                          title="Edit"
+                          title={t('super_admin.edit')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

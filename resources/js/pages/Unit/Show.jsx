@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function UnitShow() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [unit, setUnit] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,12 +27,12 @@ export default function UnitShow() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this unit? This action cannot be undone.')) return;
+    if (!confirm(t('unit.delete_confirm'))) return;
     try {
       await api.delete(`/units/${id}`);
       navigate('/units');
     } catch (err) {
-      const message = err.response?.data?.message || 'Delete failed';
+      const message = err.response?.data?.message || t('unit.delete_failed');
       alert(message);
     }
   };
@@ -40,17 +42,26 @@ export default function UnitShow() {
       const res = await api.post(`/units/${id}/toggle-status`);
       setUnit(prev => ({ ...prev, is_active: !prev.is_active }));
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to toggle status');
+      alert(err.response?.data?.message || t('unit.toggle_failed'));
     }
   };
 
   const getTypeBadge = (type) => {
-    const badges = {
-      reference: <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">Reference Unit</span>,
-      bigger: <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">Bigger Unit</span>,
-      smaller: <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700">Smaller Unit</span>
+    const labels = {
+      reference: t('unit.type_reference'),
+      bigger: t('unit.type_bigger'),
+      smaller: t('unit.type_smaller')
     };
-    return badges[type] || badges.reference;
+    const colors = {
+      reference: 'bg-blue-100 text-blue-700',
+      bigger: 'bg-green-100 text-green-700',
+      smaller: 'bg-orange-100 text-orange-700'
+    };
+    return (
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colors[type] || colors.reference}`}>
+        {labels[type] || labels.reference}
+      </span>
+    );
   };
 
   const getTypeIcon = (type) => {
@@ -64,9 +75,9 @@ export default function UnitShow() {
 
   const getTypeDescription = (type) => {
     const descriptions = {
-      reference: 'This is the base unit for its category. All conversions are based on this unit.',
-      bigger: 'This unit is larger than the reference unit. 1 unit = X reference units.',
-      smaller: 'This unit is smaller than the reference unit. X units = 1 reference unit.'
+      reference: t('unit.type_desc_reference'),
+      bigger: t('unit.type_desc_bigger'),
+      smaller: t('unit.type_desc_smaller')
     };
     return descriptions[type] || '';
   };
@@ -75,7 +86,7 @@ export default function UnitShow() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading unit...</span>
+        <span className="ml-3 text-gray-600">{t('unit.loading_unit')}</span>
       </div>
     );
   }
@@ -85,7 +96,7 @@ export default function UnitShow() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/units')} className="hover:text-[#007c89] whitespace-nowrap">Units</button>
+          <button onClick={() => navigate('/units')} className="hover:text-[#007c89] whitespace-nowrap">{t('unit.title')}</button>
           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -99,7 +110,7 @@ export default function UnitShow() {
             </div>
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 break-words">{unit.name}</h1>
-              <p className="text-sm text-gray-500 mt-1">Unit of Measurement</p>
+              <p className="text-sm text-gray-500 mt-1">{t('unit.show_subtitle')}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -111,7 +122,7 @@ export default function UnitShow() {
                   : 'bg-green-100 text-green-700 hover:bg-green-200'
               }`}
             >
-              {unit.is_active ? 'Deactivate' : 'Activate'}
+              {unit.is_active ? t('unit.deactivate') : t('unit.activate')}
             </button>
             <button
               onClick={() => navigate(`/units/${id}/edit`)}
@@ -120,7 +131,7 @@ export default function UnitShow() {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              Edit
+              {t('edit')}
             </button>
             <button
               onClick={handleDelete}
@@ -129,7 +140,7 @@ export default function UnitShow() {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Delete
+              {t('delete')}
             </button>
           </div>
         </div>
@@ -142,16 +153,16 @@ export default function UnitShow() {
           {/* Unit Details */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Unit Details</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('unit.unit_details')}</h2>
             </div>
             <div className="p-6">
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Category</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.col_category')}</dt>
                   <dd className="mt-1 text-sm text-gray-900">{unit.category?.name || '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Measure Type</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.measure_type')}</dt>
                   <dd className="mt-1 text-sm text-gray-900">
                     {unit.category?.measure_type ? (
                       <span className="capitalize">{unit.category.measure_type}</span>
@@ -159,7 +170,7 @@ export default function UnitShow() {
                   </dd>
                 </div>
                 <div className="md:col-span-2">
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Unit Type</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.unit_type_label')}</dt>
                   <dd className="mt-1">
                     {getTypeBadge(unit.uom_type)}
                     <p className="text-sm text-gray-500 mt-2">{getTypeDescription(unit.uom_type)}</p>
@@ -172,43 +183,43 @@ export default function UnitShow() {
 {/* Conversion Info */}
 <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
   <div className="px-6 py-4 border-b border-gray-200">
-    <h2 className="text-lg font-medium text-gray-900">Conversion Information</h2>
+    <h2 className="text-lg font-medium text-gray-900">{t('unit.conversion_info')}</h2>
   </div>
   <div className="p-6">
     <dl className="space-y-4">
       {unit.uom_type !== 'reference' && (
         <>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <dt className="text-xs font-medium text-gray-500 uppercase">Conversion Factor</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.conversion_factor_label')}</dt>
             <dd className="mt-1">
               <span className="text-lg font-mono font-semibold text-gray-900">
                 {Number(unit.factor).toFixed(2)}
               </span>
               <span className="text-sm text-gray-500 ml-2">
-                {unit.name} = {Number(unit.factor).toFixed(2)} {unit.reference_unit_name || 'reference unit'}
+                {t('unit.equals', { name: unit.name, factor: Number(unit.factor).toFixed(2), ref: unit.reference_unit_name || t('unit.type_reference') })}
               </span>
             </dd>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <dt className="text-xs font-medium text-gray-500 uppercase">Inverse Factor</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.inverse_factor')}</dt>
             <dd className="mt-1">
               <span className="text-lg font-mono font-semibold text-gray-900">
                 {Number(unit.factor_inv).toFixed(2)}
               </span>
               <span className="text-sm text-gray-500 ml-2">
-                1 {unit.reference_unit_name || 'reference unit'} = {Number(unit.factor_inv).toFixed(2)} {unit.name}
+                {t('unit.inverse_equals', { ref: unit.reference_unit_name || t('unit.type_reference'), factor: Number(unit.factor_inv).toFixed(2), name: unit.name })}
               </span>
             </dd>
           </div>
         </>
       )}
       <div className="bg-gray-50 p-4 rounded-lg">
-        <dt className="text-xs font-medium text-gray-500 uppercase">Rounding Precision</dt>
+        <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.rounding_precision_label')}</dt>
         <dd className="mt-1">
           <span className="text-lg font-mono font-semibold text-gray-900">
             {Number(unit.rounding).toFixed(2)}
           </span>
-          <span className="text-sm text-gray-500 ml-2">Quantities rounded to this value</span>
+          <span className="text-sm text-gray-500 ml-2">{t('unit.quantities_rounded')}</span>
         </dd>
       </div>
     </dl>
@@ -221,19 +232,19 @@ export default function UnitShow() {
           {/* Status Card */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Status</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('unit.status')}</h2>
             </div>
             <div className="p-6">
               <div className="text-center">
                 <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                   unit.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {unit.is_active ? 'Active' : 'Inactive'}
+                  {unit.is_active ? t('active') : t('inactive')}
                 </div>
                 <p className="text-sm text-gray-500 mt-3">
                   {unit.is_active 
-                    ? 'This unit is available for use in inventory and products' 
-                    : 'This unit is disabled and will not appear in selections'}
+                    ? t('unit.status_active_desc') 
+                    : t('unit.status_inactive_desc')}
                 </p>
               </div>
             </div>
@@ -243,7 +254,7 @@ export default function UnitShow() {
 {unit.uom_type !== 'reference' && unit.reference_unit_name && (
   <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
     <div className="px-6 py-4 border-b border-gray-200">
-      <h2 className="text-lg font-medium text-gray-900">Example Conversion</h2>
+      <h2 className="text-lg font-medium text-gray-900">{t('unit.example_conversion')}</h2>
     </div>
     <div className="p-6">
       <div className="space-y-3">
@@ -261,7 +272,7 @@ export default function UnitShow() {
         </div>
         <div className="text-center">
           <p className="text-xs text-gray-400">
-            Example: 10 {unit.name} = {Number(10 * unit.factor).toFixed(2)} {unit.reference_unit_name}
+            {t('unit.example', { name: unit.name, factor: Number(10 * unit.factor).toFixed(2), ref: unit.reference_unit_name })}
           </p>
         </div>
       </div>
@@ -272,26 +283,26 @@ export default function UnitShow() {
           {/* Audit Info */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Audit Information</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('unit.audit_info')}</h2>
             </div>
             <div className="p-6">
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Created By</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.created_by')}</dt>
                   <dd className="text-gray-700">{unit.creator?.first_name + ' ' + unit.creator?.last_name || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Created At</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.created_at')}</dt>
                   <dd className="text-gray-700">{new Date(unit.created_at).toLocaleString()}</dd>
                 </div>
                 {unit.updated_by && (
                   <div className="flex justify-between">
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Updated By</dt>
+                    <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.updated_by')}</dt>
                     <dd className="text-gray-700">{unit.updater?.name || '—'}</dd>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <dt className="text-xs font-medium text-gray-500 uppercase">Last Updated</dt>
+                  <dt className="text-xs font-medium text-gray-500 uppercase">{t('unit.last_updated')}</dt>
                   <dd className="text-gray-700">{new Date(unit.updated_at).toLocaleString()}</dd>
                 </div>
               </dl>

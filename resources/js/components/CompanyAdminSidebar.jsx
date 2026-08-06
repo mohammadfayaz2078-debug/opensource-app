@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import SuperAdminSidebarDropdown from './SuperAdminSidebarDropdown';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
@@ -47,6 +48,7 @@ const CompanyAdminSidebar = ({
   onCloseMobile
 }) => {
   const location = useLocation();
+  const { t } = useTranslation();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [linkSearch, setLinkSearch] = useState('');
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -71,51 +73,44 @@ const CompanyAdminSidebar = ({
           name: 'Dashboard',
           to: '/company-admin/dashboard',
           icon: 'home',
-          translation_key: 'company_admin_dashboard'
+          translation_key: 'company_admin.sidebar_dashboard'
         }
       ]
     },
     {
       title: 'Management',
       icon: 'building',
-      translation_key: 'management',
+      translation_key: 'company_admin.sidebar_management',
       children: [
-        { name: 'Branches', to: '/company-admin/branches', icon: 'building', translation_key: 'branches' },
-        { name: 'Roles', to: '/company-admin/roles', icon: 'shield', translation_key: 'roles' },
-        { name: 'Users', to: '/company-admin/users', icon: 'users', translation_key: 'users' },
-        { name: 'Wallets', to: '/company-admin/accounts', icon: 'wallet', translation_key: 'wallets' },
-        { name: 'Transfers', to: '/company-admin/account-transfers', icon: 'wallet', translation_key: 'transfers' },
+        { name: 'Branches', to: '/company-admin/branches', icon: 'building', translation_key: 'company_admin.sidebar_branches' },
+        { name: 'Roles', to: '/company-admin/roles', icon: 'shield', translation_key: 'company_admin.sidebar_roles' },
+        { name: 'Users', to: '/company-admin/users', icon: 'users', translation_key: 'company_admin.sidebar_users' },
+      ]
+    },
+    {
+      title: 'Accounting',
+      icon: 'wallet',
+      translation_key: 'Accounting',
+      children: [
+        { name: 'Wallets', to: '/company-admin/accounts', translation_key: 'sidebar_accounts' },
+        { name: 'Wallet Transactions', to: '/company-admin/account-transactions', translation_key: 'sidebar_account_transactions' },
+        { name: 'Transfers', to: '/company-admin/account-transfers', translation_key: 'sidebar_account_transfers' },
       ]
     },
     {
       title: 'Settings',
       icon: 'settings',
-      translation_key: 'Settings',
+      translation_key: 'company_admin.sidebar_settings',
       children: [
         { 
           name: 'Database Seeder', 
           to: '/company-admin/seeder', 
           icon: 'database', 
-          translation_key: 'Seed Data' 
+          translation_key: 'company_admin.sidebar_seed_data' 
         },
       ]
     }
   ];
-
-  const t = (key) => {
-    const translations = {
-      'company_management': 'Company Management',
-      'search_links': 'Search links...',
-      'company_admin_dashboard': 'Dashboard',
-      'management': 'Management',
-      'branches': 'Branches',
-      'users': 'Users',
-      'wallets': 'Wallets',
-      'transfers': 'Transfers',
-      'roles': 'Roles',
-    };
-    return translations[key] || key;
-  };
 
   const filteredLinks = links
     .map(group => {
@@ -174,6 +169,14 @@ const CompanyAdminSidebar = ({
     return classes.join(' ');
   };
 
+  const getSidebarStyle = () => ({
+    left: isRTL ? 'auto' : 0,
+    right: isRTL ? 0 : 'auto',
+    transform: windowWidth >= 1024
+      ? (isCollapsed ? `translateX(${isRTL ? 'calc(100% + 8px)' : 'calc(-100% - 8px)'})` : 'translateX(0)')
+      : (isMobileOpen ? 'translateX(0)' : `translateX(${isRTL ? '100%' : '-100%'})`),
+  });
+
   const handleLinkClick = () => {
     setOpenDropdown(null);
     if (windowWidth < 1024) {
@@ -228,13 +231,15 @@ const CompanyAdminSidebar = ({
       {isMobileOpen && windowWidth < 1024 && (
         <div
           onClick={onCloseMobile}
-          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30 transition-opacity"
+          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-[90] transition-opacity"
         />
       )}
 
       <aside
         ref={sidebarRef}
-        className={`sidebar-container fixed inset-y-0 z-40
+        dir={isRTL ? 'rtl' : 'ltr'}
+        style={getSidebarStyle()}
+        className={`sidebar-container fixed inset-y-0 z-[100]
            bg-[#F0F9FF] text-slate-700 border-r border-slate-200
            flex flex-col h-screen
            transform transition-all duration-300 ease-out
@@ -242,10 +247,10 @@ const CompanyAdminSidebar = ({
       >
         {/* Header */}
         <div
-          className={`px-3 py-2.5 border-b border-slate-200 flex items-center justify-between flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
+          className="px-3 py-2.5 border-b border-slate-200 flex items-center justify-between flex-shrink-0"
         >
           {(!isCollapsed || windowWidth < 1024) && (
-            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] rounded-md flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm">
                 {companyName.charAt(0).toUpperCase()}
               </div>
@@ -254,7 +259,7 @@ const CompanyAdminSidebar = ({
                   {companyName}
                 </div>
                 <div className="text-xs text-slate-500 truncate leading-tight">
-                  {t('company_management')}
+                  {t('company_admin.company_management')}
                 </div>
               </div>
             </div>
@@ -315,9 +320,8 @@ const CompanyAdminSidebar = ({
                         onClick={handleLinkClick}
                         className={({ isActive }) => `
                           flex items-center px-3 py-2 transition group relative
-                          ${isRTL ? 'flex-row-reverse' : ''}
                           ${isActive
-                            ? 'text-[#0EA5E9] bg-[#EFF6FF] font-medium after:absolute after:left-0 after:top-1 after:bottom-1 after:w-0.5 after:bg-[#0EA5E9] after:rounded-r-full'
+                            ? `text-[#0EA5E9] bg-[#EFF6FF] font-medium after:absolute after:top-1 after:bottom-1 after:w-0.5 after:bg-[#0EA5E9] ${isRTL ? 'after:right-0 after:rounded-l-full' : 'after:left-0 after:rounded-r-full'}`
                             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                           }
                         `}
@@ -370,7 +374,6 @@ const CompanyAdminSidebar = ({
                   onClick={install}
                   disabled={isInstalled}
                   className={`flex items-center w-full px-3 py-2 rounded-lg transition text-sm
-                    ${isRTL ? 'flex-row-reverse' : ''}
                     ${isInstalled
                       ? 'text-green-600 bg-green-50 cursor-default'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -383,7 +386,7 @@ const CompanyAdminSidebar = ({
                     </svg>
                   </div>
                   <span className={`truncate ${isRTL ? 'mr-3' : 'ml-3'}`}>
-                    {isInstalled ? 'App Installed' : 'Download App'}
+                    {isInstalled ? t('company_admin.app_installed') : t('company_admin.download_app')}
                   </span>
                 </button>
               </div>
@@ -436,7 +439,7 @@ const CompanyAdminSidebar = ({
                 <button
                   onClick={install}
                   disabled={isInstalled}
-                  title={isInstalled ? 'App Installed' : 'Download App'}
+                  title={isInstalled ? t('company_admin.app_installed') : t('company_admin.download_app')}
                   className={`w-full flex justify-center p-3 transition group
                     ${isInstalled
                       ? 'text-green-500'

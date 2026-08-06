@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function OtherIncomeCreate() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -50,7 +52,7 @@ export default function OtherIncomeCreate() {
           setErrors({ general: err.response.data.message });
         }
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to create income record.' });
+        setErrors({ general: err.response?.data?.message || t('other_income.create_failed') });
       }
     } finally {
       setLoading(false);
@@ -64,13 +66,13 @@ export default function OtherIncomeCreate() {
       {/* Breadcrumb */}
       <div className="mb-3">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <button onClick={() => navigate('/other-incomes')} className="hover:text-[#007c89]">Other Incomes</button>
+          <button onClick={() => navigate('/other-incomes')} className="hover:text-[#007c89]">{t('other_income.breadcrumb')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">New Income</span>
+          <span className="text-gray-700">{t('other_income.new_income')}</span>
         </div>
-        <h1 className="text-xl font-semibold text-gray-900">Add Other Income</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t('other_income.create_title')}</h1>
       </div>
 
       {errors.general && (
@@ -82,13 +84,13 @@ export default function OtherIncomeCreate() {
           {/* Income Information */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Income Information</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('other_income.income_info')}</h2>
             </div>
             <div className="p-4">
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Wallet <span className="text-red-500">*</span>
+                    {t('other_income.wallet_label')}
                   </label>
                   <select
                     name="account_id"
@@ -97,10 +99,10 @@ export default function OtherIncomeCreate() {
                     className={inputClass('account_id')}
                     required
                   >
-                    <option value="">Select Wallet</option>
+                    <option value="">{t('other_income.select_wallet')}</option>
                     {accounts.map(acc => (
                       <option key={acc.id} value={acc.id}>
-                        {acc.name} - Balance: {parseFloat(acc.balance || 0).toFixed(2)}
+                        {acc.name} - {t('other_income.balance_label', { balance: parseFloat(acc.balance || 0).toFixed(2) })}
                       </option>
                     ))}
                   </select>
@@ -109,7 +111,7 @@ export default function OtherIncomeCreate() {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Income Category
+                    {t('other_income.category_label')}
                   </label>
                   <select
                     name="income_category_id"
@@ -117,7 +119,7 @@ export default function OtherIncomeCreate() {
                     onChange={handleChange}
                     className={inputClass('income_category_id')}
                   >
-                    <option value="">Select category</option>
+                    <option value="">{t('other_income.select_category')}</option>
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
@@ -128,7 +130,7 @@ export default function OtherIncomeCreate() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      Income Date <span className="text-red-500">*</span>
+                      {t('other_income.date_label')}
                     </label>
                     <input
                       type="date"
@@ -143,7 +145,7 @@ export default function OtherIncomeCreate() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                      Amount <span className="text-red-500">*</span>
+                      {t('other_income.amount_label')}
                     </label>
                     <input
                       type="number"
@@ -162,7 +164,7 @@ export default function OtherIncomeCreate() {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                    Description
+                    {t('other_income.description_label')}
                   </label>
                   <textarea
                     name="description"
@@ -170,7 +172,7 @@ export default function OtherIncomeCreate() {
                     onChange={handleChange}
                     rows="1"
                     className={inputClass('description')}
-                    placeholder="Describe the income..."
+                    placeholder={t('other_income.description_placeholder')}
                   />
                   {errors.description && <p className="text-red-500 text-xs mt-0.5">{errors.description[0]}</p>}
                 </div>
@@ -181,7 +183,7 @@ export default function OtherIncomeCreate() {
           {/* Notes */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-200">
-              <h2 className="text-base font-medium text-gray-900">Notes</h2>
+              <h2 className="text-base font-medium text-gray-900">{t('other_income.notes_title')}</h2>
             </div>
             <div className="p-4">
               <textarea
@@ -190,7 +192,7 @@ export default function OtherIncomeCreate() {
                 onChange={handleChange}
                 rows="2"
                 className={inputClass('note')}
-                placeholder="Additional notes..."
+                placeholder={t('other_income.notes_placeholder')}
               />
               {errors.note && <p className="text-red-500 text-xs mt-0.5">{errors.note[0]}</p>}
             </div>
@@ -206,14 +208,14 @@ export default function OtherIncomeCreate() {
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Creating...
+                  {t('other_income.creating')}
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                   </svg>
-                  Create Income
+                  {t('other_income.create_income')}
                 </>
               )}
             </button>
@@ -222,7 +224,7 @@ export default function OtherIncomeCreate() {
               onClick={() => navigate('/other-incomes')}
               className="inline-flex items-center justify-center px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('other_income.cancel')}
             </button>
           </div>
         </div>

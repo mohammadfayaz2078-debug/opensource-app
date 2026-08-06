@@ -65,7 +65,7 @@ const UserProfile = () => {
       setUser(response.data.user);
       resetForm(response.data.user);
     } catch (err) {
-      showErrorToast('Failed to load profile');
+      showErrorToast(t('profile.load_failed'));
       console.error('Error fetching profile:', err);
     } finally {
       setLoading(false);
@@ -96,16 +96,16 @@ const UserProfile = () => {
       
       if (isChangingPassword) {
         if (!form.current_password && (form.new_password || form.new_password_confirmation)) {
-          newErrors.current_password = ['Current password is required'];
+          newErrors.current_password = [t('profile.err_current_required')];
         }
         
         if (form.new_password && form.new_password.length < 8) {
-          newErrors.new_password = ['Password must be at least 8 characters'];
+          newErrors.new_password = [t('profile.err_password_min')];
         }
         
         if (form.new_password && form.new_password_confirmation && 
             form.new_password !== form.new_password_confirmation) {
-          newErrors.new_password_confirmation = ['Passwords do not match'];
+          newErrors.new_password_confirmation = [t('profile.err_passwords_mismatch')];
         }
       }
       
@@ -118,13 +118,13 @@ const UserProfile = () => {
     const newErrors = {};
     
     if (!form.name.trim()) {
-      newErrors.name = ['Name is required'];
+      newErrors.name = [t('profile.err_name_required')];
     }
     
     if (!form.email.trim()) {
-      newErrors.email = ['Email is required'];
+      newErrors.email = [t('profile.err_email_required')];
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      newErrors.email = ['Please enter a valid email address'];
+      newErrors.email = [t('profile.err_email_invalid')];
     }
     
     if (form.new_password || form.current_password || form.new_password_confirmation) {
@@ -133,13 +133,13 @@ const UserProfile = () => {
       }
       
       if (!form.new_password) {
-        newErrors.new_password = ['New password is required'];
+        newErrors.new_password = [t('profile.err_new_password_required')];
       } else if (form.new_password.length < 8) {
         newErrors.new_password = ['Password must be at least 8 characters'];
       }
       
       if (!form.new_password_confirmation) {
-        newErrors.new_password_confirmation = ['Please confirm your new password'];
+        newErrors.new_password_confirmation = [t('profile.err_confirm_required')];
       } else if (form.new_password !== form.new_password_confirmation) {
         newErrors.new_password_confirmation = ['Passwords do not match'];
       }
@@ -172,7 +172,7 @@ const UserProfile = () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      showErrorToast('Please fix the form errors');
+      showErrorToast(t('profile.toast_fix_errors'));
       return;
     }
     
@@ -194,11 +194,11 @@ const UserProfile = () => {
     } catch (err) {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
-        showErrorToast(err.response.data.message || 'Validation failed');
+        showErrorToast(err.response.data.message || t('profile.validation_failed'));
       } else if (err.response?.status === 401) {
-        showErrorToast('Your session has expired. Please log in again.');
+        showErrorToast(t('profile.session_expired'));
       } else {
-        showErrorToast(err.response?.data?.message || 'Failed to update profile');
+        showErrorToast(err.response?.data?.message || t('profile.update_failed'));
       }
     } finally {
       setSaving(false);
@@ -211,8 +211,8 @@ const UserProfile = () => {
       setBackupDownloading(true);
       
       const loadingToast = Swal.fire({
-        title: 'Preparing Backup',
-        text: 'Please wait while we generate your database backup...',
+        title: t('profile.preparing_backup'),
+        text: t('profile.backup_wait'),
         allowOutsideClick: false,
         allowEscapeKey: false,
         showConfirmButton: false,
@@ -237,9 +237,9 @@ const UserProfile = () => {
         reader.onload = () => {
           try {
             const errorData = JSON.parse(reader.result);
-            showErrorToast(errorData.message || 'Backup failed');
+            showErrorToast(errorData.message || t('profile.backup_failed'));
           } catch (e) {
-            showErrorToast('Backup failed');
+            showErrorToast(t('profile.backup_failed'));
           }
         };
         reader.readAsText(response.data);
@@ -266,14 +266,14 @@ const UserProfile = () => {
         reader.onload = () => {
           try {
             const errorData = JSON.parse(reader.result);
-            showErrorToast(errorData.message || 'Backup failed');
+            showErrorToast(errorData.message || t('profile.backup_failed'));
           } catch (e) {
-            showErrorToast('Failed to download backup');
+            showErrorToast(t('profile.backup_download_failed'));
           }
         };
         reader.readAsText(error.response.data);
       } else {
-        showErrorToast(error.response?.data?.message || 'Failed to download backup');
+        showErrorToast(error.response?.data?.message || t('profile.backup_download_failed'));
       }
     } finally {
       setBackupDownloading(false);
@@ -290,7 +290,7 @@ const UserProfile = () => {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    showSuccessToast('Backup downloaded successfully!');
+    showSuccessToast(t('profile.backup_downloaded'));
   };
   
   // Toast notifications
@@ -332,13 +332,13 @@ const UserProfile = () => {
     
     Toast.fire({
       icon: 'error',
-      title: message || 'An error occurred!'
+      title: message || t('profile.error_occurred')
     });
   };
   
   // Format date
   const formatSimpleDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('profile.na');
     try {
       const date = new Date(dateString);
       return new Intl.DateTimeFormat('en-US', {
@@ -347,7 +347,7 @@ const UserProfile = () => {
         day: 'numeric'
       }).format(date);
     } catch (e) {
-      return 'Invalid date';
+      return t('profile.invalid_date');
     }
   };
   
@@ -379,7 +379,7 @@ const UserProfile = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading your profile...</p>
+          <p className="mt-4 text-gray-600 font-medium">{t('profile.loading')}</p>
         </div>
       </div>
     );
@@ -418,7 +418,7 @@ const UserProfile = () => {
                   <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                      {user.position?.position || 'User'}
+                      {user.position?.position || t('profile.role_user')}
                     </span>
                     <span className="inline-flex items-center gap-1.5 text-sm text-gray-500">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -445,9 +445,9 @@ const UserProfile = () => {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Downloading...
+                        {t('profile.downloading')}
                       </>
-                    ) : 'Backup Database'}
+                    ) : t('profile.backup_database')}
                   </button>
                 )}
               </div>
@@ -465,7 +465,7 @@ const UserProfile = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium">Member Since</p>
+                <p className="text-xs text-gray-500 font-medium">{t('profile.member_since')}</p>
                 <p className="text-sm font-semibold text-gray-800">{formatSimpleDate(user.created_at)}</p>
               </div>
             </div>
@@ -478,9 +478,9 @@ const UserProfile = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium">Email Status</p>
+                <p className="text-xs text-gray-500 font-medium">{t('profile.email_status')}</p>
                 <p className="text-sm font-semibold text-gray-800">
-                  {user.email_verified_at ? 'Verified' : 'Unverified'}
+                  {user.email_verified_at ? t('profile.verified') : t('profile.unverified')}
                 </p>
               </div>
             </div>
@@ -493,7 +493,7 @@ const UserProfile = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium">Last Updated</p>
+                <p className="text-xs text-gray-500 font-medium">{t('profile.last_updated')}</p>
                 <p className="text-sm font-semibold text-gray-800">{formatSimpleDate(user.updated_at)}</p>
               </div>
             </div>
@@ -512,8 +512,8 @@ const UserProfile = () => {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
-                  <p className="text-sm text-gray-500">Update your personal details</p>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('profile.personal_info')}</h2>
+                  <p className="text-sm text-gray-500">{t('profile.personal_info_hint')}</p>
                 </div>
               </div>
 
@@ -521,7 +521,7 @@ const UserProfile = () => {
                 {/* Name */}
                 <div className="space-y-1.5">
                   <label htmlFor="name" className="text-sm font-medium text-gray-700">
-                    Full Name <span className="text-red-500">*</span>
+                    {t('profile.full_name')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -538,7 +538,7 @@ const UserProfile = () => {
                       className={`w-full pl-10 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
                         errors.name ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                       }`}
-                      placeholder="John Doe"
+                      placeholder={t('profile.placeholder_name')}
                     />
                   </div>
                   {errors.name && <p className="text-xs text-red-500 font-medium">{errors.name[0]}</p>}
@@ -547,7 +547,7 @@ const UserProfile = () => {
                 {/* Email */}
                 <div className="space-y-1.5">
                   <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                    Email Address <span className="text-red-500">*</span>
+                    {t('profile.email_address')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -564,7 +564,7 @@ const UserProfile = () => {
                       className={`w-full pl-10 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
                         errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                       }`}
-                      placeholder="john@example.com"
+                      placeholder={t('profile.placeholder_email')}
                     />
                   </div>
                   {errors.email && <p className="text-xs text-red-500 font-medium">{errors.email[0]}</p>}
@@ -581,8 +581,8 @@ const UserProfile = () => {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Change Password</h2>
-                  <p className="text-sm text-gray-500">Update your password to keep your account secure</p>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('profile.change_password')}</h2>
+                  <p className="text-sm text-gray-500">{t('profile.change_password_hint')}</p>
                 </div>
               </div>
 
@@ -590,7 +590,7 @@ const UserProfile = () => {
                 {/* Current Password */}
                 <div className="space-y-1.5">
                   <label htmlFor="current_password" className="text-sm font-medium text-gray-700">
-                    Current Password
+                    {t('profile.current_password')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -607,7 +607,7 @@ const UserProfile = () => {
                       className={`w-full pl-10 pr-12 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
                         errors.current_password ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                       }`}
-                      placeholder="Enter your current password"
+                      placeholder={t('profile.placeholder_current_password')}
                     />
                     <button
                       type="button"
@@ -633,7 +633,7 @@ const UserProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label htmlFor="new_password" className="text-sm font-medium text-gray-700">
-                      New Password
+                      {t('profile.new_password')}
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -650,7 +650,7 @@ const UserProfile = () => {
                         className={`w-full pl-10 pr-12 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
                           errors.new_password ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                         }`}
-                        placeholder="Enter new password"
+                        placeholder={t('profile.placeholder_new_password')}
                       />
                       <button
                         type="button"
@@ -669,13 +669,13 @@ const UserProfile = () => {
                         )}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500">Minimum 8 characters</p>
+                    <p className="text-xs text-gray-500">{t('profile.min_chars')}</p>
                     {errors.new_password && <p className="text-xs text-red-500 font-medium">{errors.new_password[0]}</p>}
                   </div>
 
                   <div className="space-y-1.5">
                     <label htmlFor="new_password_confirmation" className="text-sm font-medium text-gray-700">
-                      Confirm New Password
+                      {t('profile.confirm_password')}
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -692,7 +692,7 @@ const UserProfile = () => {
                         className={`w-full pl-10 pr-12 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
                           errors.new_password_confirmation ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                         }`}
-                        placeholder="Confirm new password"
+                        placeholder={t('profile.placeholder_confirm_password')}
                       />
                       <button
                         type="button"
@@ -739,7 +739,7 @@ const UserProfile = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                   </svg>
                 )}
-                {saving ? 'Saving Changes...' : 'Save Changes'}
+                {saving ? t('profile.saving_changes') : t('profile.save_changes')}
               </button>
               
               <button
@@ -751,7 +751,7 @@ const UserProfile = () => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                Reset
+                {t('profile.reset')}
               </button>
             </div>
           </form>

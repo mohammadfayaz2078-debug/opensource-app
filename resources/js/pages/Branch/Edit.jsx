@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
 import {
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 
 const BranchEdit = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const fileInputRef = useRef(null);
@@ -75,12 +77,12 @@ const BranchEdit = () => {
     if (file) {
       const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        Swal.fire('Error', 'Please upload a valid image file (JPEG, PNG, JPG, GIF, WEBP)', 'error');
+        Swal.fire('Error', t('branch.error_image'), 'error');
         return;
       }
       
       if (file.size > 2 * 1024 * 1024) {
-        Swal.fire('Error', 'File size must be less than 2MB', 'error');
+        Swal.fire('Error', t('branch.error_size'), 'error');
         return;
       }
       
@@ -141,7 +143,7 @@ const BranchEdit = () => {
       }
     } catch (err) {
       console.error('Error fetching branch:', err);
-      setError(err.response?.data?.message || 'Failed to fetch branch data');
+      setError(err.response?.data?.message || t('branch.fetch_failed'));
     } finally {
       setFetching(false);
     }
@@ -251,8 +253,8 @@ const BranchEdit = () => {
           });
         }
       } else {
-        setError(err.response?.data?.message || 'Failed to update branch');
-        Swal.fire('Error', err.response?.data?.message || 'Failed to update branch', 'error');
+        setError(err.response?.data?.message || t('branch.update_failed'));
+        Swal.fire('Error', err.response?.data?.message || t('branch.update_failed'), 'error');
       }
     } finally {
       setLoading(false);
@@ -268,7 +270,7 @@ const BranchEdit = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
           <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-          <span className="text-sm text-gray-600">Loading branch data...</span>
+          <span className="text-sm text-gray-600">{t('branch.loading_data')}</span>
         </div>
       </div>
     );
@@ -288,15 +290,15 @@ const BranchEdit = () => {
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               <div>
-                <h1 className="text-lg font-semibold text-gray-800">Edit Branch</h1>
-                <p className="text-xs text-gray-400 mt-0.5">Update branch information</p>
+                <h1 className="text-lg font-semibold text-gray-800">{t('branch.edit_title')}</h1>
+                <p className="text-xs text-gray-400 mt-0.5">{t('branch.edit_subtitle')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                 form.is_active ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
               }`}>
-                {form.is_active ? 'Active' : 'Inactive'}
+                {form.is_active ? t('branch.active') : t('branch.inactive')}
               </span>
             </div>
           </div>
@@ -304,16 +306,16 @@ const BranchEdit = () => {
 
         {/* Current Usage Summary */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Current Usage</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">{t('branch.current_usage')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500">Current Users</p>
+                  <p className="text-xs text-gray-500">{t('branch.current_users')}</p>
                   <p className="text-lg font-semibold text-gray-900">{currentUserCount}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-500">Limit</p>
+                  <p className="text-xs text-gray-500">{t('branch.limit')}</p>
                   <p className="text-lg font-semibold text-gray-900">{form.allowed_user_count}</p>
                 </div>
               </div>
@@ -333,7 +335,7 @@ const BranchEdit = () => {
             <div className="bg-green-50 rounded-lg p-3 border border-green-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500">Current Products</p>
+                  <p className="text-xs text-gray-500">{t('branch.current_products')}</p>
                   <p className="text-lg font-semibold text-gray-900">{currentProductCount}</p>
                 </div>
                 <div className="text-right">
@@ -361,11 +363,11 @@ const BranchEdit = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
             {/* Basic Information */}
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Basic Information</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">{t('branch.basic_info')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Branch Name <span className="text-red-500">*</span>
+                    {t('branch.name')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -375,7 +377,7 @@ const BranchEdit = () => {
                       onChange={handleInputChange}
                       type="text"
                       required
-                      placeholder="Enter branch name"
+                      placeholder={t('branch.name_placeholder')}
                       className={`w-full pl-9 pr-3 py-1.5 text-sm bg-gray-50 border ${errors.branch_name ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
                     />
                   </div>
@@ -385,13 +387,13 @@ const BranchEdit = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Slogan</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('branch.slogan')}</label>
                   <input
                     name="branch_slogan"
                     value={form.branch_slogan}
                     onChange={handleInputChange}
                     type="text"
-                    placeholder="Branch slogan"
+                    placeholder={t('branch.slogan_placeholder')}
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -402,62 +404,62 @@ const BranchEdit = () => {
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
                 <MapPin className="w-4 h-4 inline mr-1 text-gray-400" />
-                Location
+                {t('branch.location')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Province</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('branch.province')}</label>
                   <input
                     name="branch_province"
                     value={form.branch_province}
                     onChange={handleInputChange}
                     type="text"
-                    placeholder="Enter province"
+                    placeholder={t('branch.province_placeholder')}
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">District</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('branch.district')}</label>
                   <input
                     name="branch_district"
                     value={form.branch_district}
                     onChange={handleInputChange}
                     type="text"
-                    placeholder="Enter district"
+                    placeholder={t('branch.district_placeholder')}
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Village</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('branch.village')}</label>
                   <input
                     name="branch_village"
                     value={form.branch_village}
                     onChange={handleInputChange}
                     type="text"
-                    placeholder="Enter village"
+                    placeholder={t('branch.village_placeholder')}
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Country</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('branch.country')}</label>
                   <input
                     name="branch_country"
                     value={form.branch_country}
                     onChange={handleInputChange}
                     type="text"
-                    placeholder="Enter country"
+                    placeholder={t('branch.country_placeholder')}
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
               <div className="mt-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Street Address</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('branch.street')}</label>
                 <textarea
                   name="branch_street_address"
                   value={form.branch_street_address}
                   onChange={handleInputChange}
                   rows="2"
-                  placeholder="Enter street address"
+                  placeholder={t('branch.street_placeholder')}
                   className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 />
               </div>
@@ -465,40 +467,40 @@ const BranchEdit = () => {
 
             {/* Contact Information */}
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Contact Information</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">{t('branch.contact')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     <Phone className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
-                    Phone
+                    {t('branch.phone')}
                   </label>
                   <input
                     name="branch_phone"
                     value={form.branch_phone}
                     onChange={handleInputChange}
                     type="tel"
-                    placeholder="Enter phone number"
+                    placeholder={t('branch.phone_placeholder')}
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     <Mail className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
-                    Email
+                    {t('branch.email')}
                   </label>
                   <input
                     name="branch_email"
                     value={form.branch_email}
                     onChange={handleInputChange}
                     type="email"
-                    placeholder="Enter email address"
+                    placeholder={t('branch.email_placeholder')}
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     <Globe className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
-                    Website
+                    {t('branch.website')}
                   </label>
                   <input
                     name="branch_website"
@@ -516,13 +518,13 @@ const BranchEdit = () => {
             <div className="mb-4 border-t border-gray-100 pt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
                 <Users className="w-4 h-4 inline mr-1 text-gray-400" />
-                Capacity Settings
+                {t('branch.capacity')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     <Users className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
-                    Allowed Users
+                    {t('branch.allowed_users')}
                   </label>
                   <input
                     name="allowed_user_count"
@@ -531,11 +533,11 @@ const BranchEdit = () => {
                     type="number"
                     min="0"
                     max="999"
-                    placeholder="Max users allowed"
+                    placeholder={t('branch.max_users_placeholder')}
                     className={`w-full px-3 py-1.5 text-sm bg-gray-50 border ${errors.allowed_user_count ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
                   />
                   <p className="text-xs text-gray-400 mt-1">
-                    Current users: {currentUserCount} • Cannot be less than current users
+                    {t('branch.current_users_hint', { count: currentUserCount })}
                   </p>
                   {errors.allowed_user_count && (
                     <p className="text-xs text-red-500 mt-1">{errors.allowed_user_count[0]}</p>
@@ -545,7 +547,7 @@ const BranchEdit = () => {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     <Package className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
-                    Allowed Product Publish
+                    {t('branch.allowed_products')}
                   </label>
                   <input
                     name="allowed_product_publish_count"
@@ -554,11 +556,11 @@ const BranchEdit = () => {
                     type="number"
                     min="0"
                     max="99999"
-                    placeholder="Max products allowed"
+                    placeholder={t('branch.max_products_placeholder')}
                     className={`w-full px-3 py-1.5 text-sm bg-gray-50 border ${errors.allowed_product_publish_count ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
                   />
                   <p className="text-xs text-gray-400 mt-1">
-                    Current products: {currentProductCount} • Cannot be less than current products
+                    {t('branch.current_products_hint', { count: currentProductCount })}
                   </p>
                   {errors.allowed_product_publish_count && (
                     <p className="text-xs text-red-500 mt-1">{errors.allowed_product_publish_count[0]}</p>
@@ -569,7 +571,7 @@ const BranchEdit = () => {
 
             {/* Logo Upload */}
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Branch Logo</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">{t('branch.logo')}</h3>
               <div className="flex items-center gap-4">
                 <div
                   className="flex-1 border-2 border-dashed border-gray-200 rounded-lg p-6 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group"
@@ -587,9 +589,9 @@ const BranchEdit = () => {
                       <Upload className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors" />
                     </div>
                     <p className="text-sm text-gray-500 mt-2 group-hover:text-blue-600 transition-colors">
-                      Click to upload new logo
+                      {t('branch.upload_new_logo')}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF, WEBP • Max 2MB</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('branch.logo_hint')}</p>
                   </div>
                 </div>
                 
@@ -603,7 +605,7 @@ const BranchEdit = () => {
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <p className="text-xs text-gray-400 mt-1 text-center">Current logo</p>
+                    <p className="text-xs text-gray-400 mt-1 text-center">{t('branch.current_logo')}</p>
                   </div>
                 )}
                 
@@ -624,7 +626,7 @@ const BranchEdit = () => {
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                    <p className="text-xs text-blue-500 mt-1 text-center">New logo</p>
+                    <p className="text-xs text-blue-500 mt-1 text-center">{t('branch.new_logo')}</p>
                   </div>
                 )}
               </div>
@@ -638,8 +640,8 @@ const BranchEdit = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-gray-700">Active Status</h3>
-                <p className="text-xs text-gray-400">Enable or disable this branch</p>
+                <h3 className="text-sm font-medium text-gray-700">{t('branch.active_status')}</h3>
+                <p className="text-xs text-gray-400">{t('branch.active_status_hint')}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -669,7 +671,7 @@ const BranchEdit = () => {
               onClick={() => navigate('../branches')}
               className="px-5 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('branch.cancel')}
             </button>
             <button
               type="submit"
@@ -679,12 +681,12 @@ const BranchEdit = () => {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
+                  {t('branch.updating')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Update Branch
+                  {t('branch.update_btn')}
                 </>
               )}
             </button>

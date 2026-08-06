@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 import {
   TrendingUp,
@@ -47,6 +48,7 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -123,7 +125,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600 font-medium">{t('dashboard.loading')}</p>
         </div>
       </div>
     );
@@ -156,7 +158,7 @@ const Dashboard = () => {
 
   // Payment breakdown for pie chart
   const paymentData = salesOverview.payment_breakdown?.map(item => ({
-    name: item.status.toUpperCase(),
+    name: t(`payment.${String(item.status || '').toLowerCase()}`, { defaultValue: String(item.status || '').toUpperCase() }),
     value: item.total,
     count: item.count,
   })) || [];
@@ -169,9 +171,9 @@ const Dashboard = () => {
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-emerald-500" />
-              Dashboard
+              {t('dashboard.title')}
             </h1>
-            <p className="text-xs text-gray-500">Real-time business overview</p>
+            <p className="text-xs text-gray-500">{t('dashboard.subtitle')}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -180,7 +182,7 @@ const Dashboard = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Refresh'}
+              {refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}
             </button>
             <span className="text-xs text-gray-400">{data?.period?.this_month || ''}</span>
           </div>
@@ -191,20 +193,20 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Today's Sales</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('dashboard.today_sales')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.today?.sales)}</p>
               </div>
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-4 h-4 text-blue-600" />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">+{formatNumber(summary.today?.sales_count || 0)} orders</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('dashboard.orders', { count: formatNumber(summary.today?.sales_count || 0) })}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Month Sales</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('dashboard.month_sales')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.this_month?.sales)}</p>
               </div>
               <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -212,63 +214,63 @@ const Dashboard = () => {
               </div>
             </div>
             <p className={`text-[10px] font-medium ${getStatusColor(summary.this_month?.profit)} mt-1`}>
-              Profit: {formatCurrency(summary.this_month?.profit)}
+              {t('dashboard.profit', { amount: formatCurrency(summary.this_month?.profit) })}
             </p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Month Expenses</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('dashboard.month_expenses')}</p>
                 <p className="text-lg font-bold text-red-600">{formatCurrency(summary.this_month?.expenses)}</p>
               </div>
               <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                 <Wallet className="w-4 h-4 text-red-600" />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">vs {formatCurrency(summary.this_month?.purchases)} purchases</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('dashboard.vs_purchases', { amount: formatCurrency(summary.this_month?.purchases) })}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Customers</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{t('dashboard.customers')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatNumber(summary.counts?.customers)}</p>
               </div>
               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Users className="w-4 h-4 text-purple-600" />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">{formatNumber(quickStats.customers?.today || 0)} new today</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('dashboard.new_today', { count: formatNumber(quickStats.customers?.today || 0) })}</p>
           </div>
         </div>
 
         {/* Quick Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Invoices</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('dashboard.invoices')}</p>
             <p className="text-sm font-bold text-gray-900">{formatNumber(quickStats.invoices?.total || 0)}</p>
-            <p className="text-[9px] text-gray-400">+{formatNumber(quickStats.invoices?.this_month || 0)} this month</p>
+            <p className="text-[9px] text-gray-400">{t('dashboard.this_month', { count: formatNumber(quickStats.invoices?.this_month || 0) })}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Bills</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('dashboard.bills')}</p>
             <p className="text-sm font-bold text-gray-900">{formatNumber(quickStats.bills?.total || 0)}</p>
-            <p className="text-[9px] text-gray-400">+{formatNumber(quickStats.bills?.this_month || 0)} this month</p>
+            <p className="text-[9px] text-gray-400">{t('dashboard.this_month', { count: formatNumber(quickStats.bills?.this_month || 0) })}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Products</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('dashboard.products')}</p>
             <p className="text-sm font-bold text-gray-900">{formatNumber(summary.counts?.products || 0)}</p>
-            <p className="text-[9px] text-gray-400">{formatNumber(inventoryStatus.in_stock || 0)} in stock</p>
+            <p className="text-[9px] text-gray-400">{t('dashboard.in_stock', { count: formatNumber(inventoryStatus.in_stock || 0) })}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Suppliers</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('dashboard.suppliers')}</p>
             <p className="text-sm font-bold text-gray-900">{formatNumber(summary.counts?.suppliers || 0)}</p>
-            <p className="text-[9px] text-gray-400">Active suppliers</p>
+            <p className="text-[9px] text-gray-400">{t('dashboard.active_suppliers')}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 text-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider">Return Rate</p>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">{t('dashboard.return_rate')}</p>
             <p className="text-sm font-bold text-gray-900">{quickStats.return_rate || 0}%</p>
-            <p className="text-[9px] text-gray-400">Of total sales</p>
+            <p className="text-[9px] text-gray-400">{t('dashboard.of_total_sales')}</p>
           </div>
         </div>
 
@@ -276,7 +278,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           {/* Revenue vs Expenses Chart */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Revenue vs Expenses</h2>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">{t('dashboard.revenue_vs_expenses')}</h2>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={revenueChartData}>
@@ -288,9 +290,9 @@ const Dashboard = () => {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   />
                   <Legend />
-                  <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="#93C5FD" fillOpacity={0.3} />
-                  <Area type="monotone" dataKey="expenses" stroke="#EF4444" fill="#FCA5A5" fillOpacity={0.3} />
-                  <Line type="monotone" dataKey="profit" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="revenue" name={t('dashboard.revenue')} stroke="#3B82F6" fill="#93C5FD" fillOpacity={0.3} />
+                  <Area type="monotone" dataKey="expenses" name={t('dashboard.expenses')} stroke="#EF4444" fill="#FCA5A5" fillOpacity={0.3} />
+                  <Line type="monotone" dataKey="profit" name={t('dashboard.profit_label')} stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -298,7 +300,7 @@ const Dashboard = () => {
 
           {/* Payment Breakdown */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Payment Breakdown</h2>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">{t('dashboard.payment_breakdown')}</h2>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -328,7 +330,7 @@ const Dashboard = () => {
 
         {/* Monthly Trend */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-          <h2 className="text-sm font-semibold text-gray-900 mb-3">Monthly Trend</h2>
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">{t('dashboard.monthly_trend')}</h2>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trendChartData}>
@@ -337,9 +339,9 @@ const Dashboard = () => {
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                 <Legend />
-                <Bar dataKey="sales" fill="#3B82F6" name="Sales" />
-                <Bar dataKey="purchases" fill="#8B5CF6" name="Purchases" />
-                <Bar dataKey="new_customers" fill="#10B981" name="New Customers" />
+                <Bar dataKey="sales" fill="#3B82F6" name={t('dashboard.sales')} />
+                <Bar dataKey="purchases" fill="#8B5CF6" name={t('dashboard.purchases')} />
+                <Bar dataKey="new_customers" fill="#10B981" name={t('dashboard.new_customers')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -350,7 +352,7 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Package className="w-4 h-4 text-blue-500" />
-              Top Products (This Month)
+              {t('dashboard.top_products')}
             </h2>
             <div className="space-y-2">
               {topProducts.length > 0 ? (
@@ -360,14 +362,14 @@ const Dashboard = () => {
                       <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                        <p className="text-xs text-gray-500">{formatNumber(product.quantity)} units</p>
+                        <p className="text-xs text-gray-500">{t('dashboard.units', { count: formatNumber(product.quantity) })}</p>
                       </div>
                     </div>
                     <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(product.revenue)}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-400 py-4 text-sm">No products sold this month</p>
+                <p className="text-center text-gray-400 py-4 text-sm">{t('dashboard.no_products')}</p>
               )}
             </div>
           </div>
@@ -375,7 +377,7 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Users className="w-4 h-4 text-emerald-500" />
-              Top Customers (This Month)
+              {t('dashboard.top_customers')}
             </h2>
             <div className="space-y-2">
               {topCustomers.length > 0 ? (
@@ -385,14 +387,14 @@ const Dashboard = () => {
                       <span className="text-xs font-medium text-gray-400 w-5">#{index + 1}</span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{customer.name}</p>
-                        <p className="text-xs text-gray-500">{customer.order_count} orders</p>
+                        <p className="text-xs text-gray-500">{t('dashboard.order_count', { count: customer.order_count })}</p>
                       </div>
                     </div>
                     <p className="text-sm font-semibold text-gray-900 ml-2">{formatCurrency(customer.total_spent)}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-400 py-4 text-sm">No customer data this month</p>
+                <p className="text-center text-gray-400 py-4 text-sm">{t('dashboard.no_customers')}</p>
               )}
             </div>
           </div>
@@ -404,23 +406,23 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Package className="w-4 h-4 text-orange-500" />
-              Inventory Status
+              {t('dashboard.inventory_status')}
             </h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
-                <span className="text-sm text-gray-700">In Stock</span>
+                <span className="text-sm text-gray-700">{t('dashboard.in_stock_label')}</span>
                 <span className="text-sm font-bold text-green-600">{formatNumber(inventoryStatus.in_stock || 0)}</span>
               </div>
               <div className="flex justify-between items-center p-2 bg-yellow-50 rounded-lg">
-                <span className="text-sm text-gray-700">Low Stock</span>
+                <span className="text-sm text-gray-700">{t('dashboard.low_stock')}</span>
                 <span className="text-sm font-bold text-yellow-600">{formatNumber(inventoryStatus.low_stock || 0)}</span>
               </div>
               <div className="flex justify-between items-center p-2 bg-red-50 rounded-lg">
-                <span className="text-sm text-gray-700">Out of Stock</span>
+                <span className="text-sm text-gray-700">{t('dashboard.out_of_stock')}</span>
                 <span className="text-sm font-bold text-red-600">{formatNumber(inventoryStatus.out_of_stock || 0)}</span>
               </div>
               <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                <span className="text-sm text-gray-700">Total Products</span>
+                <span className="text-sm text-gray-700">{t('dashboard.total_products')}</span>
                 <span className="text-sm font-bold text-gray-900">{formatNumber(inventoryStatus.total_products || 0)}</span>
               </div>
             </div>
@@ -430,7 +432,7 @@ const Dashboard = () => {
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Clock className="w-4 h-4 text-gray-500" />
-              Recent Activity
+              {t('dashboard.recent_activity')}
             </h2>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {recentActivity.length > 0 ? (
@@ -440,13 +442,13 @@ const Dashboard = () => {
                       {getActivityIcon(activity.type)}
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {activity.type === 'sale' && `Invoice ${activity.reference}`}
-                          {activity.type === 'purchase' && `Bill ${activity.reference}`}
-                          {activity.type === 'customer' && `New Customer: ${activity.name}`}
+                          {activity.type === 'sale' && t('dashboard.invoice_ref', { ref: activity.reference })}
+                          {activity.type === 'purchase' && t('dashboard.bill_ref', { ref: activity.reference })}
+                          {activity.type === 'customer' && t('dashboard.new_customer_ref', { name: activity.name })}
                         </p>
                         <p className="text-xs text-gray-500">
                           {activity.customer || activity.supplier || activity.code || ''}
-                          {' '}• {activity.time_ago || 'Just now'}
+                          {' '}• {activity.time_ago || t('dashboard.just_now')}
                         </p>
                       </div>
                     </div>
@@ -456,7 +458,7 @@ const Dashboard = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-400 py-4 text-sm">No recent activity</p>
+                <p className="text-center text-gray-400 py-4 text-sm">{t('dashboard.no_activity')}</p>
               )}
             </div>
           </div>
@@ -464,7 +466,7 @@ const Dashboard = () => {
 
         {/* Footer */}
         <div className="mt-4 text-center text-[10px] text-gray-400">
-          Dashboard updated {data?.period?.today ? `on ${new Date(data.period.today).toLocaleString()}` : ''}
+          {data?.period?.today ? t('dashboard.updated_on', { date: new Date(data.period.today).toLocaleString() }) : ''}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 
 const generatePageNumbers = (current, total) => {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
@@ -19,6 +20,7 @@ const generatePageNumbers = (current, total) => {
 
 // Items Modal Component
 const ItemsModal = ({ returnData, onClose }) => {
+  const { t } = useTranslation();
   if (!returnData) return null;
 
   return (
@@ -32,9 +34,9 @@ const ItemsModal = ({ returnData, onClose }) => {
               <svg className="w-5 h-5 text-[#007c89]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-              Return Items
+              {t('purchase_return.return_items')}
             </h3>
-            <p className="text-sm text-gray-500 mt-0.5">Reference: {returnData.reference_no}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{t('purchase_return.reference_colon', { ref: returnData.reference_no })}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,11 +54,11 @@ const ItemsModal = ({ returnData, onClose }) => {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">#</th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Product</th>
-                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Qty</th>
-                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Price</th>
-                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Total</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">{t('purchase_return.col_hash')}</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">{t('purchase_return.col_product')}</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">{t('purchase_return.col_qty')}</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">{t('purchase_return.col_price')}</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">{t('purchase_return.col_total')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -64,7 +66,7 @@ const ItemsModal = ({ returnData, onClose }) => {
                       <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
                         <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
                         <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">{item.product?.name || 'Unknown Product'}</div>
+                          <div className="font-medium text-gray-900">{item.product?.name || t('purchase_return.unknown_product')}</div>
                           {item.notes && (
                             <div className="text-xs text-gray-400 mt-0.5">{item.notes}</div>
                           )}
@@ -84,7 +86,7 @@ const ItemsModal = ({ returnData, onClose }) => {
                   <tfoot className="border-t-2 border-gray-300 bg-gray-50">
                     <tr>
                       <td colSpan="4" className="px-4 py-3 text-right font-semibold text-gray-900">
-                        Total
+                        {t('purchase_return.total')}
                       </td>
                       <td className="px-4 py-3 text-right font-bold text-gray-900">
                         {parseFloat(returnData.total_amount).toFixed(2)}
@@ -102,28 +104,28 @@ const ItemsModal = ({ returnData, onClose }) => {
                       <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">#{idx + 1}</span>
                       <span className="text-xs text-gray-400">{parseFloat(item.total).toFixed(2)} AFN</span>
                     </div>
-                    <div className="font-medium text-gray-900 text-sm">{item.product?.name || 'Unknown Product'}</div>
+                    <div className="font-medium text-gray-900 text-sm">{item.product?.name || t('purchase_return.unknown_product')}</div>
                     {item.notes && (
                       <div className="text-xs text-gray-400 mt-1">{item.notes}</div>
                     )}
                     <div className="grid grid-cols-3 gap-2 mt-2.5 pt-2.5 border-t border-gray-100">
                       <div>
-                        <div className="text-[10px] text-gray-500 uppercase">Qty</div>
+                        <div className="text-[10px] text-gray-500 uppercase">{t('purchase_return.col_qty')}</div>
                         <div className="text-sm font-medium text-gray-800">{parseFloat(item.quantity).toFixed(2)}</div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-gray-500 uppercase">Price</div>
+                        <div className="text-[10px] text-gray-500 uppercase">{t('purchase_return.col_price')}</div>
                         <div className="text-sm font-medium text-gray-800">{parseFloat(item.unit_price).toFixed(2)}</div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-gray-500 uppercase">Total</div>
+                        <div className="text-[10px] text-gray-500 uppercase">{t('purchase_return.col_total')}</div>
                         <div className="text-sm font-medium text-gray-800">{parseFloat(item.total).toFixed(2)}</div>
                       </div>
                     </div>
                   </div>
                 ))}
                 <div className="bg-gray-50 rounded-lg p-3.5 flex justify-between items-center">
-                  <span className="text-sm font-semibold text-gray-700">Total Amount</span>
+                  <span className="text-sm font-semibold text-gray-700">{t('purchase_return.total')}</span>
                   <span className="text-sm font-bold text-gray-900">{parseFloat(returnData.total_amount).toFixed(2)} AFN</span>
                 </div>
               </div>
@@ -133,7 +135,7 @@ const ItemsModal = ({ returnData, onClose }) => {
               <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-              <p className="text-gray-400 mt-2">No items found for this return.</p>
+              <p className="text-gray-400 mt-2">{t('purchase_return.no_items')}</p>
             </div>
           )}
         </div>
@@ -141,10 +143,10 @@ const ItemsModal = ({ returnData, onClose }) => {
         {/* Modal Footer */}
         <div className="border-t border-gray-200 px-4 sm:px-6 py-4 bg-gray-50/50 rounded-b-xl flex justify-between items-center">
           <div className="text-xs text-gray-500">
-            {returnData.items?.length || 0} item{returnData.items?.length !== 1 ? 's' : ''} returned
+            {t('purchase_return.items_returned', { count: returnData.items?.length || 0 })}
           </div>
           <button onClick={onClose} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
-            Close
+            {t('purchase_return.close')}
           </button>
         </div>
       </div>
@@ -153,6 +155,7 @@ const ItemsModal = ({ returnData, onClose }) => {
 };
 
 export default function PurchaseReturnIndex() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -186,8 +189,8 @@ export default function PurchaseReturnIndex() {
 
   useEffect(() => { 
     setCurrentPage(1);
-    const t = setTimeout(() => fetchReturns(1), 300); 
-    return () => clearTimeout(t); 
+    const timer = setTimeout(() => fetchReturns(1), 300); 
+    return () => clearTimeout(timer); 
   }, [search, perPage]);
 
   const handleViewItems = (returnData) => {
@@ -201,7 +204,7 @@ export default function PurchaseReturnIndex() {
   };
 
   const handleDelete = (id) => {
-    if (!confirm('Are you sure you want to delete this return? This action cannot be undone.')) return;
+    if (!confirm(t('purchase_return.delete_confirm'))) return;
     
     setDeleting(true);
     setDeleteId(id);
@@ -211,7 +214,7 @@ export default function PurchaseReturnIndex() {
       })
       .catch(err => {
         console.error('Error deleting return:', err);
-        alert('Failed to delete return. Please try again.');
+        alert(t('purchase_return.delete_failed'));
       })
       .finally(() => {
         setDeleting(false);
@@ -242,7 +245,7 @@ export default function PurchaseReturnIndex() {
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
           </svg>
-          Full Return
+          {t('purchase_return.full_return')}
         </span>
       );
     } else if (refundStatus === 'partial') {
@@ -251,7 +254,7 @@ export default function PurchaseReturnIndex() {
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Partial Return
+          {t('purchase_return.partial_return')}
         </span>
       );
     }
@@ -261,7 +264,7 @@ export default function PurchaseReturnIndex() {
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        Returned
+        {t('purchase_return.returned')}
       </span>
     );
   };
@@ -272,12 +275,12 @@ export default function PurchaseReturnIndex() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1">
-            <h1 className="text-xl font-semibold text-gray-900">Purchase Returns</h1>
+            <h1 className="text-xl font-semibold text-gray-900">{t('purchase_return.title')}</h1>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{total} records</span>
+              <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{t('purchase_return.records', { count: total })}</span>
               <button onClick={() => navigate('/purchase-returns/create')}
                 className="px-3 py-1.5 text-sm bg-[#007c89] text-white rounded-md hover:bg-[#006d77] transition-colors">
-                + New Return
+                {t('purchase_return.new_return')}
               </button>
             </div>
           </div>
@@ -294,7 +297,7 @@ export default function PurchaseReturnIndex() {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search by reference..."
+                placeholder={t('purchase_return.search_placeholder')}
                 className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
               />
             </div>
@@ -305,7 +308,7 @@ export default function PurchaseReturnIndex() {
         {loading && (
           <div className="flex items-center justify-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-            <span className="ml-3 text-gray-700 text-sm">Loading returns...</span>
+            <span className="ml-3 text-gray-700 text-sm">{t('purchase_return.loading')}</span>
           </div>
         )}
 
@@ -318,7 +321,7 @@ export default function PurchaseReturnIndex() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <p className="text-sm text-gray-700">
-                  {search ? 'No returns match your search.' : 'No returns yet.'}
+                  {search ? t('purchase_return.no_results_search') : t('purchase_return.no_results')}
                 </p>
               </div>
             ) : (
@@ -328,12 +331,12 @@ export default function PurchaseReturnIndex() {
                   <table className="min-w-full">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Reference</th>
-                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
-                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">PO</th>
-                        <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
-                        <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-32">Actions</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('purchase_return.reference')}</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('purchase_return.date')}</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('purchase_return.po')}</th>
+                        <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('purchase_return.amount')}</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">{t('purchase_return.status')}</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-32">{t('purchase_return.actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -356,7 +359,7 @@ export default function PurchaseReturnIndex() {
                               <button
                                 onClick={() => handleViewItems(r)}
                                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                title="View Items"
+                                title={t('purchase_return.view_items')}
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -367,7 +370,7 @@ export default function PurchaseReturnIndex() {
                               <button
                                 onClick={() => handleEdit(r.id)}
                                 className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                                title="Edit"
+                                title={t('purchase_return.edit')}
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -379,7 +382,7 @@ export default function PurchaseReturnIndex() {
                                 onClick={() => handleDelete(r.id)}
                                 disabled={deleting && deleteId === r.id}
                                 className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                                title="Delete"
+                                title={t('purchase_return.delete')}
                               >
                                 {deleting && deleteId === r.id ? (
                                   <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
@@ -412,11 +415,11 @@ export default function PurchaseReturnIndex() {
                       </div>
                       <div className="space-y-1 mb-3">
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-500">PO:</span>
+                          <span className="text-gray-500">{t('purchase_return.po_colon')}</span>
                           <span className="text-gray-700 font-medium">{r.purchase?.reference_no || '—'}</span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-500">Amount:</span>
+                          <span className="text-gray-500">{t('purchase_return.amount_colon')}</span>
                           <span className="text-gray-900 font-semibold">{parseFloat(r.total_amount).toFixed(2)}</span>
                         </div>
                       </div>
@@ -425,13 +428,13 @@ export default function PurchaseReturnIndex() {
                           onClick={() => handleViewItems(r)}
                           className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                         >
-                          Items
+                          {t('purchase_return.items')}
                         </button>
                         <button
                           onClick={() => handleEdit(r.id)}
                           className="flex-1 px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
                         >
-                          Edit
+                          {t('purchase_return.edit')}
                         </button>
                         <button
                           onClick={() => handleDelete(r.id)}
@@ -440,7 +443,7 @@ export default function PurchaseReturnIndex() {
                         >
                           {deleting && deleteId === r.id ? (
                             <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                          ) : 'Delete'}
+                          ) : t('purchase_return.delete')}
                         </button>
                       </div>
                     </div>
@@ -453,7 +456,7 @@ export default function PurchaseReturnIndex() {
             {totalPages > 1 && (
               <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="text-xs text-gray-500 text-center sm:text-left">
-                  Page {currentPage} of {totalPages}
+                  {t('purchase_return.page_of', { current: currentPage, total: totalPages })}
                 </div>
                 <div className="flex items-center justify-center gap-1">
                   {/* First */}
@@ -503,7 +506,7 @@ export default function PurchaseReturnIndex() {
                   </button>
                 </div>
                 <div className="flex items-center justify-center sm:justify-end gap-2">
-                  <span className="text-xs text-gray-500">Show</span>
+                  <span className="text-xs text-gray-500">{t('purchase_return.show')}</span>
                   <select
                     value={perPage}
                     onChange={(e) => { setPerPage(parseInt(e.target.value)); setCurrentPage(1); fetchReturns(1, parseInt(e.target.value)); }}
@@ -514,7 +517,7 @@ export default function PurchaseReturnIndex() {
                     <option value={50}>50</option>
                     <option value={100}>100</option>
                   </select>
-                  <span className="text-xs text-gray-500">per page</span>
+                  <span className="text-xs text-gray-500">{t('purchase_return.per_page')}</span>
                 </div>
               </div>
             )}

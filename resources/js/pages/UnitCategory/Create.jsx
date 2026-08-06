@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function UnitCategoryCreate() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [measureTypes, setMeasureTypes] = useState([]);
@@ -51,7 +53,7 @@ export default function UnitCategoryCreate() {
           setErrors({ general: err.response.data.message });
         }
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to create unit category.' });
+        setErrors({ general: err.response?.data?.message || t('unit_category.create_failed') });
       }
     } finally {
       setLoading(false);
@@ -70,14 +72,14 @@ export default function UnitCategoryCreate() {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/unit-categories')} className="hover:text-[#007c89]">Unit Categories</button>
+          <button onClick={() => navigate('/unit-categories')} className="hover:text-[#007c89]">{t('unit_category.title')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">New Category</span>
+          <span className="text-gray-700">{t('unit_category.new_category')}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Add Unit Category</h1>
-        <p className="text-sm text-gray-500 mt-1">Create a category to group related units of measurement</p>
+        <h1 className="text-2xl font-semibold text-gray-900">{t('unit_category.add_title')}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t('unit_category.subtitle')}</p>
       </div>
 
       {errors.general && (
@@ -90,20 +92,20 @@ export default function UnitCategoryCreate() {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Category Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('unit_category.category_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Category Name *
+                      {t('unit_category.category_name')}
                     </label>
                     <input
                       name="name"
                       value={form.name}
                       onChange={handleChange}
                       className={inputClass('name')}
-                      placeholder="e.g., Pieces, Weight, Volume"
+                      placeholder={t('unit_category.name_placeholder')}
                       autoFocus
                     />
                     {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name[0]}</p>}
@@ -111,7 +113,7 @@ export default function UnitCategoryCreate() {
                   
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Measure Type *
+                      {t('unit_category.measure_type')}
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
                       {measureTypes.map(type => (
@@ -133,14 +135,14 @@ export default function UnitCategoryCreate() {
                           />
                           <span className="text-2xl mb-1">{type.icon}</span>
                           <span className="text-xs font-medium text-center">
-                            {type.label.split(' ')[0]}
+                            {t(`unit_category.type_${type.value}`) || type.label.split(' ')[0]}
                           </span>
                         </label>
                       ))}
                     </div>
                     {errors.measure_type && <p className="text-red-500 text-xs mt-1">{errors.measure_type[0]}</p>}
                     <p className="text-xs text-gray-400 mt-2">
-                      Selected: {measureTypes.find(t => t.value === form.measure_type)?.label || form.measure_type}
+                      {t('unit_category.selected_label', { label: measureTypes.find(t => t.value === form.measure_type)?.label || form.measure_type })}
                     </p>
                   </div>
                 </div>
@@ -154,7 +156,7 @@ export default function UnitCategoryCreate() {
               <div className="mb-4 p-3 bg-blue-50 rounded-md">
                 <div className="flex items-center gap-2 text-sm text-blue-700">
                   <span className="text-lg">{getTypeIcon(form.measure_type)}</span>
-                  <span>Units in this category will share the same measurement type</span>
+                  <span>{t('unit_category.units_share')}</span>
                 </div>
               </div>
 
@@ -166,14 +168,14 @@ export default function UnitCategoryCreate() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Creating...
+                    {t('unit_category.creating')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Create Category
+                    {t('unit_category.create_category')}
                   </>
                 )}
               </button>
@@ -182,7 +184,7 @@ export default function UnitCategoryCreate() {
                 onClick={() => navigate('/unit-categories')}
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 mt-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 
 function generatePageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
@@ -20,6 +21,7 @@ function generatePageNumbers(current, total) {
 }
 
 export default function SupplierIndex() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +61,7 @@ export default function SupplierIndex() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this supplier? This action cannot be undone.')) return;
+    if (!confirm(t('supplier.delete_confirm'))) return;
     try {
       await api.delete(`/suppliers/${id}`);
       setSuppliers(prev => prev.filter(s => s.id !== id));
@@ -69,7 +71,7 @@ export default function SupplierIndex() {
         active_suppliers: suppliers.find(s => s.id === id)?.is_active ? prev.active_suppliers - 1 : prev.active_suppliers,
       }));
     } catch (err) {
-      alert(err.response?.data?.message || 'Delete failed');
+      alert(err.response?.data?.message || t('supplier.delete_failed'));
     }
   };
 
@@ -85,7 +87,7 @@ export default function SupplierIndex() {
         setSummary(prev => ({ ...prev, active_suppliers: prev.active_suppliers - 1 }));
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to toggle status');
+      alert(err.response?.data?.message || t('supplier.toggle_failed'));
     }
   };
 
@@ -103,10 +105,10 @@ export default function SupplierIndex() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="text-xl font-semibold text-gray-900">Suppliers</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('supplier.title')}</h1>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{summary.total_suppliers} total</span>
-            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{summary.active_suppliers} active</span>
+            <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">{t('supplier.total', { count: summary.total_suppliers })}</span>
+            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t('supplier.active_count', { count: summary.active_suppliers })}</span>
           </div>
         </div>
       </div>
@@ -122,7 +124,7 @@ export default function SupplierIndex() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('supplier.search_placeholder')}
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89] focus:border-[#007c89]"
             />
           </div>
@@ -131,20 +133,19 @@ export default function SupplierIndex() {
             onChange={e => setFilterActive(e.target.value)}
             className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
           >
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">{t('supplier.all')}</option>
+            <option value="active">{t('supplier.active')}</option>
+            <option value="inactive">{t('supplier.inactive')}</option>
           </select>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => navigate('/suppliers/export')}
-            className="inline-flex items-center px-3 py-1.5 text-sm border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            className="inline-flex items-center px-3 py-1.5 text-sm border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Export
+            {t('supplier.export')}
           </button>
           <Link
             to="/suppliers/create"
@@ -153,7 +154,7 @@ export default function SupplierIndex() {
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            New
+            {t('supplier.new')}
           </Link>
         </div>
       </div>
@@ -162,7 +163,7 @@ export default function SupplierIndex() {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-          <span className="ml-3 text-gray-700 text-sm">Loading suppliers...</span>
+          <span className="ml-3 text-gray-700 text-sm">{t('supplier.loading')}</span>
         </div>
       )}
 
@@ -175,7 +176,7 @@ export default function SupplierIndex() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <p className="text-sm text-gray-700">
-                {search ? 'No suppliers match your search.' : 'No suppliers yet. Create your first supplier.'}
+                {search ? t('supplier.no_results_search') : t('supplier.no_results')}
               </p>
             </div>
           ) : (
@@ -185,13 +186,13 @@ export default function SupplierIndex() {
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Supplier</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Code</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Contact Person</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Phone/Email</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Location</th>
-                      <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('supplier.col_supplier')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('supplier.col_code')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('supplier.col_contact')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('supplier.col_phone_email')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{t('supplier.col_location')}</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">{t('supplier.col_status')}</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">{t('supplier.col_actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -215,15 +216,15 @@ export default function SupplierIndex() {
                         <td className="px-4 py-2.5 whitespace-nowrap text-center">
                           <button onClick={() => handleToggleStatus(supplier.id, supplier.is_active)}
                             className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${supplier.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-700'}`}>
-                            {supplier.is_active ? 'Active' : 'Inactive'}
+                            {supplier.is_active ? t('supplier.active') : t('supplier.inactive')}
                           </button>
                         </td>
                         <td className="px-4 py-2.5 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-0.5">
-                            <button onClick={() => navigate(`/suppliers/${supplier.id}/edit`)} className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600" title="Edit">
+                            <button onClick={() => navigate(`/suppliers/${supplier.id}/edit`)} className="p-1 rounded hover:bg-yellow-50 text-gray-700 hover:text-yellow-600" title={t('supplier.edit')}>
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             </button>
-                            <button onClick={() => handleDelete(supplier.id)} className="p-1 rounded hover:bg-red-50 text-gray-700 hover:text-red-600" title="Delete">
+                            <button onClick={() => handleDelete(supplier.id)} className="p-1 rounded hover:bg-red-50 text-gray-700 hover:text-red-600" title={t('supplier.delete')}>
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                           </div>
@@ -250,19 +251,19 @@ export default function SupplierIndex() {
                       </div>
                       <button onClick={() => handleToggleStatus(supplier.id, supplier.is_active)}
                         className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${supplier.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-700'}`}>
-                        {supplier.is_active ? 'Active' : 'Inactive'}
+                        {supplier.is_active ? t('supplier.active') : t('supplier.inactive')}
                       </button>
                     </div>
                     <div className="space-y-1.5 text-sm">
-                      <div className="flex items-center justify-between"><span className="text-gray-400 text-xs">Code</span><span className="font-mono text-xs text-gray-700">{supplier.supplier_code || '—'}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-gray-400 text-xs">Phone</span><span className="text-gray-700">{supplier.phone || '—'}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-gray-400 text-xs">Email</span><span className="text-gray-700 text-right truncate max-w-[55%]">{supplier.email || '—'}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-gray-400 text-xs">Location</span><span className="text-gray-700">{supplier.city ? `${supplier.city}, ${supplier.country}` : supplier.country || '—'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-gray-400 text-xs">{t('supplier.code_label')}</span><span className="font-mono text-xs text-gray-700">{supplier.supplier_code || '—'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-gray-400 text-xs">{t('supplier.phone_label')}</span><span className="text-gray-700">{supplier.phone || '—'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-gray-400 text-xs">{t('supplier.email_label')}</span><span className="text-gray-700 text-right truncate max-w-[55%]">{supplier.email || '—'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-gray-400 text-xs">{t('supplier.location_label')}</span><span className="text-gray-700">{supplier.city ? `${supplier.city}, ${supplier.country}` : supplier.country || '—'}</span></div>
                     </div>
                     <div className="flex items-center gap-2 pt-1">
-                      <Link to={`/suppliers/${supplier.id}`} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">View</Link>
-                      <button onClick={() => navigate(`/suppliers/${supplier.id}/edit`)} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors">Edit</button>
-                      <button onClick={() => handleDelete(supplier.id)} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors">Delete</button>
+                      <Link to={`/suppliers/${supplier.id}`} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">{t('supplier.view')}</Link>
+                      <button onClick={() => navigate(`/suppliers/${supplier.id}/edit`)} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors">{t('supplier.edit')}</button>
+                      <button onClick={() => handleDelete(supplier.id)} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors">{t('supplier.delete')}</button>
                     </div>
                   </div>
                 ))}
@@ -272,12 +273,12 @@ export default function SupplierIndex() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <span className="text-xs text-gray-500 whitespace-nowrap">Page {currentPage} of {totalPages}</span>
+              <span className="text-xs text-gray-500 whitespace-nowrap">{t('supplier.page_of', { current: currentPage, total: totalPages })}</span>
               <div className="flex items-center gap-1">
-                <button onClick={() => fetchSuppliers(1)} disabled={currentPage === 1} className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="First page">
+                <button onClick={() => fetchSuppliers(1)} disabled={currentPage === 1} className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title={t('supplier.first_page')}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
                 </button>
-                <button onClick={() => fetchSuppliers(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Previous page">
+                <button onClick={() => fetchSuppliers(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title={t('supplier.previous_page')}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 {generatePageNumbers(currentPage, totalPages).map((p, i) =>
@@ -287,15 +288,15 @@ export default function SupplierIndex() {
                     <button key={p} onClick={() => fetchSuppliers(p)} className={`inline-flex items-center justify-center w-8 h-8 text-xs rounded-md font-medium transition-colors ${p === currentPage ? 'bg-[#007c89] text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'}`}>{p}</button>
                   )
                 )}
-                <button onClick={() => fetchSuppliers(currentPage + 1)} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Next page">
+                <button onClick={() => fetchSuppliers(currentPage + 1)} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title={t('supplier.next_page')}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                 </button>
-                <button onClick={() => fetchSuppliers(totalPages)} disabled={currentPage === totalPages} className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Last page">
+                <button onClick={() => fetchSuppliers(totalPages)} disabled={currentPage === totalPages} className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title={t('supplier.last_page')}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
                 </button>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap">
-                <span className="hidden sm:inline">Show</span>
+                <span className="hidden sm:inline">{t('supplier.show')}</span>
                 <select value={perPage} onChange={(e) => { setPerPage(parseInt(e.target.value)); setCurrentPage(1); }}
                   className="px-2 py-1 text-xs border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#007c89]">
                   <option value={10}>10</option>
@@ -303,7 +304,7 @@ export default function SupplierIndex() {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                <span className="hidden sm:inline">per page</span>
+                <span className="hidden sm:inline">{t('supplier.per_page')}</span>
               </div>
             </div>
           )}

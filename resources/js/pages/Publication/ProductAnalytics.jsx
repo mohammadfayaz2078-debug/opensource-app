@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 
 export default function PublicationIndex() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,14 +30,14 @@ export default function PublicationIndex() {
     try {
       await api.post(`/publications/${product.id}/toggle`);
       setProducts(prev => prev.map(p => p.id === product.id ? { ...p, is_public: !p.is_public } : p));
-    } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+    } catch (err) { alert(err.response?.data?.message || t('publication.failed')); }
   };
 
   const updateOrderStatus = async (orderId, status) => {
     try {
       await api.put(`/orders/${orderId}/status`, { status });
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
-    } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+    } catch (err) { alert(err.response?.data?.message || t('publication.failed')); }
   };
 
   const filteredProducts = useMemo(() => {
@@ -55,24 +57,24 @@ export default function PublicationIndex() {
   if (loading) return (
     <div className="flex items-center justify-center py-12">
       <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-      <span className="ml-3 text-gray-700 text-sm">Loading...</span>
+      <span className="ml-3 text-gray-700 text-sm">{t('publication.loading')}</span>
     </div>
   );
 
   return (
     <div className="relative bg-gradient-to-br from-emerald-50/40 via-white to-sky-50/40 rounded-xl p-6 -m-6">
       <div className="mb-4">
-        <h1 className="text-xl font-semibold text-gray-900">Publication</h1>
-        <p className="text-sm text-gray-500">Manage products, orders, comments, and likes</p>
+        <h1 className="text-xl font-semibold text-gray-900">{t('publication.title')}</h1>
+        <p className="text-sm text-gray-500">{t('publication.subtitle')}</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         {[
-          { label: 'Total Products', value: products.length, color: 'text-gray-900' },
-          { label: 'Published', value: publishedCount, color: 'text-green-600' },
-          { label: 'Total Likes', value: totalLikes, color: 'text-red-600' },
-          { label: 'Total Comments', value: totalComments, color: 'text-blue-600' },
+          { label: t('publication.stat_total_products'), value: products.length, color: 'text-gray-900' },
+          { label: t('publication.stat_published'), value: publishedCount, color: 'text-green-600' },
+          { label: t('publication.stat_total_likes'), value: totalLikes, color: 'text-red-600' },
+          { label: t('publication.stat_total_comments'), value: totalComments, color: 'text-blue-600' },
         ].map(s => (
           <div key={s.label} className="bg-white border border-gray-200 rounded-lg p-3 text-center">
             <p className="text-xs text-gray-500 uppercase">{s.label}</p>
@@ -85,8 +87,8 @@ export default function PublicationIndex() {
       <div className="border-b border-gray-200 mb-4 overflow-x-auto">
         <nav className="flex gap-6 min-w-max sm:min-w-0">
           {[
-            { id: 'products', label: 'Products' },
-            { id: 'orders', label: `Orders (${orders.length})` },
+            { id: 'products', label: t('publication.tab_products') },
+            { id: 'orders', label: t('publication.tab_orders', { count: orders.length }) },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`py-2.5 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === tab.id ? 'border-[#007c89] text-[#007c89]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
@@ -100,13 +102,13 @@ export default function PublicationIndex() {
       {activeTab === 'products' && (
         <div>
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('publication.search_placeholder')}
               className="w-full sm:max-w-xs px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]" />
             <select value={filter} onChange={e => setFilter(e.target.value)}
               className="px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]">
-              <option value="">All</option>
-              <option value="published">Published</option>
-              <option value="unpublished">Unpublished</option>
+              <option value="">{t('publication.all')}</option>
+              <option value="published">{t('publication.published')}</option>
+              <option value="unpublished">{t('publication.unpublished')}</option>
             </select>
           </div>
           <div className="rounded-lg border border-gray-200 shadow-md overflow-hidden">
@@ -115,17 +117,17 @@ export default function PublicationIndex() {
               <table className="min-w-full">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Product</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Category</th>
-                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">Price</th>
-                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">Public</th>
-                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">Likes</th>
-                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">Comments</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">{t('publication.col_product')}</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">{t('publication.col_category')}</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">{t('publication.col_price')}</th>
+                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">{t('publication.col_public')}</th>
+                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">{t('publication.col_likes')}</th>
+                    <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">{t('publication.col_comments')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredProducts.length === 0 ? (
-                    <tr><td colSpan="6" className="py-8 text-center text-gray-500 text-sm">No products found.</td></tr>
+                    <tr><td colSpan="6" className="py-8 text-center text-gray-500 text-sm">{t('publication.no_products')}</td></tr>
                   ) : filteredProducts.map((p, idx) => (
                     <tr key={p.id} className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50`}>
                       <td className="px-4 py-2.5 font-medium text-gray-900 whitespace-nowrap">{p.name}</td>
@@ -167,7 +169,7 @@ export default function PublicationIndex() {
             {/* Mobile Cards */}
             <div className="lg:hidden divide-y divide-gray-100">
               {filteredProducts.length === 0 ? (
-                <div className="py-8 text-center text-gray-500 text-sm">No products found.</div>
+                <div className="py-8 text-center text-gray-500 text-sm">{t('publication.no_products')}</div>
               ) : filteredProducts.map((p) => (
                 <div key={p.id} className="p-4 hover:bg-gray-50/50 transition-colors">
                   <div className="flex items-start justify-between mb-2">
@@ -215,7 +217,7 @@ export default function PublicationIndex() {
       {activeTab === 'orders' && (
         <div>
           {orders.length === 0 ? (
-            <div className="py-12 text-center text-gray-500 text-sm">No orders yet.</div>
+            <div className="py-12 text-center text-gray-500 text-sm">{t('publication.no_orders')}</div>
           ) : (
             <div className="rounded-lg border border-gray-200 shadow-md overflow-hidden">
               {/* Desktop Table */}
@@ -223,13 +225,13 @@ export default function PublicationIndex() {
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Order #</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Customer</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Phone</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">Items</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">Total</th>
-                      <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">Status</th>
-                      <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">Actions</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">{t('publication.col_order_no')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">{t('publication.col_customer')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">{t('publication.col_phone')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase">{t('publication.col_items')}</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase">{t('publication.col_total')}</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">{t('publication.col_status')}</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-700 uppercase">{t('publication.col_actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -240,12 +242,12 @@ export default function PublicationIndex() {
                         <td className="px-4 py-2.5 text-sm text-gray-600 whitespace-nowrap">{o.customer_phone || '—'}</td>
                         <td className="px-4 py-2.5 text-sm text-gray-700 whitespace-nowrap">{o.items?.length || 0}</td>
                         <td className="px-4 py-2.5 text-sm text-gray-900 text-right font-medium whitespace-nowrap">{parseFloat(o.total_amount).toFixed(2)}</td>
-                        <td className="px-4 py-2.5 text-center whitespace-nowrap"><span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColor(o.status)}`}>{o.status?.toUpperCase()}</span></td>
+                        <td className="px-4 py-2.5 text-center whitespace-nowrap"><span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColor(o.status)}`}>{t(`publication.status_${o.status}`, { defaultValue: o.status?.toUpperCase() })}</span></td>
                         <td className="px-4 py-2.5 text-center whitespace-nowrap">
                           <div className="flex justify-center gap-1">
-                            {o.status === 'pending' && <button onClick={() => updateOrderStatus(o.id, 'confirmed')} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Confirm</button>}
-                            {o.status === 'confirmed' && <button onClick={() => updateOrderStatus(o.id, 'delivered')} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200">Deliver</button>}
-                            {o.status !== 'cancelled' && o.status !== 'delivered' && <button onClick={() => updateOrderStatus(o.id, 'cancelled')} className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Cancel</button>}
+                            {o.status === 'pending' && <button onClick={() => updateOrderStatus(o.id, 'confirmed')} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">{t('publication.confirm')}</button>}
+                            {o.status === 'confirmed' && <button onClick={() => updateOrderStatus(o.id, 'delivered')} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200">{t('publication.deliver')}</button>}
+                            {o.status !== 'cancelled' && o.status !== 'delivered' && <button onClick={() => updateOrderStatus(o.id, 'cancelled')} className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">{t('publication.cancel')}</button>}
                           </div>
                         </td>
                       </tr>
@@ -264,32 +266,32 @@ export default function PublicationIndex() {
                         <div className="text-xs text-gray-600 mt-0.5">{o.customer_name}</div>
                       </div>
                       <span className={`flex-shrink-0 ml-2 text-[10px] font-medium px-2 py-0.5 rounded ${statusColor(o.status)}`}>
-                        {o.status?.toUpperCase()}
+                        {t(`publication.status_${o.status}`, { defaultValue: o.status?.toUpperCase() })}
                       </span>
                     </div>
                     <div className="space-y-1 mb-3">
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Phone:</span>
+                        <span className="text-gray-500">{t('publication.phone_label')}</span>
                         <span className="text-gray-700">{o.customer_phone || '—'}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Items:</span>
+                        <span className="text-gray-500">{t('publication.items_label')}</span>
                         <span className="text-gray-700">{o.items?.length || 0}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Total:</span>
+                        <span className="text-gray-500">{t('publication.total_label')}</span>
                         <span className="text-gray-900 font-semibold">{parseFloat(o.total_amount).toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       {o.status === 'pending' && (
-                        <button onClick={() => updateOrderStatus(o.id, 'confirmed')} className="flex-1 px-2 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 font-medium">Confirm</button>
+                        <button onClick={() => updateOrderStatus(o.id, 'confirmed')} className="flex-1 px-2 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 font-medium">{t('publication.confirm')}</button>
                       )}
                       {o.status === 'confirmed' && (
-                        <button onClick={() => updateOrderStatus(o.id, 'delivered')} className="flex-1 px-2 py-1.5 text-xs bg-green-100 text-green-700 rounded-md hover:bg-green-200 font-medium">Deliver</button>
+                        <button onClick={() => updateOrderStatus(o.id, 'delivered')} className="flex-1 px-2 py-1.5 text-xs bg-green-100 text-green-700 rounded-md hover:bg-green-200 font-medium">{t('publication.deliver')}</button>
                       )}
                       {o.status !== 'cancelled' && o.status !== 'delivered' && (
-                        <button onClick={() => updateOrderStatus(o.id, 'cancelled')} className="flex-1 px-2 py-1.5 text-xs bg-red-100 text-red-700 rounded-md hover:bg-red-200 font-medium">Cancel</button>
+                        <button onClick={() => updateOrderStatus(o.id, 'cancelled')} className="flex-1 px-2 py-1.5 text-xs bg-red-100 text-red-700 rounded-md hover:bg-red-200 font-medium">{t('publication.cancel')}</button>
                       )}
                     </div>
                   </div>
@@ -306,14 +308,14 @@ export default function PublicationIndex() {
           <div className="fixed inset-0 bg-black/40" onClick={() => setSelectedProductComments(null)}></div>
           <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 z-10">
             <div className="px-4 sm:px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">Comments — {selectedProductName}</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{t('publication.comments_title', { name: selectedProductName })}</h2>
               <button onClick={() => setSelectedProductComments(null)} className="p-1 rounded hover:bg-gray-100 text-gray-400 flex-shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="px-4 sm:px-5 py-4 max-h-96 overflow-y-auto">
               {selectedProductComments.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No comments yet.</p>
+                <p className="text-sm text-gray-500 text-center py-4">{t('publication.no_comments')}</p>
               ) : (
                 <div className="space-y-3">
                   {selectedProductComments.map((c, idx) => (

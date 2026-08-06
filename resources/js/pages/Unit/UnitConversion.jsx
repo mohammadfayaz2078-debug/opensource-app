@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function UnitConversion() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -56,7 +58,7 @@ export default function UnitConversion() {
   const handleConvert = async (e) => {
     e.preventDefault();
     if (!form.from_unit_id || !form.to_unit_id || !form.quantity) {
-      alert('Please fill in all fields');
+      alert(t('unit.fill_all'));
       return;
     }
 
@@ -65,7 +67,7 @@ export default function UnitConversion() {
       const res = await api.get('/units/convert', { params: form });
       setResult(res.data);
     } catch (err) {
-      alert(err.response?.data?.message || 'Conversion failed');
+      alert(err.response?.data?.message || t('unit.conversion_failed'));
     } finally {
       setLoading(false);
     }
@@ -79,33 +81,33 @@ export default function UnitConversion() {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/units')} className="hover:text-[#007c89]">Units</button>
+          <button onClick={() => navigate('/units')} className="hover:text-[#007c89]">{t('unit.title')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">Unit Converter</span>
+          <span className="text-gray-700">{t('unit.converter_title')}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Unit Converter</h1>
-        <p className="text-sm text-gray-500 mt-1">Convert between different units of measurement</p>
+        <h1 className="text-2xl font-semibold text-gray-900">{t('unit.converter_title')}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t('unit.converter_subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Conversion Form */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Convert Units</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t('unit.convert_units')}</h2>
           </div>
           <div className="p-6">
             <form onSubmit={handleConvert} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                  Category
+                  {t('unit.col_category')}
                 </label>
                 <select
                   onChange={handleCategoryChange}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
                 >
-                  <option value="">Select category</option>
+                  <option value="">{t('unit.select_category')}</option>
                   {categories.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
@@ -115,7 +117,7 @@ export default function UnitConversion() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                    From Unit
+                    {t('unit.from_unit')}
                   </label>
                   <select
                     name="from_unit_id"
@@ -124,7 +126,7 @@ export default function UnitConversion() {
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
                     disabled={!units.length}
                   >
-                    <option value="">Select unit</option>
+                    <option value="">{t('unit.select_unit')}</option>
                     {units.map(unit => (
                       <option key={unit.id} value={unit.id}>{unit.name}</option>
                     ))}
@@ -133,7 +135,7 @@ export default function UnitConversion() {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                    To Unit
+                    {t('unit.to_unit')}
                   </label>
                   <select
                     name="to_unit_id"
@@ -142,7 +144,7 @@ export default function UnitConversion() {
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
                     disabled={!units.length}
                   >
-                    <option value="">Select unit</option>
+                    <option value="">{t('unit.select_unit')}</option>
                     {units.map(unit => (
                       <option key={unit.id} value={unit.id}>{unit.name}</option>
                     ))}
@@ -152,7 +154,7 @@ export default function UnitConversion() {
 
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                  Quantity
+                  {t('unit.quantity')}
                 </label>
                 <input
                   type="number"
@@ -160,7 +162,7 @@ export default function UnitConversion() {
                   name="quantity"
                   value={form.quantity}
                   onChange={handleChange}
-                  placeholder="Enter quantity to convert"
+                  placeholder={t('unit.quantity_placeholder')}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#007c89]"
                 />
               </div>
@@ -173,14 +175,14 @@ export default function UnitConversion() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Converting...
+                    {t('unit.converting')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
-                    Convert
+                    {t('unit.convert_btn')}
                   </>
                 )}
               </button>
@@ -192,7 +194,7 @@ export default function UnitConversion() {
         {result && (
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Conversion Result</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('unit.conversion_result')}</h2>
             </div>
             <div className="p-6">
               <div className="text-center">
@@ -206,11 +208,11 @@ export default function UnitConversion() {
                 <div className="mt-6 pt-4 border-t border-gray-200">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="text-left">
-                      <p className="text-gray-500">From Unit Factor</p>
+                      <p className="text-gray-500">{t('unit.from_factor')}</p>
                       <p className="font-mono font-medium">{result.from_unit?.factor}</p>
                     </div>
                     <div className="text-left">
-                      <p className="text-gray-500">To Unit Factor</p>
+                      <p className="text-gray-500">{t('unit.to_factor')}</p>
                       <p className="font-mono font-medium">{result.to_unit?.factor}</p>
                     </div>
                   </div>

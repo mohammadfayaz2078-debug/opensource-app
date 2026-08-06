@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import SuperAdminSidebarDropdown from './SuperAdminSidebarDropdown';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
@@ -42,6 +43,7 @@ const SuperAdminSidebar = ({
   onCloseMobile 
 }) => {
   const location = useLocation();
+  const { t } = useTranslation();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [linkSearch, setLinkSearch] = useState('');
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -59,31 +61,19 @@ const SuperAdminSidebar = ({
           name: 'Dashboard',
           to: '/super-admin/dashboard',
           icon: 'home',
-          translation_key: 'super_admin_dashboard'
+          translation_key: 'super_admin.sidebar_dashboard'
         }
       ]
     },
     {
       title: 'Management',
       icon: 'building',
-      translation_key: 'management',
+      translation_key: 'super_admin.sidebar_management',
       children: [
-        { name: 'Companies', to: '/super-admin/companies', icon: 'building', translation_key: 'companies' },
+        { name: 'Companies', to: '/super-admin/companies', icon: 'building', translation_key: 'super_admin.sidebar_companies' },
       ]
     }
   ];
-
-  // Translation helper (replace with your i18n implementation)
-  const t = (key) => {
-    const translations = {
-      'global_management': 'Global Management',
-      'search_links': 'Search links...',
-      'super_admin_dashboard': 'Dashboard',
-      'management': 'Management',
-      'companies': 'Companies',
-    };
-    return translations[key] || key;
-  };
 
   const filteredLinks = links
     .map(group => {
@@ -153,6 +143,14 @@ const SuperAdminSidebar = ({
     return classes.join(' ');
   };
 
+  const getSidebarStyle = () => ({
+    left: isRTL ? 'auto' : 0,
+    right: isRTL ? 0 : 'auto',
+    transform: windowWidth >= 1024
+      ? (isCollapsed ? `translateX(${isRTL ? 'calc(100% + 8px)' : 'calc(-100% - 8px)'})` : 'translateX(0)')
+      : (isMobileOpen ? 'translateX(0)' : `translateX(${isRTL ? '100%' : '-100%'})`),
+  });
+
   const handleLinkClick = () => {
     setOpenDropdown(null);
     if (windowWidth < 1024) {
@@ -215,13 +213,15 @@ const SuperAdminSidebar = ({
       {isMobileOpen && windowWidth < 1024 && (
         <div
           onClick={onCloseMobile}
-          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30 transition-opacity"
+          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-[90] transition-opacity"
         />
       )}
 
       <aside
         ref={sidebarRef}
-        className={`sidebar-container fixed inset-y-0 z-40
+        dir={isRTL ? 'rtl' : 'ltr'}
+        style={getSidebarStyle()}
+        className={`sidebar-container fixed inset-y-0 z-[100]
            bg-[#F0F9FF] text-slate-700 border-r border-slate-200
            flex flex-col h-screen
            transform transition-all duration-300 ease-out
@@ -229,19 +229,19 @@ const SuperAdminSidebar = ({
       >
         {/* Header */}
         <div
-          className={`px-3 py-2.5 border-b border-slate-200 flex items-center justify-between flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
+          className="px-3 py-2.5 border-b border-slate-200 flex items-center justify-between flex-shrink-0"
         >
           {(!isCollapsed || windowWidth < 1024) && (
-            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] rounded-md flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm">
                 S
               </div>
               <div className={`overflow-hidden ${isRTL ? 'text-right' : ''}`}>
                 <div className="text-sm font-medium text-slate-800 truncate leading-tight">
-                  Super Admin
+                  {t('super_admin.brand')}
                 </div>
                 <div className="text-xs text-slate-500 truncate leading-tight">
-                  {t('global_management')}
+                  {t('super_admin.global_management')}
                 </div>
               </div>
             </div>
@@ -308,9 +308,8 @@ const SuperAdminSidebar = ({
                         onClick={handleLinkClick}
                         className={({ isActive }) => `
                           flex items-center px-3 py-2 transition group relative
-                          ${isRTL ? 'flex-row-reverse' : ''}
                           ${isActive 
-                            ? 'text-[#0EA5E9] bg-[#EFF6FF] font-medium after:absolute after:left-0 after:top-1 after:bottom-1 after:w-0.5 after:bg-[#0EA5E9] after:rounded-r-full' 
+                            ? `text-[#0EA5E9] bg-[#EFF6FF] font-medium after:absolute after:top-1 after:bottom-1 after:w-0.5 after:bg-[#0EA5E9] ${isRTL ? 'after:right-0 after:rounded-l-full' : 'after:left-0 after:rounded-r-full'}`
                             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                           }
                         `}
@@ -367,7 +366,6 @@ const SuperAdminSidebar = ({
                   onClick={install}
                   disabled={isInstalled}
                   className={`flex items-center w-full px-3 py-2 rounded-lg transition text-sm
-                    ${isRTL ? 'flex-row-reverse' : ''}
                     ${isInstalled
                       ? 'text-green-600 bg-green-50 cursor-default'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -380,7 +378,7 @@ const SuperAdminSidebar = ({
                     </svg>
                   </div>
                   <span className={`truncate ${isRTL ? 'mr-3' : 'ml-3'}`}>
-                    {isInstalled ? 'App Installed' : 'Download App'}
+                    {isInstalled ? t('super_admin.app_installed') : t('super_admin.download_app')}
                   </span>
                 </button>
               </div>
@@ -434,7 +432,7 @@ const SuperAdminSidebar = ({
                 <button
                   onClick={install}
                   disabled={isInstalled}
-                  title={isInstalled ? 'App Installed' : 'Download App'}
+                  title={isInstalled ? t('super_admin.app_installed') : t('super_admin.download_app')}
                   className={`w-full flex justify-center p-3 transition group
                     ${isInstalled
                       ? 'text-green-500'

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../plugins/axios';
 
 export default function CustomerEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
@@ -65,7 +67,7 @@ export default function CustomerEdit() {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to update customer.' });
+        setErrors({ general: err.response?.data?.message || t('customer.update_failed') });
       }
     } finally {
       setLoading(false);
@@ -76,7 +78,7 @@ export default function CustomerEdit() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading customer...</span>
+        <span className="ml-3 text-gray-600">{t('customer.loading_customer')}</span>
       </div>
     );
   }
@@ -88,7 +90,7 @@ export default function CustomerEdit() {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/customers')} className="hover:text-[#007c89]">Customers</button>
+          <button onClick={() => navigate('/customers')} className="hover:text-[#007c89]">{t('customer.breadcrumb')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -98,9 +100,9 @@ export default function CustomerEdit() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">Edit</span>
+          <span className="text-gray-700">{t('customer.edit')}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Edit Customer</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">{t('customer.edit_customer')}</h1>
       </div>
 
       {errors.general && (
@@ -113,13 +115,13 @@ export default function CustomerEdit() {
             {/* Customer Information */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Customer Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('customer.info')}</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Customer Code
+                      {t('customer.code_field')}
                     </label>
                     <input
                       name="user_code"
@@ -131,7 +133,7 @@ export default function CustomerEdit() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      First Name
+                      {t('customer.first_name')}
                     </label>
                     <input
                       name="first_name"
@@ -143,7 +145,7 @@ export default function CustomerEdit() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Last Name
+                      {t('customer.last_name')}
                     </label>
                     <input
                       name="last_name"
@@ -159,13 +161,13 @@ export default function CustomerEdit() {
             {/* Contact Information */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Contact Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('customer.contact_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Phone
+                      {t('customer.phone_label')}
                     </label>
                     <input
                       name="phone"
@@ -177,7 +179,7 @@ export default function CustomerEdit() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Email
+                      {t('customer.email_label')}
                     </label>
                     <input
                       type="email"
@@ -195,13 +197,13 @@ export default function CustomerEdit() {
             {/* Address & Location */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Address & Location</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('customer.address_location')}</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Street Address
+                      {t('customer.street_address')}
                     </label>
                     <textarea
                       name="street_address"
@@ -214,7 +216,7 @@ export default function CustomerEdit() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        District
+                        {t('customer.district')}
                       </label>
                       <input
                         name="district"
@@ -225,7 +227,7 @@ export default function CustomerEdit() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        Province
+                        {t('customer.province')}
                       </label>
                       <input
                         name="province"
@@ -238,7 +240,7 @@ export default function CustomerEdit() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        GPS Latitude
+                        {t('customer.gps_lat')}
                       </label>
                       <input
                         type="number"
@@ -251,7 +253,7 @@ export default function CustomerEdit() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        GPS Longitude
+                        {t('customer.gps_lng')}
                       </label>
                       <input
                         type="number"
@@ -265,7 +267,7 @@ export default function CustomerEdit() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Country
+                      {t('customer.country')}
                     </label>
                     <input
                       name="country"
@@ -281,13 +283,13 @@ export default function CustomerEdit() {
             {/* Additional Info */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Additional Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('customer.additional_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Notes
+                      {t('customer.notes')}
                     </label>
                     <textarea
                       name="note"
@@ -295,7 +297,7 @@ export default function CustomerEdit() {
                       onChange={handleChange}
                       rows="3"
                       className={inputClass('note')}
-                      placeholder="Any additional information about this customer..."
+                      placeholder={t('customer.notes_placeholder')}
                     />
                   </div>
                   <div className="flex items-center">
@@ -307,7 +309,7 @@ export default function CustomerEdit() {
                       className="h-4 w-4 text-[#007c89] focus:ring-[#007c89] border-gray-300 rounded"
                     />
                     <label className="ml-2 block text-sm text-gray-700">
-                      Active (available for sales)
+                      {t('customer.active_for_sales')}
                     </label>
                   </div>
                 </div>
@@ -326,14 +328,14 @@ export default function CustomerEdit() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Saving...
+                    {t('customer.saving')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Changes
+                    {t('customer.save_changes')}
                   </>
                 )}
               </button>
@@ -342,7 +344,7 @@ export default function CustomerEdit() {
                 onClick={() => navigate(`/customers/${id}`)}
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 mt-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>

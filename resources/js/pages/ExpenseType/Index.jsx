@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../plugins/axios';
 import Swal from 'sweetalert2';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   Plus,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 
 const ExpenseTypeIndex = () => {
+  const { t } = useTranslation();
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -126,8 +128,8 @@ const ExpenseTypeIndex = () => {
 
       Swal.fire({
         icon: 'success',
-        title: isEditing ? 'Updated!' : 'Created!',
-        text: res.data?.message || 'Success',
+        title: isEditing ? t('expense_type.index.updated') : t('expense_type.index.created'),
+        text: res.data?.message || t('expense_type.index.success'),
         timer: 1500,
         showConfirmButton: false,
         toast: true,
@@ -139,7 +141,7 @@ const ExpenseTypeIndex = () => {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
       } else {
-        Swal.fire('Error', err.response?.data?.message || 'Operation failed', 'error');
+        Swal.fire(t('error'), err.response?.data?.message || t('expense_type.index.operation_failed'), 'error');
       }
     } finally {
       setSaving(false);
@@ -150,16 +152,16 @@ const ExpenseTypeIndex = () => {
     const hasChildren = type.children_recursive && type.children_recursive.length > 0;
     
     const result = await Swal.fire({
-      title: 'Delete Expense Type?',
+      title: t('expense_type.index.delete_title'),
       html: hasChildren 
-        ? `This will delete "<strong>${type.name}</strong>" and all its child types.`
-        : `Delete "<strong>${type.name}</strong>"?`,
+        ? t('expense_type.index.delete_with_children', { name: type.name })
+        : t('expense_type.index.delete_confirm', { name: type.name }),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: t('expense_type.index.delete'),
+      cancelButtonText: t('expense_type.index.cancel'),
     });
 
     if (result.isConfirmed) {
@@ -167,7 +169,7 @@ const ExpenseTypeIndex = () => {
         await api.delete(`/expense-types/${type.id}`);
         Swal.fire({
           icon: 'success',
-          title: 'Deleted!',
+          title: t('expense_type.index.deleted'),
           timer: 1500,
           showConfirmButton: false,
           toast: true,
@@ -175,7 +177,7 @@ const ExpenseTypeIndex = () => {
         });
         fetchTypes();
       } catch (err) {
-        Swal.fire('Error', err.response?.data?.message || 'Failed to delete', 'error');
+        Swal.fire(t('error'), err.response?.data?.message || t('expense_type.index.delete_failed'), 'error');
       }
     }
   };
@@ -234,7 +236,7 @@ const ExpenseTypeIndex = () => {
                 <span className="text-sm font-medium text-gray-800 truncate">{type.name}</span>
                 {!type.is_active && (
                   <span className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full flex-shrink-0">
-                    Inactive
+                    {t('expense_type.index.inactive')}
                   </span>
                 )}
                 {hasChildren && (
@@ -256,14 +258,14 @@ const ExpenseTypeIndex = () => {
               <button 
                 onClick={() => openEditModal(type)} 
                 className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors" 
-                title="Edit"
+                                title={t('expense_type.index.edit')}
               >
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
               <button 
                 onClick={() => handleDelete(type)} 
                 className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-600 transition-colors" 
-                title="Delete"
+                                title={t('expense_type.index.delete')}
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -318,16 +320,16 @@ const ExpenseTypeIndex = () => {
             <div>
               <h1 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <Tag className="w-5 h-5 text-blue-600" />
-                Expense Types
+                {t('expense_type.index.title')}
               </h1>
-              <p className="text-xs text-gray-400 mt-0.5">Manage expense categories</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t('expense_type.index.subtitle')}</p>
             </div>
             <button
               onClick={openCreateModal}
               className="inline-flex items-center px-3.5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow"
             >
               <Plus className="w-4 h-4 mr-1.5" />
-              New Type
+              {t('expense_type.index.new_type')}
             </button>
           </div>
         </div>
@@ -341,7 +343,7 @@ const ExpenseTypeIndex = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search types..."
+                placeholder={t('expense_type.index.search')}
                 className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -352,14 +354,14 @@ const ExpenseTypeIndex = () => {
                 <button
                   onClick={() => setViewMode('tree')}
                   className={`p-1.5 ${viewMode === 'tree' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
-                  title="Tree View"
+                  title={t('expense_type.index.tree_view')}
                 >
                   <LayoutGrid className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
-                  title="List View"
+                  title={t('expense_type.index.list_view')}
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -371,14 +373,14 @@ const ExpenseTypeIndex = () => {
                   <button 
                     onClick={expandAll} 
                     className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
-                    title="Expand All"
+                    title={t('expense_type.index.expand_all')}
                   >
                     <Maximize2 className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={collapseAll} 
                     className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
-                    title="Collapse All"
+                    title={t('expense_type.index.collapse_all')}
                   >
                     <Minimize2 className="w-3.5 h-3.5" />
                   </button>
@@ -400,13 +402,13 @@ const ExpenseTypeIndex = () => {
                 <thead>
                   <tr className="bg-gray-50/80 border-b border-gray-100">
                     <th className="px-3 py-2.5 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Name
+                      {t('expense_type.index.name')}
                     </th>
                     <th className="px-3 py-2.5 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      ID
+                      {t('expense_type.index.id')}
                     </th>
                     <th className="px-3 py-2.5 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Actions
+                      {t('expense_type.index.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -416,12 +418,12 @@ const ExpenseTypeIndex = () => {
                       <td colSpan="3" className="px-3 py-12 text-center">
                         <div className="flex flex-col items-center">
                           <FolderTree className="w-10 h-10 text-gray-300 mb-2" />
-                          <p className="text-sm text-gray-400">No expense types found</p>
+                          <p className="text-sm text-gray-400">{t('expense_type.index.no_types')}</p>
                           <button
                             onClick={openCreateModal}
                             className="mt-3 px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                           >
-                            Create your first type
+                            {t('expense_type.index.create_first')}
                           </button>
                         </div>
                       </td>
@@ -440,7 +442,7 @@ const ExpenseTypeIndex = () => {
                               <Circle className={`w-2 h-2 flex-shrink-0 ${type.is_active ? 'fill-green-500 text-green-500' : 'fill-gray-300 text-gray-300'}`} />
                               <span className="text-sm font-medium text-gray-800">{type.name}</span>
                               {!type.is_active && (
-                                <span className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">Inactive</span>
+                                <span className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">{t('expense_type.index.inactive')}</span>
                               )}
                             </div>
                             {type.description && (
@@ -453,14 +455,14 @@ const ExpenseTypeIndex = () => {
                               <button 
                                 onClick={() => openEditModal(type)} 
                                 className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors" 
-                                title="Edit"
+                title={t('expense_type.index.edit')}
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button 
                                 onClick={() => handleDelete(type)} 
                                 className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-600 transition-colors" 
-                                title="Delete"
+                title={t('expense_type.index.delete')}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -484,7 +486,7 @@ const ExpenseTypeIndex = () => {
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto z-10 animate-fadeIn">
             <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-base font-semibold text-gray-800">
-                {isEditing ? 'Edit Expense Type' : 'New Expense Type'}
+                {isEditing ? t('expense_type.index.edit_type') : t('expense_type.index.new_type_modal')}
               </h2>
               <button 
                 onClick={closeModal} 
@@ -498,14 +500,14 @@ const ExpenseTypeIndex = () => {
               <div className="space-y-3.5">
                 {/* Parent Category */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Parent Category</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('expense_type.index.parent_category')}</label>
                   <select 
                     name="parent_id" 
                     value={form.parent_id} 
                     onChange={handleInputChange}
                     className="w-full px-3 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">No Parent (Root)</option>
+                    <option value="">{t('expense_type.index.no_parent')}</option>
                     {parentOptions.map(opt => (
                       <option key={opt.id} value={opt.id}>{opt.name}</option>
                     ))}
@@ -514,7 +516,7 @@ const ExpenseTypeIndex = () => {
 
                 {/* Name */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Name <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('expense_type.index.name')} <span className="text-red-500">*</span></label>
                   <input 
                     type="text" 
                     name="name" 
@@ -528,7 +530,7 @@ const ExpenseTypeIndex = () => {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('expense_type.index.description')}</label>
                   <textarea 
                     name="description" 
                     value={form.description} 
@@ -547,7 +549,7 @@ const ExpenseTypeIndex = () => {
                     onChange={handleInputChange}
                     className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
                   />
-                  <label className="text-xs text-gray-600 cursor-pointer">Active</label>
+                  <label className="text-xs text-gray-600 cursor-pointer">{t('expense_type.index.active')}</label>
                 </div>
               </div>
 
@@ -557,7 +559,7 @@ const ExpenseTypeIndex = () => {
                   onClick={closeModal} 
                   className="flex-1 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  {t('expense_type.index.cancel')}
                 </button>
                 <button 
                   type="submit" 
@@ -567,12 +569,12 @@ const ExpenseTypeIndex = () => {
                   {saving ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                      Saving...
+                      {t('expense_type.index.saving')}
                     </>
                   ) : (
                     <>
                       <Save className="w-3.5 h-3.5 mr-1.5" />
-                      {isEditing ? 'Update' : 'Create'}
+                      {isEditing ? t('expense_type.index.update') : t('expense_type.index.create')}
                     </>
                   )}
                 </button>

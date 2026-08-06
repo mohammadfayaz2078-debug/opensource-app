@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 
 export default function PurchaseInvoice() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const printRef = useRef();
@@ -39,13 +41,13 @@ export default function PurchaseInvoice() {
         <div className="flex items-center justify-between">
           <button onClick={() => navigate(-1)} className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            Back
+            {t('purchase.back')}
           </button>
           <div className="flex items-center gap-2">
             <button onClick={handlePrint}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#007c89] text-white text-sm rounded-lg hover:bg-[#006d77] transition-colors shadow-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-              Print / Save PDF
+              {t('purchase.print_save_pdf')}
             </button>
           </div>
         </div>
@@ -58,12 +60,12 @@ export default function PurchaseInvoice() {
           <div className="bg-gradient-to-r from-[#007c89] to-[#006d77] px-8 py-6 text-white print:bg-gray-900">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">PURCHASE BILL</h1>
-                <p className="text-sm text-white/80 mt-0.5">Bill # {purchase.id}</p>
+                <h1 className="text-2xl font-bold tracking-tight">{t('purchase.purchase_bill')}</h1>
+                <p className="text-sm text-white/80 mt-0.5">{t('purchase.bill_no_id', { id: purchase.id })}</p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold">{parseFloat(purchase.total_amount).toFixed(2)} AFN</p>
-                <p className="text-xs text-white/70">Total Amount</p>
+                <p className="text-xs text-white/70">{t('purchase.total_amount')}</p>
               </div>
             </div>
           </div>
@@ -72,7 +74,7 @@ export default function PurchaseInvoice() {
             {/* Supplier & Invoice Details */}
             <div className="grid grid-cols-2 gap-8 mb-8">
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Bill From</h3>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('purchase.bill_from')}</h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="font-semibold text-gray-900">{purchase.supplier?.full_name || '—'}</p>
                   {purchase.supplier?.phone && <p className="text-sm text-gray-600 mt-1">{purchase.supplier.phone}</p>}
@@ -81,25 +83,25 @@ export default function PurchaseInvoice() {
                 </div>
               </div>
               <div className="text-right">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Invoice Details</h3>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('purchase.invoice_details')}</h3>
                 <div className="bg-gray-50 rounded-lg p-4 text-right">
                   <div className="flex justify-between text-sm py-0.5">
-                    <span className="text-gray-500">Bill #</span>
+                    <span className="text-gray-500">{t('purchase.bill_no')}</span>
                     <span className="font-medium">{purchase.id}</span>
                   </div>
                   <div className="flex justify-between text-sm py-0.5">
-                    <span className="text-gray-500">Date</span>
+                    <span className="text-gray-500">{t('purchase.date')}</span>
                     <span>{(purchase.purchase_date || '').split('T')[0]}</span>
                   </div>
                   {purchase.due_date && (
                     <div className="flex justify-between text-sm py-0.5">
-                      <span className="text-gray-500">Due Date</span>
+                      <span className="text-gray-500">{t('purchase.due_date')}</span>
                       <span>{(purchase.due_date || '').split('T')[0]}</span>
                     </div>
                   )}
                   {purchase.account && (
                     <div className="flex justify-between text-sm py-0.5">
-                      <span className="text-gray-500">Wallet</span>
+                      <span className="text-gray-500">{t('purchase.wallet')}</span>
                       <span>{purchase.account.name}</span>
                     </div>
                   )}
@@ -112,11 +114,11 @@ export default function PurchaseInvoice() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">#</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Qty</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Unit Price</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Total</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{t('purchase.col_hash')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{t('purchase.col_product')}</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">{t('purchase.col_qty')}</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">{t('purchase.unit_price')}</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">{t('purchase.col_total')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -138,29 +140,29 @@ export default function PurchaseInvoice() {
               <div className="w-72">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm py-1">
-                    <span className="text-gray-600">Subtotal</span>
+                    <span className="text-gray-600">{t('purchase.subtotal')}</span>
                     <span>{parseFloat(purchase.subtotal || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm py-1">
-                    <span className="text-gray-600">Discount</span>
+                    <span className="text-gray-600">{t('purchase.discount')}</span>
                     <span className="text-red-600">-{parseFloat(purchase.discount_value || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm py-1">
-                    <span className="text-gray-600">Shipping</span>
+                    <span className="text-gray-600">{t('purchase.shipping')}</span>
                     <span>{parseFloat(purchase.shipping_cost || 0).toFixed(2)}</span>
                   </div>
                   <div className="border-t-2 border-gray-200 pt-2 mt-2">
                     <div className="flex justify-between text-base font-bold">
-                      <span>Total</span>
+                      <span>{t('purchase.total')}</span>
                       <span>{parseFloat(purchase.total_amount || 0).toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Paid</span>
+                    <span>{t('purchase.paid')}</span>
                     <span>{parseFloat(purchase.paid_amount || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-red-600 font-bold">
-                    <span>Due</span>
+                    <span>{t('purchase.due')}</span>
                     <span>{unpaid.toFixed(2)}</span>
                   </div>
                 </div>
@@ -170,15 +172,15 @@ export default function PurchaseInvoice() {
             {/* Notes */}
             {purchase.notes && (
               <div className="mb-8 pt-4 border-t border-gray-100">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Notes</h3>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('purchase.notes')}</h3>
                 <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{purchase.notes}</p>
               </div>
             )}
 
             {/* Footer */}
             <div className="pt-4 border-t border-gray-100 text-center">
-              <p className="text-xs text-gray-400">This is a computer-generated document. No signature required.</p>
-              <p className="text-xs text-gray-400 mt-0.5">Bill #{purchase.id} · {(purchase.purchase_date || '').split('T')[0]}</p>
+              <p className="text-xs text-gray-400">{t('purchase.generated_document')}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t('purchase.bill_ref_date', { id: purchase.id, date: (purchase.purchase_date || '').split('T')[0] })}</p>
             </div>
           </div>
         </div>

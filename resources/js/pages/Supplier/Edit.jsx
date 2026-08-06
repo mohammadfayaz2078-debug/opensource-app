@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../plugins/axios';
+import { useTranslation } from 'react-i18next';
 
 export default function SupplierEdit() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -62,7 +64,7 @@ export default function SupplierEdit() {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
       } else {
-        setErrors({ general: err.response?.data?.message || 'Failed to update supplier.' });
+        setErrors({ general: err.response?.data?.message || t('supplier.update_failed') });
       }
     } finally {
       setLoading(false);
@@ -73,7 +75,7 @@ export default function SupplierEdit() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#007c89] border-t-transparent"></div>
-        <span className="ml-3 text-gray-600">Loading supplier...</span>
+        <span className="ml-3 text-gray-600">{t('supplier.loading_supplier')}</span>
       </div>
     );
   }
@@ -85,7 +87,7 @@ export default function SupplierEdit() {
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <button onClick={() => navigate('/suppliers')} className="hover:text-[#007c89]">Suppliers</button>
+          <button onClick={() => navigate('/suppliers')} className="hover:text-[#007c89]">{t('supplier.breadcrumb')}</button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -95,9 +97,9 @@ export default function SupplierEdit() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">Edit</span>
+          <span className="text-gray-700">{t('supplier.edit')}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Edit Supplier</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">{t('supplier.edit_supplier')}</h1>
       </div>
 
       {errors.general && (
@@ -110,13 +112,13 @@ export default function SupplierEdit() {
             {/* Supplier Information */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Supplier Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('supplier.info')}</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Supplier Code
+                      {t('supplier.code_field')}
                     </label>
                     <input
                       name="supplier_code"
@@ -128,7 +130,7 @@ export default function SupplierEdit() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      First Name
+                      {t('supplier.first_name')}
                     </label>
                     <input
                       name="first_name"
@@ -140,7 +142,7 @@ export default function SupplierEdit() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Last Name
+                      {t('supplier.last_name')}
                     </label>
                     <input
                       name="last_name"
@@ -151,7 +153,7 @@ export default function SupplierEdit() {
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Contact Person
+                      {t('supplier.contact_person')}
                     </label>
                     <input
                       name="contact_person"
@@ -167,13 +169,13 @@ export default function SupplierEdit() {
             {/* Contact Information */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Contact Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('supplier.contact_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Phone
+                      {t('supplier.phone')}
                     </label>
                     <input
                       name="phone"
@@ -185,7 +187,7 @@ export default function SupplierEdit() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Email
+                      {t('supplier.email')}
                     </label>
                     <input
                       type="email"
@@ -203,13 +205,13 @@ export default function SupplierEdit() {
             {/* Address */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Address</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('supplier.address')}</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Street Address
+                      {t('supplier.street_address')}
                     </label>
                     <textarea
                       name="address"
@@ -222,7 +224,7 @@ export default function SupplierEdit() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        City
+                        {t('supplier.city')}
                       </label>
                       <input
                         name="city"
@@ -233,7 +235,7 @@ export default function SupplierEdit() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        Country
+                        {t('supplier.country')}
                       </label>
                       <input
                         name="country"
@@ -250,13 +252,13 @@ export default function SupplierEdit() {
             {/* Additional Info */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Additional Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('supplier.additional_info')}</h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                      Notes
+                      {t('supplier.notes')}
                     </label>
                     <textarea
                       name="note"
@@ -264,7 +266,7 @@ export default function SupplierEdit() {
                       onChange={handleChange}
                       rows="3"
                       className={inputClass('note')}
-                      placeholder="Any additional information about this supplier..."
+                      placeholder={t('supplier.notes_placeholder')}
                     />
                   </div>
                   <div className="flex items-center">
@@ -276,7 +278,7 @@ export default function SupplierEdit() {
                       className="h-4 w-4 text-[#007c89] focus:ring-[#007c89] border-gray-300 rounded"
                     />
                     <label className="ml-2 block text-sm text-gray-700">
-                      Active (available for purchases)
+                      {t('supplier.active_for_purchases')}
                     </label>
                   </div>
                 </div>
@@ -295,14 +297,14 @@ export default function SupplierEdit() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Saving...
+                    {t('supplier.saving')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Changes
+                    {t('supplier.save_changes')}
                   </>
                 )}
               </button>
@@ -311,7 +313,7 @@ export default function SupplierEdit() {
                 onClick={() => navigate(`/suppliers/${id}`)}
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 mt-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>
