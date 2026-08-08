@@ -159,6 +159,8 @@ class ProductController extends Controller
             'sale_price'                => 'nullable|numeric|min:0|max:999999999999.99',
             'low_stock_warning_count'   => 'nullable|integer|min:0',
             'reorder_point'             => 'nullable|integer|min:0',
+            'attachments'               => 'nullable|array|max:10',
+            'attachments.*'             => 'file|mimes:jpg,jpeg,png,gif,webp,pdf|max:5120',
         ]);
 
         // Verify category belongs to branch
@@ -249,6 +251,8 @@ class ProductController extends Controller
             'sale_price'                => 'nullable|numeric|min:0|max:999999999999.99',
             'low_stock_warning_count'   => 'nullable|integer|min:0',
             'reorder_point'             => 'nullable|integer|min:0',
+            'attachments'               => 'nullable|array|max:10',
+            'attachments.*'             => 'file|mimes:jpg,jpeg,png,gif,webp,pdf|max:5120',
         ]);
 
         // Verify category belongs to branch if changed
@@ -317,6 +321,12 @@ class ProductController extends Controller
     private function uploadAttachments(array $files, Product $product, int $branchId, int $companyId): void
     {
         foreach ($files as $file) {
+            // Defense in depth: re-validate each uploaded file.
+            $file->validate([
+                'mimes' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'],
+                'max'   => 5120,
+            ]);
+
             $path = $file->store("products/{$product->id}", 'public');
             
             ProductAttachment::create([

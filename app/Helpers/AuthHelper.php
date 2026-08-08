@@ -15,13 +15,28 @@ class AuthHelper
     }
 
     /**
+     * Check if the authenticated user is the platform super admin
+     */
+    public static function isSuperAdmin()
+    {
+        $user = Auth::user();
+
+        return $user && method_exists($user, 'getTable') && $user->getTable() === 'super_admins';
+    }
+
+    /**
      * Check if authenticated user is a company admin (from companies table)
      * Company admins don't have branch_id or role_id
      */
     public static function isCompanyAdmin()
     {
         $user = Auth::user();
-        
+
+        // Super admins are platform owners, never company admins
+        if (self::isSuperAdmin()) {
+            return false;
+        }
+
         // Check if user is from companies table (has company_name and manager_password)
         if ($user && method_exists($user, 'getTable') && $user->getTable() === 'companies') {
             return true;
@@ -42,7 +57,12 @@ class AuthHelper
     public static function isBranchUser()
     {
         $user = Auth::user();
-        
+
+        // Super admins are never branch users
+        if (self::isSuperAdmin()) {
+            return false;
+        }
+
         // Check if user is from users table
         if ($user && method_exists($user, 'getTable') && $user->getTable() === 'users') {
             return true;
@@ -62,6 +82,10 @@ class AuthHelper
     public static function getCompanyId()
     {
         $user = Auth::user();
+
+        if (self::isSuperAdmin()) {
+            return null;
+        }
         
         if (self::isCompanyAdmin()) {
             // Company admin's ID is the company_id
@@ -95,6 +119,10 @@ class AuthHelper
      */
     public static function getUserType()
     {
+        if (self::isSuperAdmin()) {
+            return 'superadmin';
+        }
+
         if (self::isCompanyAdmin()) {
             return 'company_admin';
         }

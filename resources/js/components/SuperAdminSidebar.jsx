@@ -283,7 +283,6 @@ const SuperAdminSidebar = ({
               />
             </div>
           </div>
-          </div>
         )}
 
         {/* Navigation */}

@@ -3,8 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 return new class extends Migration
 {
@@ -20,15 +18,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Insert default super admin
-        DB::table('super_admins')->insert([
-            'name' => 'Super Admin',
-            'email' => 'superadmin@gmail.com',
-            'password' => Hash::make('admin'),
-            'language' => 'en',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // NOTE: No default super admin is created in a migration.
+        // Demo accounts are created by the database seeders instead
+        // (see Database\Seeders\DatabaseSeeder).
     }
 
     public function down(): void

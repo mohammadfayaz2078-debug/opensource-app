@@ -100,6 +100,21 @@ class SaleController extends Controller
             'items.*.notes'      => 'nullable|string',
         ]);
 
+        // Tenant isolation: the referenced customer and account must belong to
+        // the caller's own company — otherwise a user could attach another
+        // company's account/customer to their invoice.
+        if (!empty($validated['customer_id'])) {
+            $customerExists = \App\Models\Customer::where('company_id', $companyId)->whereKey($validated['customer_id'])->exists();
+            if (!$customerExists) {
+                return response()->json(['message' => 'Invalid customer for this company.'], 422);
+            }
+        }
+
+        $accountExists = Account::where('company_id', $companyId)->whereKey($validated['account_id'])->exists();
+        if (!$accountExists) {
+            return response()->json(['message' => 'Invalid account for this company.'], 422);
+        }
+
         $validated['company_id']    = $companyId;
         $validated['branch_id']     = $branchId;
         $validated['created_by']    = Auth::id();
@@ -228,6 +243,14 @@ class SaleController extends Controller
         $branchId = $this->resolveBranchId($request);
         $sale = Sale::where('branch_id', $branchId)->findOrFail($id);
 
+        // Do not silently destroy invoices that have payments: the money was
+        // already recorded in the account ledger. Use cancel instead.
+        if ((float) $sale->paid_amount > 0) {
+            return response()->json([
+                'message' => 'Cannot delete an invoice that already has payments.',
+            ], 422);
+        }
+
         if ($sale->status === Sale::STATUS_CONFIRMED) {
             StockService::reverse('Sale', $sale->id);
         }
@@ -239,13 +262,28 @@ class SaleController extends Controller
 
     public function pay(Request $request, int $id): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
         $sale = Sale::where('branch_id', $branchId)->findOrFail($id);
 
         $validated = $request->validate([
             'amount'     => 'required|numeric|min:0.01',
             'account_id' => 'required|exists:accounts,id',
         ]);
+
+        // Prevent overpayment: a payment cannot exceed the remaining due amount.
+        if ((float) $validated['amount'] > (float) $sale->due_amount) {
+            return response()->json([
+                'message' => 'Payment amount exceeds the remaining due amount.',
+                'due_amount' => (float) $sale->due_amount,
+            ], 422);
+        }
+
+        // The payment account must belong to the caller's own company.
+        $account = Account::where('company_id', $companyId)->find($validated['account_id']);
+        if (!$account) {
+            return response()->json(['message' => 'Invalid account for this company.'], 422);
+        }
 
         $accountId = (int) $validated['account_id'];
         $newPaid = (float) $sale->paid_amount + (float) $validated['amount'];
@@ -268,7 +306,7 @@ class SaleController extends Controller
         $transaction = null;
 
         // Update account balance — money comes in for sales
-        $account = Account::find($accountId);
+        $account = Account::where('company_id', $companyId)->find($accountId);
         if ($account) {
             $amount = (float) $validated['amount'];
             $balanceAfter = (float) $account->balance + $amount;

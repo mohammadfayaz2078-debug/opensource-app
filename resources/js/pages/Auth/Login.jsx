@@ -58,6 +58,8 @@ const submit = async (e) => {
     // Navigate based on user type
     if (user_type === 'company_admin') {
       navigate('/company-admin/dashboard');
+    } else if (user_type === 'superadmin') {
+      navigate('/super-admin/dashboard');
     } else {
       navigate('/dashboard');
     }

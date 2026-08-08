@@ -15,14 +15,22 @@ return new class extends Migration
             $table->json('fifo_layers')->nullable();
         });
 
-        // Disable FK checks to allow index restructure
-        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
-
-        // Drop old unique index, create new one with unit_category_id
-        DB::statement('ALTER TABLE stock_balances DROP INDEX stock_balances_product_id_branch_id_unique');
-        DB::statement('ALTER TABLE stock_balances ADD UNIQUE INDEX stock_balances_product_branch_category_unique (product_id, branch_id, unit_category_id)');
-
-        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+        // Drop old unique index, create new one with unit_category_id.
+        //
+        // MySQL: the index is referenced by a foreign key, so it must be
+        // restructured with FOREIGN_KEY_CHECKS disabled and raw DDL.
+        // SQLite: the same restructure is expressed with the Schema facade.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+            DB::statement('ALTER TABLE stock_balances DROP INDEX stock_balances_product_id_branch_id_unique');
+            DB::statement('ALTER TABLE stock_balances ADD UNIQUE INDEX stock_balances_product_branch_category_unique (product_id, branch_id, unit_category_id)');
+            DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+        } else {
+            Schema::table('stock_balances', function (Blueprint $table) {
+                $table->dropUnique('stock_balances_product_id_branch_id_unique');
+                $table->unique(['product_id', 'branch_id', 'unit_category_id'], 'stock_balances_product_branch_category_unique');
+            });
+        }
 
         // Add original_quantity and original_unit_id to stock_transactions if not present
         Schema::table('stock_transactions', function (Blueprint $table) {
@@ -44,10 +52,17 @@ return new class extends Migration
             $table->dropColumn(['original_quantity', 'original_unit_id']);
         });
 
-        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
-        DB::statement('ALTER TABLE stock_balances DROP INDEX stock_balances_product_branch_category_unique');
-        DB::statement('ALTER TABLE stock_balances ADD UNIQUE INDEX stock_balances_product_id_branch_id_unique (product_id, branch_id)');
-        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+            DB::statement('ALTER TABLE stock_balances DROP INDEX stock_balances_product_branch_category_unique');
+            DB::statement('ALTER TABLE stock_balances ADD UNIQUE INDEX stock_balances_product_id_branch_id_unique (product_id, branch_id)');
+            DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+        } else {
+            Schema::table('stock_balances', function (Blueprint $table) {
+                $table->dropUnique('stock_balances_product_branch_category_unique');
+                $table->unique(['product_id', 'branch_id'], 'stock_balances_product_id_branch_id_unique');
+            });
+        }
 
         Schema::table('stock_balances', function (Blueprint $table) {
             $table->dropForeign(['unit_category_id']);

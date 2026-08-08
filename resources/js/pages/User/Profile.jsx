@@ -429,8 +429,9 @@ const UserProfile = () => {
                   </div>
                 </div>
                 
-                {/* Backup Button */}
-                {isAdmin && (
+                {/* Backup Button — the backend restricts database backups to the
+                    platform super admin only, so the button is only shown to them. */}
+                {authUser?.user_type === 'superadmin' && (
                   <button
                     onClick={handleBackupDownload}
                     disabled={backupDownloading}

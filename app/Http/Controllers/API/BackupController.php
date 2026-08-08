@@ -20,13 +20,20 @@ class BackupController extends Controller
     {
         try {
             $user = Auth::user();
-            
-            // Check if user is authorized (optional - add your own logic)
+
             if (!$user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized'
                 ], 401);
+            }
+
+            // SECURITY: the backup contains the ENTIRE database (every company,
+            // user password hashes and financial records). Only the platform
+            // Super Admin may download it. Company admins / branch users must
+            // never be able to exfiltrate other tenants' data through it.
+            if (!($user instanceof \App\Models\SuperAdmin)) {
+                abort(403, 'Only the platform super admin can download database backups.');
             }
 
             // Generate filename with timestamp
@@ -48,8 +55,11 @@ class BackupController extends Controller
                 ->header('Pragma', 'no-cache')
                 ->header('Expires', '0');
             
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            // Re-throw HTTP errors (e.g. the 403 abort for non-super-admins)
+            // so they are rendered as real HTTP responses instead of a 500.
+            throw $e;
         } catch (\Exception $e) {
-   
             return response()->json([
                 'success' => false,
                 'message' => 'Backup failed: ' . $e->getMessage()

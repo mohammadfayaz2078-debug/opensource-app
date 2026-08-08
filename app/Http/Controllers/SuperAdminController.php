@@ -284,6 +284,43 @@ class SuperAdminController extends Controller
     }
 
     /**
+     * Update the authenticated super admin's language
+     * POST /super-admin/language
+     */
+    public function updateLanguage(Request $request)
+    {
+        $this->authorizeSuperAdmin($request);
+
+        $request->validate(['language' => 'required|in:en,fa,ps']);
+
+        $user = $request->user();
+        $user->language = $request->language;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Language updated',
+            'language' => $user->language,
+        ]);
+    }
+
+    /**
+     * Logout the authenticated super admin
+     * POST /super-admin/logout
+     */
+    public function logout(Request $request)
+    {
+        $this->authorizeSuperAdmin($request);
+
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logged out successfully',
+        ]);
+    }
+
+    /**
      * Get current super admin profile
      * GET /super-admin/profile
      */

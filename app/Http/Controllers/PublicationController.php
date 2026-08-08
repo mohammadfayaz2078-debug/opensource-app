@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuthHelper;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -9,9 +10,22 @@ use Illuminate\Support\Facades\DB;
 
 class PublicationController extends Controller
 {
+    private function resolveCompanyId(Request $request): ?int
+    {
+        if (AuthHelper::isCompanyAdmin()) {
+            return $request->filled('company_id') ? (int) $request->company_id : null;
+        }
+
+        $branchId = AuthHelper::getBranchId();
+        return $branchId ? \App\Models\Branch::find($branchId)?->company_id : null;
+    }
+
     public function index(Request $request): JsonResponse
     {
-        $query = Product::with('category');
+        $companyId = $this->resolveCompanyId($request);
+
+        $query = Product::with('category')
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId));
 
         if ($request->filled('is_public')) {
             $query->where('is_public', $request->boolean('is_public'));
@@ -35,7 +49,10 @@ class PublicationController extends Controller
 
     public function toggle(Request $request, int $id): JsonResponse
     {
-        $product = Product::findOrFail($id);
+        $companyId = $this->resolveCompanyId($request);
+
+        // Tenant isolation: users may only toggle products within their own company.
+        $product = Product::where('company_id', $companyId)->findOrFail($id);
         $product->update(['is_public' => !$product->is_public]);
 
         return response()->json([

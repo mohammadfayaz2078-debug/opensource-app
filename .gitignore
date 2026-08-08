@@ -1,8 +1,14 @@
 *.log
 .DS_Store
+
+# AI-assisted coding tool history (never publish personal session data)
+.aider.chat.history.md
+.aider.input.history
 .env
 .env.backup
 .env.production
+.env.*
+!.env.example
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -24,3 +30,9 @@ Homestead.json
 Homestead.yaml
 /.mimocode
 Thumbs.db
+
+# Generated archives and local databases (never publish these)
+public/build.zip
+database/*.sqlite
+database/*.sqlite-journal
+storage/app/backups/

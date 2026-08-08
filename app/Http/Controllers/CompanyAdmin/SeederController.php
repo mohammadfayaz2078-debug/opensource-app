@@ -11,10 +11,39 @@ use Illuminate\Support\Facades\Log;
 class SeederController extends Controller
 {
     /**
+     * SECURITY: the seeder truncates tenant tables, so it may only be run by
+     * an authenticated company admin (the route prefix is /company-admin, and
+     * every sibling controller enforces the same guard). Branch users and any
+     * other actor are rejected before any destructive work happens.
+     */
+    protected function authorizeCompanyAdmin(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            abort(401, 'Unauthenticated');
+        }
+
+        if (!($user instanceof \App\Models\Company)) {
+            abort(403, 'Unauthorized - Company admin access required');
+        }
+
+        return $user;
+    }
+
+    /**
      * Run the seeder
      */
     public function runSeeder(Request $request)
     {
+        $this->authorizeCompanyAdmin($request);
+
+        // The seeder is a local/demo bootstrap tool that writes demo data for
+        // company id 1. It must never run on a production installation.
+        if (app()->environment('production')) {
+            abort(403, 'Seeding is disabled in production.');
+        }
+
         try {
             // Check if already seeded to prevent duplicates
             $branchExists = DB::table('branches')->where('company_id', 1)->exists();
@@ -55,8 +84,10 @@ class SeederController extends Controller
     /**
      * Check if data already exists
      */
-    public function checkStatus()
+    public function checkStatus(Request $request)
     {
+        $this->authorizeCompanyAdmin($request);
+
         $branchExists = DB::table('branches')->where('company_id', 1)->exists();
         $userExists = DB::table('users')->where('company_id', 1)->exists();
         $accountExists = DB::table('accounts')->where('company_id', 1)->exists();
@@ -75,6 +106,14 @@ class SeederController extends Controller
      */
     public function resetAndSeed(Request $request)
     {
+        $this->authorizeCompanyAdmin($request);
+
+        // This truncates tenant tables, so it is strictly a local/demo tool and
+        // is hard-disabled in production.
+        if (app()->environment('production')) {
+            abort(403, 'Seeding is disabled in production.');
+        }
+
         try {
             // Disable foreign key checks
             DB::statement('SET FOREIGN_KEY_CHECKS=0');

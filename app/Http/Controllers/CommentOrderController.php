@@ -109,16 +109,17 @@ class CommentOrderController extends Controller
 
         $customer = Customer::where('email', $request->email)->first();
 
+        // NOTE: intentionally returns only the minimal fields the guest order form
+        // needs (name + phone + email). Sensitive fields (street address, province)
+        // are never disclosed to anonymous callers.
         return response()->json([
             'exists'   => $customer ? true : false,
             'customer' => $customer ? [
-                'id'          => $customer->id,
-                'first_name'  => $customer->first_name,
-                'last_name'   => $customer->last_name,
-                'phone'       => $customer->phone,
-                'email'       => $customer->email,
-                'address'     => $customer->street_address,
-                'province'    => $customer->province,
+                'id'         => $customer->id,
+                'first_name' => $customer->first_name,
+                'last_name'  => $customer->last_name,
+                'phone'      => $customer->phone,
+                'email'      => $customer->email,
             ] : null,
         ]);
     }
@@ -169,6 +170,38 @@ class CommentOrderController extends Controller
                 if ($firstProduct) {
                     $companyId = (int) $firstProduct->company_id;
                     $branchId = (int) $firstProduct->branch_id;
+                }
+            }
+
+            // Guests may only order PUBLIC products, and every item in the cart
+            // must belong to the same company/branch (no mixed-tenant carts).
+            if (!AuthHelper::isCompanyAdmin() && !AuthHelper::isBranchUser()) {
+                $productIds = array_column($validated['items'], 'product_id');
+                $products = Product::whereIn('id', $productIds)->get();
+
+                if ($products->count() !== count($productIds)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'items' => 'One or more products no longer exist.',
+                    ]);
+                }
+
+                if ($products->contains(fn ($p) => !$p->is_public)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'items' => 'One or more products are not available for public ordering.',
+                    ]);
+                }
+
+                $firstCompanyId = (int) $products->first()->company_id;
+                $firstBranchId  = (int) $products->first()->branch_id;
+                if ($products->contains(fn ($p) => (int) $p->company_id !== $firstCompanyId || (int) $p->branch_id !== $firstBranchId)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'items' => 'All items in an order must come from the same seller.',
+                    ]);
+                }
+
+                if ($companyId === null || $companyId !== $firstCompanyId) {
+                    $companyId = $firstCompanyId;
+                    $branchId  = $firstBranchId;
                 }
             }
 
@@ -251,9 +284,13 @@ class CommentOrderController extends Controller
         ], 201);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $orders = Order::with('items.product', 'customer')->orderBy('created_at', 'desc')->paginate(20);
+        $query = Order::with('items.product', 'customer')->orderBy('created_at', 'desc');
+
+        $this->scopeOrderQueryToCaller($query, $request);
+
+        $orders = $query->paginate(20);
 
         return response()->json([
             'data'         => $orders->items(),
@@ -263,9 +300,13 @@ class CommentOrderController extends Controller
         ]);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $order = Order::with('items.product', 'customer')->findOrFail($id);
+        $order = Order::with('items.product', 'customer')->find($id);
+
+        if (!$order || !$this->orderBelongsToCaller($order)) {
+            abort(404, 'Order not found.');
+        }
 
         return response()->json(['data' => $order]);
     }
@@ -274,7 +315,12 @@ class CommentOrderController extends Controller
     {
         $request->validate(['status' => 'required|in:pending,confirmed,delivered,cancelled']);
 
-        $order = Order::with('items.product', 'customer')->findOrFail($id);
+        $order = Order::with('items.product', 'customer')->find($id);
+
+        if (!$order || !$this->orderBelongsToCaller($order)) {
+            abort(404, 'Order not found.');
+        }
+
         $newStatus = $request->status;
 
         DB::transaction(function () use ($order, $newStatus) {
@@ -292,6 +338,43 @@ class CommentOrderController extends Controller
             'data'    => $order,
             'message' => 'Order status updated.',
         ]);
+    }
+
+    /**
+     * Tenant-scope an order query to the authenticated caller.
+     * Super admins see all orders; company admins and branch users only see
+     * orders belonging to their own company.
+     */
+    private function scopeOrderQueryToCaller($query, Request $request): void
+    {
+        $user = $request->user();
+
+        if ($user instanceof \App\Models\SuperAdmin) {
+            return; // platform owner sees everything
+        }
+
+        $companyId = AuthHelper::getCompanyId();
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        } else {
+            $query->whereRaw('1 = 0'); // unknown actor → nothing
+        }
+    }
+
+    /**
+     * Check whether an order belongs to the authenticated caller's company.
+     */
+    private function orderBelongsToCaller(Order $order): bool
+    {
+        $user = auth()->user();
+
+        if ($user instanceof \App\Models\SuperAdmin) {
+            return true;
+        }
+
+        $companyId = AuthHelper::getCompanyId();
+
+        return $companyId !== null && (int) $order->company_id === (int) $companyId;
     }
 
     private function createSaleFromOrder(Order $order): void

@@ -152,8 +152,8 @@ class OtherIncomeController extends Controller
         $companyId = $this->resolveCompanyId($request);
 
         $validated = $request->validate([
-            'account_id'           => 'required|exists:accounts,id',
-            'income_category_id'   => 'nullable|exists:income_categories,id',
+            'account_id'           => ['required', 'integer', Rule::exists('accounts', 'id')->where(fn($q) => $q->where('company_id', $companyId))],
+            'income_category_id'   => ['nullable', 'integer', Rule::exists('income_categories', 'id')->where(fn($q) => $q->where('company_id', $companyId))],
             'income_number'        => ['nullable', 'string', 'max:50', Rule::unique('other_incomes')->where(fn($q) => $q->where('branch_id', $branchId))],
             'income_date'          => 'required|date',
             'description'          => 'nullable|string',
@@ -171,11 +171,11 @@ class OtherIncomeController extends Controller
             $validated['income_number'] = $this->generateIncomeNumber($branchId);
         }
 
-        $income = DB::transaction(function () use ($validated) {
+        $income = DB::transaction(function () use ($validated, $companyId) {
             $income = OtherIncome::create($validated);
             
-            // Update account balance (increase)
-            $account = Account::find($validated['account_id']);
+            // Update account balance (increase) — scoped to the caller's company
+            $account = Account::where('company_id', $companyId)->find($validated['account_id']);
             if ($account) {
                 $account->balance += $validated['amount'];
                 $account->save();
@@ -216,8 +216,8 @@ class OtherIncomeController extends Controller
         $income    = OtherIncome::where('branch_id', $branchId)->findOrFail($id);
 
         $validated = $request->validate([
-            'account_id'           => 'sometimes|exists:accounts,id',
-            'income_category_id'   => 'nullable|exists:income_categories,id',
+            'account_id'           => ['sometimes', 'integer', Rule::exists('accounts', 'id')->where(fn($q) => $q->where('company_id', $companyId))],
+            'income_category_id'   => ['nullable', 'integer', Rule::exists('income_categories', 'id')->where(fn($q) => $q->where('company_id', $companyId))],
             'income_number'        => ['sometimes', 'string', 'max:50', Rule::unique('other_incomes')->where(fn($q) => $q->where('branch_id', $branchId))->ignore($income->id)],
             'income_date'          => 'sometimes|date',
             'description'          => 'nullable|string',
@@ -225,7 +225,7 @@ class OtherIncomeController extends Controller
             'note'                 => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($income, $validated) {
+        DB::transaction(function () use ($income, $validated, $companyId) {
             $oldAmount = $income->amount;
             $oldAccountId = $income->account_id;
             $newAmount = $validated['amount'] ?? $oldAmount;
@@ -235,7 +235,7 @@ class OtherIncomeController extends Controller
             if ($oldAccountId != $newAccountId || $oldAmount != $newAmount) {
                 // Reverse old account balance
                 if ($oldAccountId) {
-                    $oldAccount = Account::find($oldAccountId);
+                    $oldAccount = Account::where('company_id', $companyId)->find($oldAccountId);
                     if ($oldAccount) {
                         $oldAccount->balance -= $oldAmount;
                         $oldAccount->save();
@@ -244,7 +244,7 @@ class OtherIncomeController extends Controller
 
                 // Update new account balance
                 if ($newAccountId) {
-                    $newAccount = Account::find($newAccountId);
+                    $newAccount = Account::where('company_id', $companyId)->find($newAccountId);
                     if ($newAccount) {
                         $newAccount->balance += $newAmount;
                         $newAccount->save();

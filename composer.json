@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "bazarnet/bazarnet-erp",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Bazarnet — a multi-tenant ERP for inventory, sales, purchasing, accounts and a public storefront, built with Laravel 12 and React 19.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {

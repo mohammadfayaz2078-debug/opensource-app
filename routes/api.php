@@ -40,30 +40,32 @@ use App\Http\Controllers\CompanyDashboardController;
 use Illuminate\Http\Request;
 
 // Replace login route
-Route::post('/login', [SuperAdminAuthController::class, 'login']);
-Route::get('roles/modules', [RoleController::class, 'getModules']);
-Route::get('/register/options', [AuthController::class, 'getBranchesAndPositions']);
+// Login is rate-limited to slow down brute-force attempts.
+Route::post('/login', [SuperAdminAuthController::class, 'login'])->middleware('throttle:5,1');
 
 // Public storefront endpoints (guests allowed)
 Route::get('/publications/public', [PublicationController::class, 'publicProducts']);
 Route::get('/publications/public/{id}', [PublicationController::class, 'publicShow']);
 
 // Guest-accessible interactions on public products (likes, comments, orders)
-Route::post('/products/{id}/comments', [CommentOrderController::class, 'addComment']);
-Route::get('/products/{id}/comments', [CommentOrderController::class, 'getComments']);
-Route::delete('/products/{id}/comments/{index}', [CommentOrderController::class, 'deleteComment']);
-Route::post('/products/{id}/likes', [CommentOrderController::class, 'toggleLike']);
-Route::get('/products/{id}/likes', [CommentOrderController::class, 'getLikes']);
-Route::get('/products/{id}/likes/check', [CommentOrderController::class, 'checkLiked']);
-
-Route::prefix('orders')->group(function () {
-    Route::get('/',           [CommentOrderController::class, 'index']);
-    Route::post('/',          [CommentOrderController::class, 'createOrder']);
-    Route::get('/{id}',       [CommentOrderController::class, 'show']);
+// These are rate-limited to prevent spam and abuse. Comment DELETION is NOT
+// guest-accessible — it requires authentication (see the auth group below)
+// so anonymous visitors cannot remove other users' content.
+Route::middleware('throttle:30,1')->group(function () {
+    Route::post('/products/{id}/comments', [CommentOrderController::class, 'addComment']);
+    Route::get('/products/{id}/comments', [CommentOrderController::class, 'getComments']);
+    Route::post('/products/{id}/likes', [CommentOrderController::class, 'toggleLike']);
+    Route::get('/products/{id}/likes', [CommentOrderController::class, 'getLikes']);
+    Route::get('/products/{id}/likes/check', [CommentOrderController::class, 'checkLiked']);
 });
 
+// Guests may place orders, but listing / viewing orders requires authentication
+// and is scoped to the caller's own company (see CommentOrderController).
+Route::post('/orders', [CommentOrderController::class, 'createOrder'])->middleware('throttle:10,1');
+
 // Check if customer email exists (for order form)
-Route::get('/customers/check-email', [CommentOrderController::class, 'checkEmail']);
+// Rate-limited and returns only minimal, non-sensitive fields.
+Route::get('/customers/check-email', [CommentOrderController::class, 'checkEmail'])->middleware('throttle:10,1');
 
 
 // Order status update requires authentication (admin action)
@@ -80,11 +82,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::get('/user-me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // These reference the authenticated user's own tenant, so they must never
+    // be guest-accessible.
+    Route::get('roles/modules', [RoleController::class, 'getModules']);
+    Route::get('/register/options', [AuthController::class, 'getBranchesAndRoles']);
+
+    // Authenticated moderation: deleting a comment on a public product.
+    Route::delete('/products/{id}/comments/{index}', [CommentOrderController::class, 'deleteComment']);
+
+    // Authenticated, tenant-scoped order listing / detail (storefront analytics + admin)
+    Route::prefix('orders')->group(function () {
+        Route::get('/',     [CommentOrderController::class, 'index']);
+        Route::get('/{id}', [CommentOrderController::class, 'show']);
+    });
     Route::get('/user/{id}', [AuthController::class, 'getUser']);
     Route::put('/user/{id}', [AuthController::class, 'updateUser']);
     Route::delete('/user/{id}', [AuthController::class, 'deleteUser']);
     Route::post('/register', [AuthController::class, 'register']);
 
+    // Database backup is restricted to platform Super Admins only (see BackupController)
     Route::get('/backup/download', [BackupController::class, 'download'])->name('api.backup.download');
 
     
@@ -454,4 +471,40 @@ Route::middleware(['auth:sanctum', 'check.impersonation'])->group(function () {
     Route::get('impersonation/check', [\App\Http\Controllers\API\ImpersonationController::class, 'checkImpersonation']);
     Route::post('impersonation/stop', [\App\Http\Controllers\API\ImpersonationController::class, 'stopImpersonation']);
 });
+
+
+// ─── Super Admin (platform owner) routes ──────────────────────────────────
+// These wire up the platform-management UI (companies, super admins, profile).
+// Every handler validates that the authenticated user is a SuperAdmin.
+Route::prefix('super-admin')
+    ->middleware(['auth:sanctum'])
+    ->group(function () {
+
+        Route::prefix('companies')->group(function () {
+            Route::get('/', [\App\Http\Controllers\CompanyController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\CompanyController::class, 'store']);
+            Route::get('/list', [\App\Http\Controllers\CompanyController::class, 'getCompaniesList']);
+            Route::get('/statistics', [\App\Http\Controllers\CompanyController::class, 'statistics']);
+            Route::get('/export', [\App\Http\Controllers\CompanyController::class, 'export']);
+            Route::get('/{id}', [\App\Http\Controllers\CompanyController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\CompanyController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\CompanyController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [\App\Http\Controllers\CompanyController::class, 'toggleStatus']);
+            Route::post('/{id}/impersonate', [\App\Http\Controllers\CompanyController::class, 'impersonate']);
+        });
+
+        Route::prefix('super-admins')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SuperAdminController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\SuperAdminController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\SuperAdminController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\SuperAdminController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\SuperAdminController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [\App\Http\Controllers\SuperAdminController::class, 'toggleStatus']);
+        });
+
+        Route::get('/profile', [\App\Http\Controllers\SuperAdminController::class, 'profile']);
+        Route::put('/profile', [\App\Http\Controllers\SuperAdminController::class, 'updateProfile']);
+        Route::post('/language', [\App\Http\Controllers\SuperAdminController::class, 'updateLanguage']);
+        Route::post('/logout', [\App\Http\Controllers\SuperAdminController::class, 'logout']);
+    });
 

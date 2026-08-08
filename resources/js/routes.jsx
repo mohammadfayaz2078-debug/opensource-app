@@ -16,6 +16,8 @@ import BranchShow from './pages/Branch/Show';
 // Company Pages (used in regular user routes)
 import CompanyShow from './pages/Company/Show';
 import CompanyEdit from './pages/Company/Edit';
+import CompanyIndex from './pages/Company/Index';
+import CompanyCreate from './pages/Company/Create';
 
 // Purchase Pages
 import PurchaseIndex from './pages/Purchase/Index';
@@ -135,6 +137,14 @@ import UserSettings from './pages/User/Settings';
 // Layouts
 import AuthenticatedLayout from './layouts/AuthenticatedLayout';
 import CompanyAdminLayout from './layouts/CompanyAdminLayout';
+import SuperAdminLayout from './layouts/SuperAdminLayout';
+
+// Super Admin Pages
+import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
+import SuperAdminIndex from './pages/SuperAdmin/Index';
+import SuperAdminCreate from './pages/SuperAdmin/Create';
+import SuperAdminEdit from './pages/SuperAdmin/Edit';
+import SuperAdminProfile from './pages/SuperAdmin/Profile';
 
 // Protected Route Wrapper
 const PrivateRoute = ({ children, requiredRole = null }) => {
@@ -153,11 +163,19 @@ const PrivateRoute = ({ children, requiredRole = null }) => {
     return <Navigate to="/dashboard" replace />;
   }
 
+  if (requiredRole === 'superadmin' && userType !== 'superadmin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (requiredRole === null && userType === 'company_admin') {
     const isImpersonatingBranch = localStorage.getItem('impersonating_branch') === 'true';
     if (!isImpersonatingBranch) {
       return <Navigate to="/company-admin/dashboard" replace />;
     }
+  }
+
+  if (requiredRole === null && userType === 'superadmin') {
+    return <Navigate to="/super-admin/dashboard" replace />;
   }
 
   return children;
@@ -171,6 +189,9 @@ const GuestRoute = ({ children }) => {
     const userType = localStorage.getItem('user_type');
     if (userType === 'company_admin') {
       return <Navigate to="/company-admin/dashboard" replace />;
+    }
+    if (userType === 'superadmin') {
+      return <Navigate to="/super-admin/dashboard" replace />;
     }
     return <Navigate to="/dashboard" replace />;
   }
@@ -373,6 +394,28 @@ const routes = [
     ]
   },
   
+  // Super Admin Routes (platform owner)
+  {
+    path: '/super-admin',
+    element: (
+      <PrivateRoute requiredRole="superadmin">
+        <SuperAdminLayout />
+      </PrivateRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="/super-admin/dashboard" replace /> },
+      { path: 'dashboard', element: <SuperAdminDashboard /> },
+      { path: 'companies', element: <CompanyIndex /> },
+      { path: 'companies/create', element: <CompanyCreate /> },
+      { path: 'companies/:id', element: <CompanyShow /> },
+      { path: 'companies/:id/edit', element: <CompanyEdit /> },
+      { path: 'super-admins', element: <SuperAdminIndex /> },
+      { path: 'super-admins/create', element: <SuperAdminCreate /> },
+      { path: 'super-admins/:id/edit', element: <SuperAdminEdit /> },
+      { path: 'profile', element: <SuperAdminProfile /> },
+    ]
+  },
+
   // 404 Not Found - MUST BE LAST
   {
     path: '*',

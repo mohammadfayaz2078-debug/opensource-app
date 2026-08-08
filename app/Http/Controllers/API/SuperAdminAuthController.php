@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\SuperAdmin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,6 +17,21 @@ class SuperAdminAuthController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
+
+        // Platform super admin (top of the tenant hierarchy)
+        $superAdmin = SuperAdmin::where('email', $request->email)->first();
+
+        if ($superAdmin && Hash::check($request->password, $superAdmin->password)) {
+            $token = $superAdmin->createToken('superadmin_token')->plainTextToken;
+
+            return response()->json([
+                'user_type' => 'superadmin',
+                'user' => $superAdmin,
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'permissions' => $this->getCompanyAdminPermissions(),
+            ]);
+        }
 
         $company = Company::where('email', $request->email)->first();
 
@@ -86,6 +102,15 @@ class SuperAdminAuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
+
+        if ($user instanceof SuperAdmin) {
+            return response()->json([
+                'user' => $user,
+                'user_type' => 'superadmin',
+                'permissions' => $this->getCompanyAdminPermissions(),
+                'language' => $user->language ?? 'en',
+            ]);
+        }
 
         if ($user instanceof Company) {
             return response()->json([

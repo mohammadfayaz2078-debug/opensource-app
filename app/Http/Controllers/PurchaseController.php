@@ -99,6 +99,20 @@ class PurchaseController extends Controller
             'items.*.notes'      => 'nullable|string',
         ]);
 
+        // Tenant isolation: the referenced supplier and account must belong to
+        // the caller's own company.
+        if (!empty($validated['supplier_id'])) {
+            $supplierExists = \App\Models\Supplier::where('company_id', $companyId)->whereKey($validated['supplier_id'])->exists();
+            if (!$supplierExists) {
+                return response()->json(['message' => 'Invalid supplier for this company.'], 422);
+            }
+        }
+
+        $accountExists = Account::where('company_id', $companyId)->whereKey($validated['account_id'])->exists();
+        if (!$accountExists) {
+            return response()->json(['message' => 'Invalid account for this company.'], 422);
+        }
+
         $validated['company_id']   = $companyId;
         $validated['branch_id']    = $branchId;
         $validated['created_by']   = Auth::id();
@@ -168,7 +182,8 @@ class PurchaseController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
         $purchase = Purchase::where('branch_id', $branchId)->findOrFail($id);
 
         if (!$purchase->canBeEdited()) {
@@ -193,7 +208,16 @@ class PurchaseController extends Controller
             'items.*.notes'      => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($purchase, $validated, $request) {
+        DB::transaction(function () use ($purchase, $validated, $request, $companyId, $branchId) {
+            // Accounting correctness: a purchase edit changes the goods received,
+            // so the previously recorded stock must be reversed and re-recorded
+            // with the updated line items. Without this the stock balance drifts
+            // away from the document.
+            $hasItems = isset($validated['items']);
+            if ($hasItems) {
+                StockService::reverse('Purchase', $purchase->id, 'Re-recording stock for purchase edit');
+            }
+
             if (isset($validated['items'])) {
                 $existingIds = collect($validated['items'])->pluck('id')->filter()->toArray();
                 $purchase->items()->whereNotIn('id', $existingIds)->delete();
@@ -211,6 +235,26 @@ class PurchaseController extends Controller
 
             $purchase->update($validated);
             $purchase->recalculate();
+
+            // Re-record stock for the updated line items.
+            if ($hasItems) {
+                foreach ($purchase->items as $item) {
+                    if ($item->product_id) {
+                        StockService::record(
+                            companyId: $companyId,
+                            branchId: $branchId,
+                            productId: $item->product_id,
+                            movementType: 'in',
+                            quantity: (float) $item->quantity,
+                            unitCost: (float) $item->unit_price,
+                            referenceType: 'Purchase',
+                            referenceId: $purchase->id,
+                            notes: "Purchase {$purchase->reference_no} (edited)",
+                            unitId: $item->unit_id,
+                        );
+                    }
+                }
+            }
         });
 
         $purchase->load(['supplier', 'items.product', 'items.unit', 'creator']);
@@ -240,13 +284,28 @@ class PurchaseController extends Controller
 
     public function pay(Request $request, int $id): JsonResponse
     {
-        $branchId = $this->resolveBranchId($request);
+        $branchId  = $this->resolveBranchId($request);
+        $companyId = $this->resolveCompanyId($request);
         $purchase = Purchase::where('branch_id', $branchId)->findOrFail($id);
 
         $validated = $request->validate([
             'amount'     => 'required|numeric|min:0.01',
             'account_id' => 'required|exists:accounts,id',
         ]);
+
+        // Prevent overpayment: a payment cannot exceed the remaining due amount.
+        if ((float) $validated['amount'] > (float) $purchase->due_amount) {
+            return response()->json([
+                'message' => 'Payment amount exceeds the remaining due amount.',
+                'due_amount' => (float) $purchase->due_amount,
+            ], 422);
+        }
+
+        // The payment account must belong to the caller's own company.
+        $account = Account::where('company_id', $companyId)->find($validated['account_id']);
+        if (!$account) {
+            return response()->json(['message' => 'Invalid account for this company.'], 422);
+        }
 
         $accountId = (int) $validated['account_id'];
         $newPaid = (float) $purchase->paid_amount + (float) $validated['amount'];
@@ -269,7 +328,7 @@ class PurchaseController extends Controller
         $transaction = null;
 
         // Update account balance — money goes out for purchases
-        $account = Account::find($accountId);
+        $account = Account::where('company_id', $companyId)->find($accountId);
         if ($account) {
             $amount = (float) $validated['amount'];
             $balanceAfter = (float) $account->balance - $amount;

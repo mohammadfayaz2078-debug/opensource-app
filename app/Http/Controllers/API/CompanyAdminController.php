@@ -153,7 +153,10 @@ class CompanyAdminController extends Controller
             ->first();
 
         if (!$branchUser) {
-            // Create a branch admin user
+            // Create a branch admin user.
+            // SECURITY: the password is a random secret (never a predictable value).
+            // These accounts are impersonation vehicles only and are not meant to
+            // be used for direct login.
             $branchUser = User::firstOrCreate(
                 ['email' => 'admin@branch-' . $branch->id . '.local'],
                 [
@@ -162,7 +165,7 @@ class CompanyAdminController extends Controller
                     'role_id' => $adminRole->id,
                     'first_name' => 'Branch',
                     'last_name' => 'Admin',
-                    'password' => Hash::make('branch-admin-' . $branch->id),
+                    'password' => \Illuminate\Support\Str::random(32),
                     'phone' => $branch->branch_phone,
                     'status' => true,
                     'language' => $company->language ?? 'en',

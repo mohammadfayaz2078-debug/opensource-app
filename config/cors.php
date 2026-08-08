@@ -20,5 +20,7 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    // The SPA sends cookies with credentials (axios withCredentials), so the
+    // server must explicitly allow credentials for the dev origins below.
+    'supports_credentials' => true,
 ];

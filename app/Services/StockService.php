@@ -51,12 +51,15 @@ class StockService
         }
 
         // ── Get or create stock balance (one record per product + branch + unit category) ──
+        // lockForUpdate serializes concurrent movements for the same product/branch
+        // so that simultaneous sales cannot both pass the overselling check.
         $balance = StockBalance::where([
             'company_id'       => $companyId,
             'branch_id'        => $branchId,
             'product_id'       => $productId,
         ])
         ->when($unitCategoryId, fn($q) => $q->where('unit_category_id', $unitCategoryId))
+        ->lockForUpdate()
         ->first();
 
         if (!$balance) {
@@ -243,6 +246,7 @@ class StockService
                 'product_id' => $txn->product_id,
             ])
             ->when($unitCategoryId, fn($q) => $q->where('unit_category_id', $unitCategoryId))
+            ->lockForUpdate()
             ->first();
 
             if (!$balance) {
