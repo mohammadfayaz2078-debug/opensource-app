@@ -1167,13 +1167,8 @@ const Welcome = () => {
               <div className="w-10 h-10 rounded-lg bg-[#17211f] flex items-center justify-center shadow-sm">
                 <span className="text-white font-extrabold text-xl">B</span>
               </div>
-<<<<<<< HEAD
               <span className="hidden sm:block text-[#17211f] font-black text-xl">
                 Bazar<span className="text-[#ee5b43]">Net</span>
-=======
-              <span className="hidden sm:block text-[#1877F2] font-extrabold text-2xl tracking-tight">
-                BazarNet
->>>>>>> 03d431d183ce978a5f88bb43f1650fc83d4bb98a
               </span>
             </Link>
 
@@ -1486,11 +1481,7 @@ const Welcome = () => {
                 <span className="text-white font-extrabold text-sm">B</span>
               </div>
               <div>
-<<<<<<< HEAD
                 <p className="font-extrabold text-white text-sm leading-none">
-=======
-                <p className="font-extrabold text-gray-900 text-sm leading-none">
->>>>>>> 03d431d183ce978a5f88bb43f1650fc83d4bb98a
                   BazarNet
                 </p>
                 <p className="text-[10px] text-white/55 mt-0.5 font-medium">{t('welcome.footer.tagline')}</p>

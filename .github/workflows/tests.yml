@@ -63,7 +63,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 22 is the current Active LTS (Node 20 is EOL) and satisfies
+          # Vite 7's requirement of Node ^20.19.0 || >=22.12.0.
+          node-version: 22
           cache: npm
 
       - name: Install npm dependencies
