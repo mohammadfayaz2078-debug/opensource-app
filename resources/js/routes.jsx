@@ -8,7 +8,7 @@ import Register from './pages/Auth/Register';
 import Welcome from './pages/WelcomePage/Welcome';
 
 // Branch Pages
-import BranchIndex from './pages/Branch/Index';
+import BranchIndex from './pages/Branch/index';
 import BranchCreate from './pages/Branch/Create';
 import BranchEdit from './pages/Branch/Edit';
 import BranchShow from './pages/Branch/Show';
@@ -112,7 +112,7 @@ import ProductShow from './pages/Product/Show';
 
 
 // Dashboard Pages
-import DashboardIndex from './pages/Dashboard/Index';
+import DashboardIndex from './pages/Dashboard/index';
 
 // Error Pages
 import NotFound from './pages/Error/NotFound';
